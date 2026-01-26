@@ -182,7 +182,7 @@ docs=(
 
 for file in "${docs[@]}"; do
   update_file_regex "$file" "doc sync" \
-    "s/^(Status:[[:space:]]*)`[^`]*`([.][[:space:]]*)$/\\1\`$VERSION\`\\2/; \
+    "s/^(Status:[[:space:]]*)\`[^\`]*\`([.][[:space:]]*)$/\\1\`$VERSION\`\\2/; \
      s/^([[:space:]]*)(oxide_(annotations|runtime|generator)):[[:space:]]*\\^?[0-9]+\\.[0-9]+\\.[0-9]+.*$/\\1\\2: ^$VERSION/; \
      s/(oxide_(core|macros))[[:space:]]*=[[:space:]]*\"[0-9]+\\.[0-9]+\\.[0-9]+\"/\\1 = \"$VERSION\"/g; \
      s/^(##[[:space:]]+)[0-9]+\\.[0-9]+\\.[0-9]+[[:space:]]*$/\\1$VERSION/" || exit $?
