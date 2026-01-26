@@ -1,0 +1,8 @@
+builders:
+  oxide_store:
+    import: "package:oxide_generator/oxide_generator.dart"
+    builder_factories: ["oxideBuilder"]
+    build_extensions: {".dart": [".oxide.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+

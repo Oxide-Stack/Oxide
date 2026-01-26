@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.1.0). If empty, uses the ref tag."
+        required: false
+        type: string
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        name: Validate tag matches VERSION
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(cat VERSION | tr -d '\r\n' | xargs)"
+          if [[ -z "$VERSION" ]]; then
+            echo "VERSION is empty" >&2
+            exit 1
+          fi
+
+          TAG_INPUT="${{ inputs.tag }}"
+          if [[ -n "$TAG_INPUT" ]]; then
+            TAG="$TAG_INPUT"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ "$TAG" != v* ]]; then
+            echo "Tag must start with 'v' (got '$TAG')" >&2
+            exit 1
+          fi
+
+          TAG_VERSION="${TAG#v}"
+          if [[ "$TAG_VERSION" != "$VERSION" ]]; then
+            echo "Tag version '$TAG_VERSION' does not match VERSION '$VERSION'" >&2
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  publish-rust:
+    runs-on: ubuntu-latest
+    needs: [validate]
+    if: ${{ secrets.CARGO_REGISTRY_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish oxide_core
+        working-directory: rust
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish -p oxide_core
+      - name: Publish oxide_macros
+        working-directory: rust
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish -p oxide_macros
+
+  publish-dart:
+    runs-on: ubuntu-latest
+    needs: [validate]
+    if: ${{ secrets.PUB_CREDENTIALS != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Configure pub credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.config/dart"
+          echo '${{ secrets.PUB_CREDENTIALS }}' > "$HOME/.config/dart/pub-credentials.json"
+      - name: Publish oxide_annotations
+        working-directory: flutter/oxide_annotations
+        run: dart pub publish
+      - name: Publish oxide_generator
+        working-directory: flutter/oxide_generator
+        run: dart pub publish
+      - name: Publish oxide_runtime
+        working-directory: flutter/oxide_runtime
+        run: dart pub publish

@@ -1,0 +1,5 @@
+error: Reducer impl is missing `type SideEffect = ...;`
+ --> tests/ui/fail_reducer_missing_sideeffect.rs:7:30
+  |
+7 | impl oxide_core::Reducer for MissingSideEffectReducer {
+  |                              ^^^^^^^^^^^^^^^^^^^^^^^^
