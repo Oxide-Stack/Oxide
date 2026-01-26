@@ -12,7 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Verify version sync
-        run: ./tools/scripts/version_sync.sh --verify
+        run: bash ./tools/scripts/version_sync.sh --verify
+
 
   rust:
     runs-on: ubuntu-latest
