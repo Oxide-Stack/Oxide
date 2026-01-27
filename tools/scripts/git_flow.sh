@@ -25,9 +25,8 @@ set -euo pipefail
 #   - sync
 #       Updates local develop and main from origin (ff-only).
 #   - release <version>
-#       Creates an annotated tag v<version> on main, but only after main already contains
-#       develop (i.e., the PR from develop -> main has been merged). This command does NOT
-#       merge develop into main.
+#       Creates an annotated tag v<version> on main. Accepts either <version> or v<version>
+#       (e.g. 0.1.0 or v0.1.0). This command does NOT merge develop into main.
 #
 # Recommended release steps:
 #   1) Bump VERSION, run tools/scripts/version_sync.{ps1,sh}, commit + push to develop
@@ -124,11 +123,15 @@ case "$COMMAND" in
     ;;
   release)
     if [[ -z "$NAME" ]]; then
-      die "Version required (e.g. 1.1.0)"
+      die "Version required (e.g. 1.1.0 or v1.1.0)"
     fi
     assert_in_git_repo
     assert_clean_working_tree
-    tag="v$NAME"
+    version="$NAME"
+    if [[ "$version" =~ ^v[0-9] ]]; then
+      version="${version:1}"
+    fi
+    tag="v$version"
     gitx fetch --prune --tags
     assert_tag_does_not_exist "$tag"
     assert_branch_exists "develop"
@@ -138,22 +141,19 @@ case "$COMMAND" in
     checkout_branch "main"
     gitx pull --ff-only
 
-    if ! git merge-base --is-ancestor origin/develop origin/main >/dev/null 2>&1; then
-      cat >&2 <<EOF
-Cannot create a release tag because origin/main does not contain origin/develop yet.
-
-Next steps:
-  1) Ensure VERSION is updated and synced (tools/scripts/version_sync.sh)
-  2) Commit + push to develop
-  3) Open and merge the PR develop -> main
-  4) Re-run: ./tools/scripts/git_flow.sh release $NAME
-EOF
-      exit 1
+    ahead_behind="$(git rev-list --left-right --count origin/main...origin/develop 2>/dev/null || true)"
+    main_only="$(echo "$ahead_behind" | awk '{print $1}' 2>/dev/null || echo "")"
+    develop_only="$(echo "$ahead_behind" | awk '{print $2}' 2>/dev/null || echo "")"
+    if [[ -n "$develop_only" && "$develop_only" -gt 0 ]]; then
+      echo "warning: origin/develop is ahead of origin/main by $develop_only commit(s). Tagging main anyway." >&2
+    fi
+    if [[ -n "$main_only" && "$main_only" -gt 0 ]]; then
+      echo "warning: origin/main has $main_only commit(s) not in origin/develop. Tagging main anyway." >&2
     fi
 
     checkout_branch "main"
     gitx pull --ff-only
-    gitx tag -a "$tag" -m "release: $NAME"
+    gitx tag -a "$tag" -m "release: $version"
     echo "Created tag $tag on main (local)."
     echo "Push the tag: git push origin $tag"
     ;;
