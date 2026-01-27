@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Oxide-Stack/Oxide/actions/workflows/ci.yml/badge.svg)](https://github.com/Oxide-Stack/Oxide/actions/workflows/ci.yml)
 [![Release](https://github.com/Oxide-Stack/Oxide/actions/workflows/release.yml/badge.svg)](https://github.com/Oxide-Stack/Oxide/actions/workflows/release.yml)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/tag/Oxide-Stack/Oxide?label=release)](https://github.com/Oxide-Stack/Oxide/tags)
 
 Oxide is a Rust ↔ Flutter workflow for building apps where:
@@ -140,6 +140,6 @@ Issues and PRs are welcome — especially from first-time contributors. If you�
 
 ## 📜 License
 
-MIT. See [LICENSE](./LICENSE).
+Dual-licensed under MIT OR Apache-2.0. See [LICENSE](./LICENSE).
 
 Some packages may also include their own license file (for example, `flutter/oxide_runtime/LICENSE`).

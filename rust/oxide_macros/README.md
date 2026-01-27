@@ -170,4 +170,4 @@ The macros add doc strings containing `oxide:meta:<json>`. The JSON includes use
 
 ## License
 
-MIT. See [LICENSE](../../LICENSE).
+Dual-licensed under MIT OR Apache-2.0. See [LICENSE](./LICENSE).

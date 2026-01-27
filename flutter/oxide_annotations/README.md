@@ -101,4 +101,4 @@ If your Rust surface exposes persistence functions, you can provide:
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+Dual-licensed under MIT OR Apache-2.0. See [LICENSE](./LICENSE).

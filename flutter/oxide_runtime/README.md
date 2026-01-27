@@ -39,4 +39,4 @@ For complete, runnable usage, see the repository examples.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+Dual-licensed under MIT OR Apache-2.0. See [LICENSE](./LICENSE).

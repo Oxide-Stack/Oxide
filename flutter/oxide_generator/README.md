@@ -84,4 +84,4 @@ Exact output shapes are easiest to understand by inspecting an example’s gener
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+Dual-licensed under MIT OR Apache-2.0. See [LICENSE](./LICENSE).
