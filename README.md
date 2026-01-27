@@ -65,16 +65,16 @@ pub struct StateSnapshot<T> {
 
 Add your recordings under `docs/media/`:
 
-![Counter demo](docs/media/counter.gif)
-![Todos demo](docs/media/todos.gif)
-![Ticker demo](docs/media/ticker.gif)
-![Benchmark demo](docs/media/benchmark.gif)
+![Counter demo](docs/media/Counter_App.gif)
+![Todos demo](docs/media/Todos_App.gif)
+![Ticker demo](docs/media/Ticker_App.gif)
+![Benchmark demo](docs/media/Benchmark_App.gif)
 
 ## 📈 Benchmark Results
 
-Add your screenshot under `docs/media/`:
+Full write-up and more charts: [docs/BENCHMARKS.md](./docs/BENCHMARKS.md)
 
-![Benchmark results](docs/media/benchmark.png)
+![Benchmark chart](docs/media/benchmarks/itr1000_samples40_warm3_sieve.png)
 
 ## 🧪 Quickstart (Run An Example)
 

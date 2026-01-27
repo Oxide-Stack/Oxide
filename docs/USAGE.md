@@ -6,6 +6,7 @@ For fully working code, follow the examples and mirror their structure:
 - [todos_app](../examples/todos_app)
 - [ticker_app](../examples/ticker_app)
 - [benchmark_app](../examples/benchmark_app)
+- Benchmarks write-up: [BENCHMARKS.md](./BENCHMARKS.md)
 
 Important: start from an **FRB-integrated Flutter app / template** (or copy one of this repo’s examples). Oxide assumes you already have a working Flutter Rust Bridge (FRB) setup for building Rust, generating bindings, and initializing `RustLib` in Flutter.
 

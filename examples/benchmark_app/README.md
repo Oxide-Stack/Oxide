@@ -42,4 +42,5 @@ flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 ## Docs
 
 - Root project overview: [README.md](../../README.md)
+- Benchmark results and interpretation: [docs/BENCHMARKS.md](../../docs/BENCHMARKS.md)
 - Generator docs: [flutter/oxide_generator](../../flutter/oxide_generator)
