@@ -36,9 +36,12 @@ Recommended release steps:
 param(
   [Parameter(Mandatory=$true)]
   [ValidateSet("status","feature","hotfix","release","sync")]
+  [ValidateSet("status","feature","hotfix","release","sync")]
   [string]$Cmd,
 
-  [string]$Name
+  [string]$Name,
+
+  [switch]$DryRun
 )
 
 $ErrorActionPreference = "Stop"
@@ -95,9 +98,62 @@ function Assert-TagDoesNotExist([string]$Tag) {
   & git show-ref --tags --verify --quiet ("refs/tags/{0}" -f $Tag)
   if ($LASTEXITCODE -eq 0) { throw "Tag '$Tag' already exists." }
 }
+function gitx {
+  param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$Args
+  )
+  & git @Args
+  if ($LASTEXITCODE -ne 0) {
+    throw ("git failed: git " + ($Args -join " "))
+  }
+}
+
+function Assert-InGitRepo {
+  & git rev-parse --is-inside-work-tree 1>$null 2>$null
+  if ($LASTEXITCODE -ne 0) { throw "Not inside a git repository." }
+}
+
+function Assert-CleanWorkingTree {
+  $porcelain = & git status --porcelain
+  if ($LASTEXITCODE -ne 0) { throw "Failed to read git status." }
+  if (-not [string]::IsNullOrWhiteSpace($porcelain)) {
+    throw "Working tree is not clean. Commit or stash changes before running this command."
+  }
+}
+
+function Assert-BranchExists([string]$Branch) {
+  & git show-ref --verify --quiet ("refs/heads/{0}" -f $Branch)
+  if ($LASTEXITCODE -eq 0) { return }
+  & git show-ref --verify --quiet ("refs/remotes/origin/{0}" -f $Branch)
+  if ($LASTEXITCODE -eq 0) { return }
+  throw "Branch '$Branch' not found locally or on origin."
+}
+
+function Checkout-Branch([string]$Branch) {
+  & git show-ref --verify --quiet ("refs/heads/{0}" -f $Branch)
+  if ($LASTEXITCODE -eq 0) {
+    gitx checkout $Branch
+    return
+  }
+  gitx checkout -b $Branch --track ("origin/{0}" -f $Branch)
+}
+
+function Assert-BranchDoesNotExist([string]$Branch) {
+  & git show-ref --verify --quiet ("refs/heads/{0}" -f $Branch)
+  if ($LASTEXITCODE -eq 0) { throw "Branch '$Branch' already exists locally." }
+  & git show-ref --verify --quiet ("refs/remotes/origin/{0}" -f $Branch)
+  if ($LASTEXITCODE -eq 0) { throw "Branch '$Branch' already exists on origin." }
+}
+
+function Assert-TagDoesNotExist([string]$Tag) {
+  & git show-ref --tags --verify --quiet ("refs/tags/{0}" -f $Tag)
+  if ($LASTEXITCODE -eq 0) { throw "Tag '$Tag' already exists." }
+}
 
 switch ($Cmd) {
   "status" {
+    Assert-InGitRepo
     Assert-InGitRepo
     gitx status -sb
     gitx branch -vv
@@ -105,6 +161,7 @@ switch ($Cmd) {
   }
 
   "feature" {
+    Assert-InGitRepo
     Assert-InGitRepo
     if (-not $Name) { throw "Feature name required" }
     Assert-CleanWorkingTree
@@ -124,7 +181,27 @@ switch ($Cmd) {
     gitx fetch --prune
     Assert-BranchExists "develop"
     Checkout-Branch "develop"
+    Assert-CleanWorkingTree
+    gitx fetch --prune
+    Assert-BranchExists "develop"
+    Checkout-Branch "develop"
     gitx pull --ff-only
+    $branch = "feature/$Name"
+    Assert-BranchDoesNotExist $branch
+    gitx checkout -b $branch
+  }
+
+  "hotfix" {
+    Assert-InGitRepo
+    if (-not $Name) { throw "Hotfix name required" }
+    Assert-CleanWorkingTree
+    gitx fetch --prune
+    Assert-BranchExists "develop"
+    Checkout-Branch "develop"
+    gitx pull --ff-only
+    $branch = "hotfix/$Name"
+    Assert-BranchDoesNotExist $branch
+    gitx checkout -b $branch
     $branch = "hotfix/$Name"
     Assert-BranchDoesNotExist $branch
     gitx checkout -b $branch
@@ -171,9 +248,17 @@ Next steps:
     Assert-BranchExists "develop"
     Assert-BranchExists "main"
     Checkout-Branch "develop"
+    Assert-InGitRepo
+    Assert-CleanWorkingTree
+    gitx fetch --prune
+    Assert-BranchExists "develop"
+    Assert-BranchExists "main"
+    Checkout-Branch "develop"
     gitx pull --ff-only
     Checkout-Branch "main"
+    Checkout-Branch "main"
     gitx pull --ff-only
+    Checkout-Branch "develop"
     Checkout-Branch "develop"
   }
 }
