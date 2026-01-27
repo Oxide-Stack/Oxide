@@ -50,13 +50,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 function gitx {
-  param(
-    [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$Args
-  )
-  & git @Args
+  & git @args
   if ($LASTEXITCODE -ne 0) {
-    throw ("git failed: git " + ($Args -join " "))
+    throw ("git failed: git " + ($args -join " "))
   }
 }
 
