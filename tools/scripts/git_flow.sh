@@ -5,7 +5,7 @@ set -euo pipefail
 #   ./tools/scripts/git_flow.sh status
 #   ./tools/scripts/git_flow.sh feature <name>
 #   ./tools/scripts/git_flow.sh hotfix <name>
-#   ./tools/scripts/git_flow.sh hotfix <name>
+#   ./tools/scripts/git_flow.sh backmerge
 #   ./tools/scripts/git_flow.sh release <version>
 #   ./tools/scripts/git_flow.sh sync
 #
@@ -23,12 +23,13 @@ set -euo pipefail
 #       Creates feature/<name> from the latest develop.
 #   - hotfix <name>
 #       Creates hotfix/<name> from the latest develop.
+#   - backmerge
+#       Merges main back into develop to keep develop up-to-date with main-only changes.
 #   - sync
 #       Updates local develop and main from origin (ff-only).
 #   - release <version>
-#       Creates an annotated tag v<version> on main, but only after main already contains
-#       develop (i.e., the PR from develop -> main has been merged). This command does NOT
-#       merge develop into main.
+#       Creates an annotated tag v<version> on main. Accepts either <version> or v<version>
+#       (e.g. 0.1.0 or v0.1.0). This command does NOT merge develop into main.
 #
 # Recommended release steps:
 #   1) Bump VERSION, run tools/scripts/version_sync.{ps1,sh}, commit + push to develop
@@ -88,63 +89,15 @@ assert_tag_does_not_exist() {
   git show-ref --tags --verify --quiet "refs/tags/$tag" && die "Tag '$tag' already exists."
 }
 
-die() {
-  echo "$1" >&2
-  exit 2
-}
-
-assert_in_git_repo() {
-  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "Not inside a git repository."
-}
-
-assert_clean_working_tree() {
-  [[ -z "$(git status --porcelain)" ]] || die "Working tree is not clean. Commit or stash changes before running this command."
-}
-
-assert_branch_exists() {
-  local branch="$1"
-  if git show-ref --verify --quiet "refs/heads/$branch"; then
-    return 0
-  fi
-  git show-ref --verify --quiet "refs/remotes/origin/$branch" || die "Branch '$branch' not found locally or on origin."
-}
-
-checkout_branch() {
-  local branch="$1"
-  if git show-ref --verify --quiet "refs/heads/$branch"; then
-    gitx checkout "$branch"
-    return 0
-  fi
-  gitx checkout -b "$branch" --track "origin/$branch"
-}
-
-assert_branch_does_not_exist() {
-  local branch="$1"
-  if git show-ref --verify --quiet "refs/heads/$branch"; then
-    die "Branch '$branch' already exists locally."
-  fi
-  if git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
-    die "Branch '$branch' already exists on origin."
-  fi
-}
-
-assert_tag_does_not_exist() {
-  local tag="$1"
-  git show-ref --tags --verify --quiet "refs/tags/$tag" && die "Tag '$tag' already exists."
-}
-
 case "$COMMAND" in
   status)
-    assert_in_git_repo
     assert_in_git_repo
     gitx status -sb
     gitx branch -vv
     gitx tag --list --sort=-creatordate | head -n 5
     ;;
   feature)
-    if [[ -z "$NAME" ]]; then
-      die "Feature name required"
-    fi
+    [[ -n "$NAME" ]] || die "Feature name required"
     assert_in_git_repo
     assert_clean_working_tree
     gitx fetch --prune
@@ -156,50 +109,55 @@ case "$COMMAND" in
     gitx checkout -b "$branch"
     ;;
   hotfix)
-    if [[ -z "$NAME" ]]; then
-      die "Hotfix name required"
-    fi
-    assert_in_git_repo
-    assert_clean_working_tree
-    gitx fetch --prune
-    assert_branch_exists "develop"
-    checkout_branch "develop"
-      die "Feature name required"
-    fi
+    [[ -n "$NAME" ]] || die "Hotfix name required"
     assert_in_git_repo
     assert_clean_working_tree
     gitx fetch --prune
     assert_branch_exists "develop"
     checkout_branch "develop"
     gitx pull --ff-only
-    branch="feature/$NAME"
+    branch="hotfix/$NAME"
     assert_branch_does_not_exist "$branch"
     gitx checkout -b "$branch"
     ;;
-  hotfix)
-    if [[ -z "$NAME" ]]; then
-      die "Hotfix name required"
-    fi
+  backmerge)
     assert_in_git_repo
     assert_clean_working_tree
     gitx fetch --prune
     assert_branch_exists "develop"
+    assert_branch_exists "main"
+    checkout_branch "main"
+    gitx pull --ff-only
     checkout_branch "develop"
     gitx pull --ff-only
-    branch="hotfix/$NAME"
-    assert_branch_does_not_exist "$branch"
-    gitx checkout -b "$branch"
-    branch="hotfix/$NAME"
-    assert_branch_does_not_exist "$branch"
-    gitx checkout -b "$branch"
+
+    ahead_behind="$(git rev-list --left-right --count origin/develop...origin/main 2>/dev/null || true)"
+    develop_only="$(echo "$ahead_behind" | awk '{print $1}' 2>/dev/null || echo "")"
+    main_only="$(echo "$ahead_behind" | awk '{print $2}' 2>/dev/null || echo "")"
+    if [[ -n "$main_only" && "$main_only" -eq 0 ]]; then
+      echo "develop already contains all commits from main."
+      exit 0
+    fi
+    if [[ -n "$develop_only" && "$develop_only" -gt 0 ]]; then
+      echo "warning: origin/develop has $develop_only commit(s) not in origin/main. Backmerging main will create a merge commit." >&2
+    fi
+    if [[ -n "$main_only" ]]; then
+      echo "main has $main_only commit(s) to backmerge into develop."
+    fi
+
+    gitx merge --no-ff main -m "backmerge: main -> develop"
+    echo "Backmerge complete (local)."
+    echo "Push develop: git push origin develop"
     ;;
   release)
-    if [[ -z "$NAME" ]]; then
-      die "Version required (e.g. 1.1.0)"
-    fi
+    [[ -n "$NAME" ]] || die "Version required (e.g. 1.1.0 or v1.1.0)"
     assert_in_git_repo
     assert_clean_working_tree
-    tag="v$NAME"
+    version="$NAME"
+    if [[ "$version" =~ ^v[0-9] ]]; then
+      version="${version:1}"
+    fi
+    tag="v$version"
     gitx fetch --prune --tags
     assert_tag_does_not_exist "$tag"
     assert_branch_exists "develop"
@@ -209,22 +167,19 @@ case "$COMMAND" in
     checkout_branch "main"
     gitx pull --ff-only
 
-    if ! git merge-base --is-ancestor origin/develop origin/main >/dev/null 2>&1; then
-      cat >&2 <<EOF
-Cannot create a release tag because origin/main does not contain origin/develop yet.
-
-Next steps:
-  1) Ensure VERSION is updated and synced (tools/scripts/version_sync.sh)
-  2) Commit + push to develop
-  3) Open and merge the PR develop -> main
-  4) Re-run: ./tools/scripts/git_flow.sh release $NAME
-EOF
-      exit 1
+    ahead_behind="$(git rev-list --left-right --count origin/main...origin/develop 2>/dev/null || true)"
+    main_only="$(echo "$ahead_behind" | awk '{print $1}' 2>/dev/null || echo "")"
+    develop_only="$(echo "$ahead_behind" | awk '{print $2}' 2>/dev/null || echo "")"
+    if [[ -n "$develop_only" && "$develop_only" -gt 0 ]]; then
+      echo "warning: origin/develop is ahead of origin/main by $develop_only commit(s). Tagging main anyway." >&2
+    fi
+    if [[ -n "$main_only" && "$main_only" -gt 0 ]]; then
+      echo "warning: origin/main has $main_only commit(s) not in origin/develop. Tagging main anyway." >&2
     fi
 
     checkout_branch "main"
     gitx pull --ff-only
-    gitx tag -a "$tag" -m "release: $NAME"
+    gitx tag -a "$tag" -m "release: $version"
     echo "Created tag $tag on main (local)."
     echo "Push the tag: git push origin $tag"
     ;;
@@ -235,21 +190,12 @@ EOF
     assert_branch_exists "develop"
     assert_branch_exists "main"
     checkout_branch "develop"
-    assert_in_git_repo
-    assert_clean_working_tree
-    gitx fetch --prune
-    assert_branch_exists "develop"
-    assert_branch_exists "main"
-    checkout_branch "develop"
     gitx pull --ff-only
     checkout_branch "main"
-    checkout_branch "main"
     gitx pull --ff-only
-    checkout_branch "develop"
     checkout_branch "develop"
     ;;
   *)
-    die "Usage: git_flow.sh <status|feature|hotfix|release|sync> [name|version]"
-    die "Usage: git_flow.sh <status|feature|hotfix|release|sync> [name|version]"
+    die "Usage: git_flow.sh <status|feature|hotfix|backmerge|release|sync> [name|version]"
     ;;
 esac
