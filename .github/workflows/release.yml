@@ -115,51 +115,66 @@ jobs:
       - name: Publish oxide_annotations
         if: ${{ env.PUB_CREDENTIALS != '' }}
         working-directory: flutter/oxide_annotations
+        timeout-minutes: 15
         shell: bash
         run: |
           set -euo pipefail
-          output=""
-          if ! output="$(dart pub publish --force 2>&1)"; then
-            exit_code="$?"
-            printf '%s\n' "$output"
-            if printf '%s\n' "$output" | grep -qiE '(already (published|exists)|version.*already)'; then
+          # Stream output live so the workflow log doesn't appear "stuck" while publish runs.
+          # We still capture it to detect the "already published" case.
+          publish_log="$(mktemp)"
+          set +e
+          dart pub publish --force 2>&1 | tee "$publish_log"
+          exit_code="${PIPESTATUS[0]}"
+          set -e
+
+          if [[ "$exit_code" != "0" ]]; then
+            if grep -qiE '(already (published|exists)|version.*already)' "$publish_log"; then
               echo "oxide_annotations@$VERSION is already published; skipping."
               exit 0
             fi
             exit "$exit_code"
           fi
-          printf '%s\n' "$output"
       - name: Publish oxide_generator
         if: ${{ env.PUB_CREDENTIALS != '' }}
         working-directory: flutter/oxide_generator
+        timeout-minutes: 15
         shell: bash
         run: |
           set -euo pipefail
-          output=""
-          if ! output="$(dart pub publish --force 2>&1)"; then
-            exit_code="$?"
-            printf '%s\n' "$output"
-            if printf '%s\n' "$output" | grep -qiE '(already (published|exists)|version.*already)'; then
+          # Stream output live so the workflow log doesn't appear "stuck" while publish runs.
+          # We still capture it to detect the "already published" case.
+          publish_log="$(mktemp)"
+          set +e
+          dart pub publish --force 2>&1 | tee "$publish_log"
+          exit_code="${PIPESTATUS[0]}"
+          set -e
+
+          if [[ "$exit_code" != "0" ]]; then
+            if grep -qiE '(already (published|exists)|version.*already)' "$publish_log"; then
               echo "oxide_generator@$VERSION is already published; skipping."
               exit 0
             fi
             exit "$exit_code"
           fi
-          printf '%s\n' "$output"
       - name: Publish oxide_runtime
         if: ${{ env.PUB_CREDENTIALS != '' }}
         working-directory: flutter/oxide_runtime
+        timeout-minutes: 15
         shell: bash
         run: |
           set -euo pipefail
-          output=""
-          if ! output="$(dart pub publish --force 2>&1)"; then
-            exit_code="$?"
-            printf '%s\n' "$output"
-            if printf '%s\n' "$output" | grep -qiE '(already (published|exists)|version.*already)'; then
+          # Stream output live so the workflow log doesn't appear "stuck" while publish runs.
+          # We still capture it to detect the "already published" case.
+          publish_log="$(mktemp)"
+          set +e
+          dart pub publish --force 2>&1 | tee "$publish_log"
+          exit_code="${PIPESTATUS[0]}"
+          set -e
+
+          if [[ "$exit_code" != "0" ]]; then
+            if grep -qiE '(already (published|exists)|version.*already)' "$publish_log"; then
               echo "oxide_runtime@$VERSION is already published; skipping."
               exit 0
             fi
             exit "$exit_code"
           fi
-          printf '%s\n' "$output"
