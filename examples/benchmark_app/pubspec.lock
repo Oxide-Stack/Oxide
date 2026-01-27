@@ -472,21 +472,21 @@ packages:
       path: "../../flutter/oxide_annotations"
       relative: true
     source: path
-    version: "1.0.0"
+    version: "0.1.0"
   oxide_generator:
     dependency: "direct dev"
     description:
       path: "../../flutter/oxide_generator"
       relative: true
     source: path
-    version: "1.0.0"
+    version: "0.1.0"
   oxide_runtime:
     dependency: "direct main"
     description:
       path: "../../flutter/oxide_runtime"
       relative: true
     source: path
-    version: "1.0.0"
+    version: "0.1.0"
   package_config:
     dependency: transitive
     description:
@@ -573,7 +573,7 @@ packages:
       path: rust_builder
       relative: true
     source: path
-    version: "1.0.0"
+    version: "0.1.0"
   shelf:
     dependency: transitive
     description:

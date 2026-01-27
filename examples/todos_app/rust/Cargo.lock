@@ -520,7 +520,7 @@ dependencies = [
 
 [[package]]
 name = "oxide_core"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "bincode",
  "flutter_rust_bridge",
@@ -533,7 +533,7 @@ dependencies = [
 
 [[package]]
 name = "oxide_macros"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -641,7 +641,7 @@ checksum = "c08c74e62047bb2de4ff487b251e4a92e24f48745648451635cec7d591162d9f"
 
 [[package]]
 name = "rust_lib_counter_app"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "flutter_rust_bridge",
  "oxide_core",

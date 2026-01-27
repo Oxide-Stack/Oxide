@@ -16,15 +16,15 @@ In your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxide_macros = "1.0.0"
-oxide_core = "1.0.0"
+oxide_macros = "0.1.0"
+oxide_core = "0.1.0"
 ```
 
 When working inside this repository, use combined version + path dependencies (Cargo prefers `path` locally, while published crates resolve by `version`):
 
 ```toml
-oxide_core = { version = "1.0.0", path = "../rust/oxide_core" }
-oxide_macros = { version = "1.0.0", path = "../rust/oxide_macros" }
+oxide_core = { version = "0.1.0", path = "../rust/oxide_core" }
+oxide_macros = { version = "0.1.0", path = "../rust/oxide_macros" }
 ```
 
 ## Macros
