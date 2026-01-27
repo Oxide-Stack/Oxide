@@ -24,7 +24,7 @@ set -euo pipefail
 #   - hotfix <name>
 #       Creates hotfix/<name> from the latest develop.
 #   - backmerge
-#       Merges main back into develop to keep develop up-to-date with main-only changes.
+#       Realigns develop to main (recommended when main uses squash merges from develop).
 #   - sync
 #       Updates local develop and main from origin (ff-only).
 #   - release <version>
@@ -126,28 +126,39 @@ case "$COMMAND" in
     gitx fetch --prune
     assert_branch_exists "develop"
     assert_branch_exists "main"
+    ahead_behind="$(git rev-list --left-right --count origin/develop...origin/main 2>/dev/null || true)"
+    develop_only="$(echo "$ahead_behind" | awk '{print $1}' 2>/dev/null || echo "")"
+    main_only="$(echo "$ahead_behind" | awk '{print $2}' 2>/dev/null || echo "")"
+    if [[ -n "$main_only" && -n "$develop_only" && "$main_only" -eq 0 && "$develop_only" -eq 0 ]]; then
+      echo "develop and main are aligned on origin."
+      exit 0
+    fi
+    if [[ -n "$main_only" && "$main_only" -eq 0 ]]; then
+      echo "main has no commits to apply onto develop."
+      exit 0
+    fi
+    if [[ -n "$develop_only" && "$develop_only" -gt 0 ]]; then
+      echo "warning: develop has $develop_only commit(s) not in main. In a squash-merge workflow, those commits are usually already represented on main as squashed commits." >&2
+    fi
+    if [[ -n "$main_only" ]]; then
+      echo "main has $main_only commit(s) not in develop."
+    fi
+
     checkout_branch "main"
     gitx pull --ff-only
     checkout_branch "develop"
     gitx pull --ff-only
 
-    ahead_behind="$(git rev-list --left-right --count origin/develop...origin/main 2>/dev/null || true)"
-    develop_only="$(echo "$ahead_behind" | awk '{print $1}' 2>/dev/null || echo "")"
-    main_only="$(echo "$ahead_behind" | awk '{print $2}' 2>/dev/null || echo "")"
-    if [[ -n "$main_only" && "$main_only" -eq 0 ]]; then
-      echo "develop already contains all commits from main."
-      exit 0
-    fi
-    if [[ -n "$develop_only" && "$develop_only" -gt 0 ]]; then
-      echo "warning: origin/develop has $develop_only commit(s) not in origin/main. Backmerging main will create a merge commit." >&2
-    fi
-    if [[ -n "$main_only" ]]; then
-      echo "main has $main_only commit(s) to backmerge into develop."
+    local_ahead_behind="$(git rev-list --left-right --count origin/develop...develop 2>/dev/null || true)"
+    origin_only="$(echo "$local_ahead_behind" | awk '{print $1}' 2>/dev/null || echo "")"
+    local_only="$(echo "$local_ahead_behind" | awk '{print $2}' 2>/dev/null || echo "")"
+    if [[ -n "$local_only" && "$local_only" -gt 0 ]]; then
+      die "Local develop has commits not on origin/develop. Push or move them before backmerge."
     fi
 
-    gitx merge --no-ff main -m "backmerge: main -> develop"
-    echo "Backmerge complete (local)."
-    echo "Push develop: git push origin develop"
+    gitx reset --hard origin/main
+    echo "Develop realigned to origin/main (local)."
+    echo "Push develop: git push --force-with-lease origin develop"
     ;;
   release)
     [[ -n "$NAME" ]] || die "Version required (e.g. 1.1.0 or v1.1.0)"

@@ -24,7 +24,7 @@ Commands:
   - hotfix <name>
       Creates hotfix/<name> from the latest develop.
   - backmerge
-      Merges main back into develop to keep develop up-to-date with main-only changes.
+      Realigns develop to main (recommended when main uses squash merges from develop).
   - sync
       Updates local develop and main from origin (ff-only).
   - release <version>
@@ -147,20 +147,29 @@ switch ($Cmd) {
       if ($parts.Count -ge 2) {
         $developOnly = [int]$parts[0]
         $mainOnly = [int]$parts[1]
-        if ($mainOnly -eq 0) {
-          Write-Host "develop already contains all commits from main."
+        if ($mainOnly -eq 0 -and $developOnly -eq 0) {
+          Write-Host "develop and main are aligned on origin."
           return
         }
-        if ($developOnly -gt 0) {
-          Write-Warning ("origin/develop has {0} commit(s) not in origin/main. Backmerging main will create a merge commit." -f $developOnly)
+        if ($mainOnly -eq 0) {
+          Write-Host "main has no commits to apply onto develop."
+          return
         }
-        Write-Host ("main has {0} commit(s) to backmerge into develop." -f $mainOnly)
+        Write-Host ("main has {0} commit(s) not in develop." -f $mainOnly)
+        if ($developOnly -gt 0) {
+          Write-Warning ("develop has {0} commit(s) not in main. In a squash-merge workflow, those commits are usually already represented on main as squashed commits." -f $developOnly)
+        }
       }
     }
 
     if ($DryRun) {
-      Write-Host "Dry run: would merge main into develop."
-      Write-Host "To run: pwsh ./tools/scripts/git_flow.ps1 backmerge"
+      Write-Host "Dry run: would realign develop to main using a reset (squash-merge friendly)."
+      $originMain = (& git rev-parse origin/main 2>$null).Trim()
+      $originDevelop = (& git rev-parse origin/develop 2>$null).Trim()
+      if (-not [string]::IsNullOrWhiteSpace($originMain)) { Write-Host "origin/main:   $originMain" }
+      if (-not [string]::IsNullOrWhiteSpace($originDevelop)) { Write-Host "origin/develop: $originDevelop" }
+      Write-Host "To run:        pwsh ./tools/scripts/git_flow.ps1 backmerge"
+      Write-Host "Then push:     git push --force-with-lease origin develop"
       return
     }
 
@@ -169,10 +178,22 @@ switch ($Cmd) {
     gitx pull --ff-only
     Checkout-Branch "develop"
     gitx pull --ff-only
-    Checkout-Branch "develop"
-    gitx merge --no-ff main -m "backmerge: main -> develop"
-    Write-Host "Backmerge complete (local)."
-    Write-Host "Push develop: git push origin develop"
+
+    $localAheadBehind = (& git rev-list --left-right --count origin/develop...develop 2>$null).Trim()
+    if (-not [string]::IsNullOrWhiteSpace($localAheadBehind)) {
+      $parts = $localAheadBehind -split '\s+'
+      if ($parts.Count -ge 2) {
+        $originOnly = [int]$parts[0]
+        $localOnly = [int]$parts[1]
+        if ($localOnly -gt 0) {
+          throw "Local develop has commits not on origin/develop. Push or move them before backmerge."
+        }
+      }
+    }
+
+    gitx reset --hard origin/main
+    Write-Host "Develop realigned to origin/main (local)."
+    Write-Host "Push develop: git push --force-with-lease origin develop"
   }
 
   "release" {
