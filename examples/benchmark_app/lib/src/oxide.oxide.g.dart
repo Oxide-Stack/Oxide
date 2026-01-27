@@ -189,6 +189,53 @@ class BenchCounterBlocOxideCubit
   }
 }
 
+class BenchCounterBlocOxideScope extends StatefulWidget {
+  const BenchCounterBlocOxideScope({
+    super.key,
+    required this.child,
+    this.cubit,
+  });
+
+  final Widget child;
+  final BenchCounterBlocOxideCubit? cubit;
+
+  static BenchCounterBlocOxideCubit cubitOf(BuildContext context) {
+    return BlocProvider.of<BenchCounterBlocOxideCubit>(context);
+  }
+
+  @override
+  State<BenchCounterBlocOxideScope> createState() =>
+      _BenchCounterBlocOxideScopeState();
+}
+
+class _BenchCounterBlocOxideScopeState extends State<BenchCounterBlocOxideScope>
+    with AutomaticKeepAliveClientMixin {
+  late final BenchCounterBlocOxideCubit _cubit;
+  late final bool _ownsCubit;
+
+  @override
+  bool get wantKeepAlive => false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownsCubit = widget.cubit == null;
+    _cubit = widget.cubit ?? BenchCounterBlocOxideCubit();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsCubit) unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return BlocProvider.value(value: _cubit, child: widget.child);
+  }
+}
+
 class BenchCounterHooksOxideActions {
   BenchCounterHooksOxideActions._(
     Future<void> Function(CounterAction action) dispatch,
@@ -309,9 +356,13 @@ class BenchCounterHooksOxideScope extends StatefulWidget {
 }
 
 class _BenchCounterHooksOxideScopeState
-    extends State<BenchCounterHooksOxideScope> {
+    extends State<BenchCounterHooksOxideScope>
+    with AutomaticKeepAliveClientMixin {
   late final BenchCounterHooksOxideController _controller;
   late final bool _ownsController;
+
+  @override
+  bool get wantKeepAlive => false;
 
   @override
   void initState() {
@@ -328,6 +379,7 @@ class _BenchCounterHooksOxideScopeState
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return _BenchCounterHooksOxideInherited(
       notifier: _controller,
       child: widget.child,
@@ -528,6 +580,49 @@ class BenchJsonBlocOxideCubit
   }
 }
 
+class BenchJsonBlocOxideScope extends StatefulWidget {
+  const BenchJsonBlocOxideScope({super.key, required this.child, this.cubit});
+
+  final Widget child;
+  final BenchJsonBlocOxideCubit? cubit;
+
+  static BenchJsonBlocOxideCubit cubitOf(BuildContext context) {
+    return BlocProvider.of<BenchJsonBlocOxideCubit>(context);
+  }
+
+  @override
+  State<BenchJsonBlocOxideScope> createState() =>
+      _BenchJsonBlocOxideScopeState();
+}
+
+class _BenchJsonBlocOxideScopeState extends State<BenchJsonBlocOxideScope>
+    with AutomaticKeepAliveClientMixin {
+  late final BenchJsonBlocOxideCubit _cubit;
+  late final bool _ownsCubit;
+
+  @override
+  bool get wantKeepAlive => false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownsCubit = widget.cubit == null;
+    _cubit = widget.cubit ?? BenchJsonBlocOxideCubit();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsCubit) unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return BlocProvider.value(value: _cubit, child: widget.child);
+  }
+}
+
 class BenchJsonHooksOxideActions {
   BenchJsonHooksOxideActions._(
     Future<void> Function(JsonAction action) dispatch,
@@ -646,9 +741,13 @@ class BenchJsonHooksOxideScope extends StatefulWidget {
       _BenchJsonHooksOxideScopeState();
 }
 
-class _BenchJsonHooksOxideScopeState extends State<BenchJsonHooksOxideScope> {
+class _BenchJsonHooksOxideScopeState extends State<BenchJsonHooksOxideScope>
+    with AutomaticKeepAliveClientMixin {
   late final BenchJsonHooksOxideController _controller;
   late final bool _ownsController;
+
+  @override
+  bool get wantKeepAlive => false;
 
   @override
   void initState() {
@@ -665,6 +764,7 @@ class _BenchJsonHooksOxideScopeState extends State<BenchJsonHooksOxideScope> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return _BenchJsonHooksOxideInherited(
       notifier: _controller,
       child: widget.child,
@@ -867,6 +967,49 @@ class BenchSieveBlocOxideCubit
   }
 }
 
+class BenchSieveBlocOxideScope extends StatefulWidget {
+  const BenchSieveBlocOxideScope({super.key, required this.child, this.cubit});
+
+  final Widget child;
+  final BenchSieveBlocOxideCubit? cubit;
+
+  static BenchSieveBlocOxideCubit cubitOf(BuildContext context) {
+    return BlocProvider.of<BenchSieveBlocOxideCubit>(context);
+  }
+
+  @override
+  State<BenchSieveBlocOxideScope> createState() =>
+      _BenchSieveBlocOxideScopeState();
+}
+
+class _BenchSieveBlocOxideScopeState extends State<BenchSieveBlocOxideScope>
+    with AutomaticKeepAliveClientMixin {
+  late final BenchSieveBlocOxideCubit _cubit;
+  late final bool _ownsCubit;
+
+  @override
+  bool get wantKeepAlive => false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownsCubit = widget.cubit == null;
+    _cubit = widget.cubit ?? BenchSieveBlocOxideCubit();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsCubit) unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return BlocProvider.value(value: _cubit, child: widget.child);
+  }
+}
+
 class BenchSieveHooksOxideActions {
   BenchSieveHooksOxideActions._(
     Future<void> Function(SieveAction action) dispatch,
@@ -986,9 +1129,13 @@ class BenchSieveHooksOxideScope extends StatefulWidget {
       _BenchSieveHooksOxideScopeState();
 }
 
-class _BenchSieveHooksOxideScopeState extends State<BenchSieveHooksOxideScope> {
+class _BenchSieveHooksOxideScopeState extends State<BenchSieveHooksOxideScope>
+    with AutomaticKeepAliveClientMixin {
   late final BenchSieveHooksOxideController _controller;
   late final bool _ownsController;
+
+  @override
+  bool get wantKeepAlive => false;
 
   @override
   void initState() {
@@ -1005,6 +1152,7 @@ class _BenchSieveHooksOxideScopeState extends State<BenchSieveHooksOxideScope> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return _BenchSieveHooksOxideInherited(
       notifier: _controller,
       child: widget.child,

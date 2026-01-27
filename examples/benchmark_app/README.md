@@ -8,8 +8,10 @@ Benchmark example that compares “Dart-only” state updates vs Rust/Oxide-back
 - Fair(er) measurement practices: warmup runs, multiple samples, and sequential execution.
 - Comparing “Dart-only” state updates vs Rust/Oxide-backed state updates across Riverpod/BLoC/Hooks.
 - End-to-end Rust ↔ Flutter wiring (FRB + `@OxideStore` + generated glue) in a performance-focused app.
+- Multi-engine store declarations using `bindings` to avoid repeating FRB method names.
 - A deterministic CPU-bound benchmark (“sieve”) implemented in both Dart-only and Rust-backed variants.
 - Tabular summaries (median/mean/p95) plus a dedicated charts view for median/mean/p95 bars.
+- Charts view includes run context (iterations/samples/warmup) and a quick fastest/slowest summary.
 
 ## Notes on fairness / interpretation
 

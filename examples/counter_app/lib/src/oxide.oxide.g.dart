@@ -120,9 +120,13 @@ class StateBridgeOxideScope extends StatefulWidget {
   State<StateBridgeOxideScope> createState() => _StateBridgeOxideScopeState();
 }
 
-class _StateBridgeOxideScopeState extends State<StateBridgeOxideScope> {
+class _StateBridgeOxideScopeState extends State<StateBridgeOxideScope>
+    with AutomaticKeepAliveClientMixin {
   late final StateBridgeOxideController _controller;
   late final bool _ownsController;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -139,6 +143,7 @@ class _StateBridgeOxideScopeState extends State<StateBridgeOxideScope> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return _StateBridgeOxideInherited(
       notifier: _controller,
       child: widget.child,
@@ -269,10 +274,13 @@ class StateBridgeHooksOxideScope extends StatefulWidget {
       _StateBridgeHooksOxideScopeState();
 }
 
-class _StateBridgeHooksOxideScopeState
-    extends State<StateBridgeHooksOxideScope> {
+class _StateBridgeHooksOxideScopeState extends State<StateBridgeHooksOxideScope>
+    with AutomaticKeepAliveClientMixin {
   late final StateBridgeHooksOxideController _controller;
   late final bool _ownsController;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -289,6 +297,7 @@ class _StateBridgeHooksOxideScopeState
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return _StateBridgeHooksOxideInherited(
       notifier: _controller,
       child: widget.child,
@@ -335,16 +344,13 @@ class StateBridgeRiverpodOxideActions {
 }
 
 final stateBridgeRiverpodOxideProvider =
-    AutoDisposeNotifierProvider<
+    NotifierProvider<
       StateBridgeRiverpodOxideNotifier,
       OxideView<AppState, StateBridgeRiverpodOxideActions>
     >(() => StateBridgeRiverpodOxideNotifier());
 
 class StateBridgeRiverpodOxideNotifier
-    extends
-        AutoDisposeNotifier<
-          OxideView<AppState, StateBridgeRiverpodOxideActions>
-        > {
+    extends Notifier<OxideView<AppState, StateBridgeRiverpodOxideActions>> {
   StateBridgeRiverpodOxideNotifier();
 
   late final StateBridgeRiverpodOxideActions actions =
@@ -481,5 +487,48 @@ class StateBridgeBlocOxideCubit
     await _subscription?.cancel();
     await _core.dispose();
     return super.close();
+  }
+}
+
+class StateBridgeBlocOxideScope extends StatefulWidget {
+  const StateBridgeBlocOxideScope({super.key, required this.child, this.cubit});
+
+  final Widget child;
+  final StateBridgeBlocOxideCubit? cubit;
+
+  static StateBridgeBlocOxideCubit cubitOf(BuildContext context) {
+    return BlocProvider.of<StateBridgeBlocOxideCubit>(context);
+  }
+
+  @override
+  State<StateBridgeBlocOxideScope> createState() =>
+      _StateBridgeBlocOxideScopeState();
+}
+
+class _StateBridgeBlocOxideScopeState extends State<StateBridgeBlocOxideScope>
+    with AutomaticKeepAliveClientMixin {
+  late final StateBridgeBlocOxideCubit _cubit;
+  late final bool _ownsCubit;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownsCubit = widget.cubit == null;
+    _cubit = widget.cubit ?? StateBridgeBlocOxideCubit();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsCubit) unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return BlocProvider.value(value: _cubit, child: widget.child);
   }
 }

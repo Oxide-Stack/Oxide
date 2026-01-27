@@ -61,6 +61,23 @@ The generator emits backend-specific glue. Depending on `backend: OxideBackend..
 - An actions facade that calls into the FRB-generated `dispatch(...)`
 - A UI adapter (scope/widget/provider) that exposes an `OxideView<State, Actions>` or equivalent access pattern
 
+## Lifetime / Keep-Alive
+
+`@OxideStore` supports a single lifetime knob: `keepAlive` (default: `false`).
+
+When `keepAlive: true`, the generator keeps the store alive when possible:
+
+- Inherited / Hooks / BLoC: the generated scope widget requests keep-alive so tab/page views do not dispose it when off-screen
+- Riverpod: the generator emits a non-autoDispose provider so the store is not disposed when un-watched
+
+### BLoC scopes
+
+For `OxideBackend.bloc`, the generator emits a `...Cubit` and a `...Scope` widget that provides the cubit. The scope uses `flutter_bloc` (`BlocProvider`), so the source file containing your `part '...oxide.g.dart';` must import `package:flutter_bloc/flutter_bloc.dart`.
+
+## Multi-engine bindings
+
+For multi-engine apps, `@OxideStore` supports `bindings` (an import alias string). When provided, default binding method names are qualified automatically so you don’t need to repeat `createEngine/dispatch/current/stateStream/...` for every engine.
+
 Exact output shapes are easiest to understand by inspecting an example’s generated file, e.g.:
 
 - `examples/counter_app/lib/src/oxide.oxide.g.dart`

@@ -357,7 +357,11 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
             alignment: Alignment.centerLeft,
             child: FilledButton.tonal(
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => _ChartsView(samplesByVariant: _samplesByVariant)));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => _ChartsView(samplesByVariant: _samplesByVariant, iterations: _iterations, samples: _samples, warmup: _warmup),
+                  ),
+                );
               },
               child: const Text('View Charts'),
             ),
@@ -556,9 +560,12 @@ final class _ResultTable extends StatelessWidget {
 }
 
 final class _ChartsView extends StatelessWidget {
-  const _ChartsView({required this.samplesByVariant});
+  const _ChartsView({required this.samplesByVariant, required this.iterations, required this.samples, required this.warmup});
 
   final Map<BenchVariant, List<Duration>> samplesByVariant;
+  final int iterations;
+  final int samples;
+  final int warmup;
 
   @override
   Widget build(BuildContext context) {
@@ -568,6 +575,12 @@ final class _ChartsView extends StatelessWidget {
       if (summary == null) continue;
       groups.add(BenchMetricGroup(label: v.label, median: summary.median, mean: summary.mean, p95: summary.p95));
     }
+
+    final BenchMetricGroup? fastestMedian = groups.isEmpty ? null : groups.reduce((a, b) => a.median <= b.median ? a : b);
+    final BenchMetricGroup? slowestMedian = groups.isEmpty ? null : groups.reduce((a, b) => a.median >= b.median ? a : b);
+    final double? medianPctFaster = (fastestMedian == null || slowestMedian == null || slowestMedian.median.inMicroseconds == 0)
+        ? null
+        : ((slowestMedian.median.inMicroseconds - fastestMedian.median.inMicroseconds) / slowestMedian.median.inMicroseconds) * 100.0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Benchmark Charts')),
@@ -581,6 +594,19 @@ final class _ChartsView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Median / Mean / P95', style: Theme.of(context).textTheme.titleSmall),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      Chip(label: Text('Iterations: $iterations')),
+                      Chip(label: Text('Samples: $samples')),
+                      Chip(label: Text('Warmup: $warmup')),
+                      if (fastestMedian != null) Chip(label: Text('Fastest (median): ${fastestMedian.label} • ${_fmt(fastestMedian.median)}')),
+                      if (slowestMedian != null) Chip(label: Text('Slowest (median): ${slowestMedian.label} • ${_fmt(slowestMedian.median)}')),
+                      if (medianPctFaster != null) Chip(label: Text('Median delta: ${medianPctFaster.toStringAsFixed(0)}% faster')),
+                    ],
+                  ),
                   const SizedBox(height: 8),
                   const _ChartLegend(),
                   const SizedBox(height: 8),

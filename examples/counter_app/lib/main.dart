@@ -155,8 +155,7 @@ class _BlocPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => StateBridgeBlocOxideCubit(),
+    return StateBridgeBlocOxideScope(
       child: BlocBuilder<StateBridgeBlocOxideCubit, OxideView<AppState, StateBridgeBlocOxideActions>>(
         builder: (context, view) {
           final state = view.state;

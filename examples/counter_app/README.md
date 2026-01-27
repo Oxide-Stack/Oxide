@@ -7,6 +7,15 @@ Minimal example showing basic state management with Oxide + Flutter Rust Bridge 
 - Rust owns the state (`AppState { counter }`) and applies transitions via a reducer.
 - Flutter dispatches typed actions (`Increment`, `Decrement`, `Reset`) into Rust.
 - Flutter receives state updates as a typed stream of snapshots (`AppStateSnapshot`).
+- Four Flutter adapters for the same store idea (Inherited, Hooks, Riverpod, BLoC) shown as tabs.
+
+## State lifetime (tabs)
+
+Each tab owns its own store instance. If a tab subtree is disposed and rebuilt (common in tab/page views), the store may be disposed and recreated, which resets Rust state back to its initial value.
+
+This example opts into keeping tab state alive by using:
+
+- `keepAlive: true` on the `@OxideStore(...)` declarations so each backend keeps its store alive when possible
 
 ## Run
 
@@ -32,4 +41,3 @@ flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 
 - Root project overview: [README.md](../../README.md)
 - Generator docs: [flutter/oxide_generator](../../flutter/oxide_generator)
-

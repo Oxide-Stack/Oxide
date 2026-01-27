@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
@@ -24,6 +24,7 @@ part 'oxide.oxide.g.dart';
   actions: AppAction,
   engine: ArcAppEngine,
   backend: OxideBackend.inherited,
+  keepAlive: true,
   name: 'StateBridgeOxide',
 )
 class StateBridgeOxide {}
@@ -34,6 +35,7 @@ class StateBridgeOxide {}
   actions: AppAction,
   engine: ArcAppEngine,
   backend: OxideBackend.inheritedHooks,
+  keepAlive: true,
   name: 'StateBridgeHooksOxide',
 )
 class StateBridgeHooksOxide {}
@@ -44,6 +46,7 @@ class StateBridgeHooksOxide {}
   actions: AppAction,
   engine: ArcAppEngine,
   backend: OxideBackend.riverpod,
+  keepAlive: true,
   name: 'StateBridgeRiverpodOxide',
 )
 class StateBridgeRiverpodOxide {}
@@ -54,6 +57,7 @@ class StateBridgeRiverpodOxide {}
   actions: AppAction,
   engine: ArcAppEngine,
   backend: OxideBackend.bloc,
+  keepAlive: true,
   name: 'StateBridgeBlocOxide',
 )
 class StateBridgeBlocOxide {}

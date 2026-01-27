@@ -26,6 +26,8 @@ final class OxideStore {
     required this.actions,
     required this.engine,
     this.backend = OxideBackend.inherited,
+    this.keepAlive = false,
+    this.bindings,
     this.createEngine = 'createEngine',
     this.disposeEngine = 'disposeEngine',
     this.dispatch = 'dispatch',
@@ -44,6 +46,31 @@ final class OxideStore {
   final Type engine;
   /// Which Flutter state-management backend to generate for.
   final OxideBackend backend;
+
+  /// Whether the generated store should be kept alive when possible.
+  ///
+  /// This is primarily useful for tab/page view style UIs where off-screen
+  /// subtrees might otherwise be disposed and rebuilt, resetting the store.
+  ///
+  /// Backend behavior:
+  /// - Inherited / Hooks / BLoC: requests keep-alive for the generated scope
+  ///   widget so the store instance is not disposed when off-screen.
+  /// - Riverpod: generates a non-autoDispose provider so the store is not
+  ///   disposed when un-watched.
+  ///
+  /// Defaults to `false`.
+  final bool keepAlive;
+
+  /// Optional import alias used to qualify default binding function names.
+  ///
+  /// This is meant for multi-engine apps where multiple FRB binding libraries
+  /// expose the same method names (e.g. `createEngine`, `dispatch`).
+  ///
+  /// When provided, and you do not override the corresponding string fields,
+  /// the generator prefixes defaults with this value. For example, with
+  /// `bindings: 'counter_api'`, the default `createEngine` becomes
+  /// `counter_api.createEngine`.
+  final String? bindings;
 
   /// Engine creation method name on the bindings object.
   final String createEngine;

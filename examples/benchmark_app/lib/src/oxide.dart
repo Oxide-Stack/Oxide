@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -33,12 +33,7 @@ part 'oxide.oxide.g.dart';
   actions: CounterAction,
   engine: counter_api.ArcCounterEngine,
   backend: OxideBackend.riverpod,
-  name: 'BenchCounterRiverpodOxide',
-  createEngine: 'counter_api.createEngine',
-  disposeEngine: 'counter_api.disposeEngine',
-  dispatch: 'counter_api.dispatch',
-  current: 'counter_api.current',
-  stateStream: 'counter_api.stateStream',
+  bindings: 'counter_api',
 )
 class BenchCounterRiverpodOxide {}
 
@@ -48,12 +43,7 @@ class BenchCounterRiverpodOxide {}
   actions: CounterAction,
   engine: counter_api.ArcCounterEngine,
   backend: OxideBackend.bloc,
-  name: 'BenchCounterBlocOxide',
-  createEngine: 'counter_api.createEngine',
-  disposeEngine: 'counter_api.disposeEngine',
-  dispatch: 'counter_api.dispatch',
-  current: 'counter_api.current',
-  stateStream: 'counter_api.stateStream',
+  bindings: 'counter_api',
 )
 class BenchCounterBlocOxide {}
 
@@ -63,12 +53,7 @@ class BenchCounterBlocOxide {}
   actions: CounterAction,
   engine: counter_api.ArcCounterEngine,
   backend: OxideBackend.inheritedHooks,
-  name: 'BenchCounterHooksOxide',
-  createEngine: 'counter_api.createEngine',
-  disposeEngine: 'counter_api.disposeEngine',
-  dispatch: 'counter_api.dispatch',
-  current: 'counter_api.current',
-  stateStream: 'counter_api.stateStream',
+  bindings: 'counter_api',
 )
 class BenchCounterHooksOxide {}
 
@@ -78,12 +63,7 @@ class BenchCounterHooksOxide {}
   actions: JsonAction,
   engine: json_api.ArcJsonEngine,
   backend: OxideBackend.riverpod,
-  name: 'BenchJsonRiverpodOxide',
-  createEngine: 'json_api.createEngine',
-  disposeEngine: 'json_api.disposeEngine',
-  dispatch: 'json_api.dispatch',
-  current: 'json_api.current',
-  stateStream: 'json_api.stateStream',
+  bindings: 'json_api',
 )
 class BenchJsonRiverpodOxide {}
 
@@ -93,12 +73,7 @@ class BenchJsonRiverpodOxide {}
   actions: JsonAction,
   engine: json_api.ArcJsonEngine,
   backend: OxideBackend.bloc,
-  name: 'BenchJsonBlocOxide',
-  createEngine: 'json_api.createEngine',
-  disposeEngine: 'json_api.disposeEngine',
-  dispatch: 'json_api.dispatch',
-  current: 'json_api.current',
-  stateStream: 'json_api.stateStream',
+  bindings: 'json_api',
 )
 class BenchJsonBlocOxide {}
 
@@ -108,12 +83,7 @@ class BenchJsonBlocOxide {}
   actions: JsonAction,
   engine: json_api.ArcJsonEngine,
   backend: OxideBackend.inheritedHooks,
-  name: 'BenchJsonHooksOxide',
-  createEngine: 'json_api.createEngine',
-  disposeEngine: 'json_api.disposeEngine',
-  dispatch: 'json_api.dispatch',
-  current: 'json_api.current',
-  stateStream: 'json_api.stateStream',
+  bindings: 'json_api',
 )
 class BenchJsonHooksOxide {}
 
@@ -123,12 +93,7 @@ class BenchJsonHooksOxide {}
   actions: SieveAction,
   engine: sieve_api.ArcSieveEngine,
   backend: OxideBackend.riverpod,
-  name: 'BenchSieveRiverpodOxide',
-  createEngine: 'sieve_api.createEngine',
-  disposeEngine: 'sieve_api.disposeEngine',
-  dispatch: 'sieve_api.dispatch',
-  current: 'sieve_api.current',
-  stateStream: 'sieve_api.stateStream',
+  bindings: 'sieve_api',
 )
 class BenchSieveRiverpodOxide {}
 
@@ -138,12 +103,7 @@ class BenchSieveRiverpodOxide {}
   actions: SieveAction,
   engine: sieve_api.ArcSieveEngine,
   backend: OxideBackend.bloc,
-  name: 'BenchSieveBlocOxide',
-  createEngine: 'sieve_api.createEngine',
-  disposeEngine: 'sieve_api.disposeEngine',
-  dispatch: 'sieve_api.dispatch',
-  current: 'sieve_api.current',
-  stateStream: 'sieve_api.stateStream',
+  bindings: 'sieve_api',
 )
 class BenchSieveBlocOxide {}
 
@@ -153,11 +113,6 @@ class BenchSieveBlocOxide {}
   actions: SieveAction,
   engine: sieve_api.ArcSieveEngine,
   backend: OxideBackend.inheritedHooks,
-  name: 'BenchSieveHooksOxide',
-  createEngine: 'sieve_api.createEngine',
-  disposeEngine: 'sieve_api.disposeEngine',
-  dispatch: 'sieve_api.dispatch',
-  current: 'sieve_api.current',
-  stateStream: 'sieve_api.stateStream',
+  bindings: 'sieve_api',
 )
 class BenchSieveHooksOxide {}

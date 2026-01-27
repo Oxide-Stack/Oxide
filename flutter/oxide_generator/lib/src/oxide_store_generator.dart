@@ -30,11 +30,22 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
     final actionsType = _readType(annotation, 'actions');
     final engineType = _readType(annotation, 'engine');
 
-    final createEngine = annotation.read('createEngine').stringValue;
-    final disposeEngine = annotation.read('disposeEngine').stringValue;
-    final dispatchFn = annotation.read('dispatch').stringValue;
-    final stateStreamFn = annotation.read('stateStream').stringValue;
-    final currentFn = annotation.read('current').stringValue;
+    final keepAlive = annotation.peek('keepAlive')?.boolValue ?? false;
+    final bindings = annotation.peek('bindings')?.stringValue;
+
+    var createEngine = annotation.read('createEngine').stringValue;
+    var disposeEngine = annotation.read('disposeEngine').stringValue;
+    var dispatchFn = annotation.read('dispatch').stringValue;
+    var stateStreamFn = annotation.read('stateStream').stringValue;
+    var currentFn = annotation.read('current').stringValue;
+
+    if (bindings != null && bindings.isNotEmpty) {
+      if (createEngine == 'createEngine') createEngine = '$bindings.createEngine';
+      if (disposeEngine == 'disposeEngine') disposeEngine = '$bindings.disposeEngine';
+      if (dispatchFn == 'dispatch') dispatchFn = '$bindings.dispatch';
+      if (stateStreamFn == 'stateStream') stateStreamFn = '$bindings.stateStream';
+      if (currentFn == 'current') currentFn = '$bindings.current';
+    }
     final initAppFn = annotation.peek('initApp')?.stringValue;
     final backendIndex = annotation.peek('backend')?.objectValue.getField('index')?.toIntValue();
     final backend = switch (backendIndex) {
@@ -114,6 +125,7 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
         actionsIsEnum: actionsIsEnum,
         engineType: engineTypeName,
         backend: backend,
+        keepAlive: keepAlive,
         createEngine: createEngine,
         disposeEngine: disposeEngine,
         dispatch: dispatchFn,

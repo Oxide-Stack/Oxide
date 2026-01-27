@@ -11,6 +11,7 @@ final class OxideCodegenConfig {
     required this.actionsIsEnum,
     required this.engineType,
     required this.backend,
+    required this.keepAlive,
     required this.createEngine,
     required this.disposeEngine,
     required this.dispatch,
@@ -30,6 +31,7 @@ final class OxideCodegenConfig {
   final bool actionsIsEnum;
   final String engineType;
   final String backend;
+  final bool keepAlive;
 
   final String createEngine;
   final String disposeEngine;
@@ -181,9 +183,13 @@ class ${c.prefix}Scope extends StatefulWidget {
   State<${c.prefix}Scope> createState() => _${c.prefix}ScopeState();
 }
 
-class _${c.prefix}ScopeState extends State<${c.prefix}Scope> {
+class _${c.prefix}ScopeState extends State<${c.prefix}Scope>
+    with AutomaticKeepAliveClientMixin {
   late final ${c.prefix}Controller _controller;
   late final bool _ownsController;
+
+  @override
+  bool get wantKeepAlive => ${c.keepAlive};
 
   @override
   void initState() {
@@ -200,6 +206,7 @@ class _${c.prefix}ScopeState extends State<${c.prefix}Scope> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return _${c.prefix}Inherited(
       notifier: _controller,
       child: widget.child,
@@ -227,14 +234,14 @@ OxideView<${c.stateType}, ${c.prefix}Actions> use${c.prefix}Oxide() {
 
   final riverpodBackend =
       '''
-final ${_lowerFirst(c.prefix)}Provider = AutoDisposeNotifierProvider<
+final ${_lowerFirst(c.prefix)}Provider = ${c.keepAlive ? 'NotifierProvider' : 'AutoDisposeNotifierProvider'}<
     ${c.prefix}Notifier,
     OxideView<${c.stateType}, ${c.prefix}Actions>>(
   () => ${c.prefix}Notifier(),
 );
 
 class ${c.prefix}Notifier
-    extends AutoDisposeNotifier<OxideView<${c.stateType}, ${c.prefix}Actions>> {
+    extends ${c.keepAlive ? 'Notifier' : 'AutoDisposeNotifier'}<OxideView<${c.stateType}, ${c.prefix}Actions>> {
   ${c.prefix}Notifier();
 
   late final ${c.prefix}Actions actions = ${c.prefix}Actions._(_dispatch);
@@ -328,6 +335,51 @@ $coreInstantiation
     await _subscription?.cancel();
     await _core.dispose();
     return super.close();
+  }
+}
+
+class ${c.prefix}Scope extends StatefulWidget {
+  const ${c.prefix}Scope({super.key, required this.child, this.cubit});
+
+  final Widget child;
+  final ${c.prefix}Cubit? cubit;
+
+  static ${c.prefix}Cubit cubitOf(BuildContext context) {
+    return BlocProvider.of<${c.prefix}Cubit>(context);
+  }
+
+  @override
+  State<${c.prefix}Scope> createState() => _${c.prefix}ScopeState();
+}
+
+class _${c.prefix}ScopeState extends State<${c.prefix}Scope>
+    with AutomaticKeepAliveClientMixin {
+  late final ${c.prefix}Cubit _cubit;
+  late final bool _ownsCubit;
+
+  @override
+  bool get wantKeepAlive => ${c.keepAlive};
+
+  @override
+  void initState() {
+    super.initState();
+    _ownsCubit = widget.cubit == null;
+    _cubit = widget.cubit ?? ${c.prefix}Cubit();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsCubit) unawaited(_cubit.close());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return BlocProvider.value(
+      value: _cubit,
+      child: widget.child,
+    );
   }
 }
 ''';

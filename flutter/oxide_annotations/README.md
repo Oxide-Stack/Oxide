@@ -50,6 +50,32 @@ For a complete working example, see:
 
 - `backend`: which adapter to generate (`OxideBackend.inherited` by default)
 
+### Lifetime
+
+- `keepAlive`: when `true`, the generated backend will keep the store alive when possible (default: `false`).
+  This is most useful for tab/page views where off-screen subtrees may otherwise be disposed and rebuilt.
+
+### Multi-engine bindings
+
+- `bindings`: optional import alias used to qualify default binding function names (e.g. `counter_api`). Useful when multiple engines expose the same method names.
+  With `bindings` set, you can usually omit `createEngine`, `dispatch`, `current`, `stateStream`, etc.
+
+Example:
+
+```dart
+import 'rust/api/counter_bridge.dart' as counter_api;
+
+@OxideStore(
+  state: CounterState,
+  snapshot: counter_api.CounterStateSnapshot,
+  actions: CounterAction,
+  engine: counter_api.ArcCounterEngine,
+  backend: OxideBackend.inheritedHooks,
+  bindings: 'counter_api',
+)
+class BenchCounterHooksOxide {}
+```
+
 ### FRB Function Names
 
 These default to the common Oxide macro-generated surface:
