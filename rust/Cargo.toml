@@ -1,0 +1,11 @@
+[workspace]
+resolver = "3"
+members = [
+  "oxide_core",
+  "oxide_generator_rs"
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"

@@ -1,0 +1,38 @@
+[package]
+name = "oxide_core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Rust engine primitives for Oxide (store, snapshot streams, error model, optional persistence)."
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+homepage = "https://github.com/Oxide-Stack/Oxide"
+repository = "https://github.com/Oxide-Stack/Oxide"
+documentation = "https://docs.rs/oxide_core"
+keywords = ["oxide", "state-management", "redux", "async", "ffi"]
+categories = ["asynchronous", "concurrency", "api-bindings"]
+
+[dependencies]
+tokio = { version = "1.34.0", features = ["full"] }     
+futures = "0.3"                                   
+thiserror = "2"
+tokio-stream = { version = "0.1", features = ["sync"] }
+flutter_rust_bridge = { version = "=2.11.1", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+bincode = { version = "1.3", optional = true }
+serde_json = { version = "1", optional = true }
+
+[features]
+default = ["frb-spawn", "internal-runtime"]
+frb-spawn = ["dep:flutter_rust_bridge"]
+internal-runtime = []
+state-persistence = ["dep:serde", "dep:bincode"]
+persistence-json = ["state-persistence", "dep:serde_json"]
+full = ["state-persistence", "persistence-json", "internal-runtime","frb-spawn"]
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "store_dispatch"
+harness = false

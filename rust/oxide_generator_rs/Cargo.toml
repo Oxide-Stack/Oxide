@@ -1,0 +1,33 @@
+[package]
+name = "oxide_generator_rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural macros for Oxide stores, actions, and reducers (FRB-friendly surface generation)."
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+homepage = "https://github.com/Oxide-Stack/Oxide"
+repository = "https://github.com/Oxide-Stack/Oxide"
+documentation = "https://docs.rs/oxide_generator_rs"
+keywords = ["oxide", "proc-macro", "state-management", "redux", "flutter"]
+categories = ["development-tools::procedural-macro-helpers"]
+
+[dependencies]
+syn = { version = "2.0", features = ["full"] }        # parse Rust code
+quote = "1.0"      # generate Rust code
+proc-macro2 = "1.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[lib]
+proc-macro = true
+
+[features]
+default = ["frb"]
+frb = []
+state-persistence = []
+full = ["frb", "state-persistence"]
+
+[dev-dependencies]
+trybuild = "1.0"
+oxide_core = { version = "0.1.0", path = "../oxide_core", features = ["state-persistence"] }

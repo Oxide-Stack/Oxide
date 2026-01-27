@@ -1,0 +1,10 @@
+name: oxide_annotations
+description: "Shared annotations + small types for Oxide code generation."
+version: 0.1.0
+homepage: https://github.com/Oxide-Stack/Oxide
+repository: https://github.com/Oxide-Stack/Oxide
+documentation: https://github.com/Oxide-Stack/Oxide
+issue_tracker: https://github.com/Oxide-Stack/Oxide/issues
+
+environment:
+  sdk: ^3.10.4

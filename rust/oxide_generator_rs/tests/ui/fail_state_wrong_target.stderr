@@ -1,0 +1,5 @@
+error: #[state] can only be applied to a struct or enum
+ --> tests/ui/fail_state_wrong_target.rs:4:1
+  |
+4 | fn not_a_state() {}
+  | ^^^^^^^^^^^^^^^^^^^

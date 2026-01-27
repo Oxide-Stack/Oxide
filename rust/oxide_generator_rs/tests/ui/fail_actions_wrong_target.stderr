@@ -1,0 +1,5 @@
+error: #[actions] can only be applied to an enum
+ --> tests/ui/fail_actions_wrong_target.rs:4:1
+  |
+4 | pub struct NotActions;
+  | ^^^^^^^^^^^^^^^^^^^^^^
