@@ -1,6 +1,6 @@
 [package]
 name = "rust_lib_counter_app"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
 [lib]
@@ -8,8 +8,8 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.11.1"
-oxide_core = { path = "../../../rust/oxide_core", features = ["state-persistence"] }
-oxide_macros = { path = "../../../rust/oxide_macros", features = ["state-persistence"] }
+oxide_core = { version = "1.0.0", path = "../../../rust/oxide_core", features = ["state-persistence"] }
+oxide_macros = { version = "1.0.0", path = "../../../rust/oxide_macros", features = ["state-persistence"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 

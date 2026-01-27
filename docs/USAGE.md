@@ -439,6 +439,10 @@ Enable it in your Rust dependency:
 oxide_core = { version = "1.0.0", features = ["state-persistence"] }
 ```
 
-When working inside this repository, the examples use path dependencies instead.
+When working inside this repository, use a combined version + path dependency (Cargo prefers `path` locally, while published crates resolve by `version`):
+
+```toml
+oxide_core = { version = "1.0.0", path = "../rust/oxide_core", features = ["state-persistence"] }
+```
 
 Then use the persistence options supported by the reducer macro (see the `todos_app` example for a working configuration).

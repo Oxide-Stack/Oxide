@@ -2,12 +2,14 @@
 Usage:
   .\tools\scripts\build.ps1 -Platform windows
   .\tools\scripts\build.ps1 -Platform android
-Builds Rust workspace and all example apps for the selected platform.
+  .\tools\scripts\build.ps1 -Platform windows -NoExamples
+Builds Rust workspace, Flutter packages, and example apps for the selected platform.
 #>
 param(
   [Parameter(Mandatory = $true)]
   [ValidateSet("android", "ios", "linux", "windows", "macos", "web")]
-  [string] $Platform
+  [string] $Platform,
+  [switch] $NoExamples
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,13 +17,34 @@ $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rootDir = Resolve-Path (Join-Path $scriptDir "..\..")
 
-# Build all projects and example apps.
+# Build all projects, Flutter packages, and example apps.
 
 Push-Location (Join-Path $rootDir "rust")
 try {
   cargo build --workspace
 } finally {
   Pop-Location
+}
+
+$flutterPackages = @(
+  "flutter\oxide_annotations",
+  "flutter\oxide_runtime",
+  "flutter\oxide_generator"
+)
+
+foreach ($dir in $flutterPackages) {
+  Push-Location (Join-Path $rootDir $dir)
+  try {
+    flutter pub get
+    flutter test
+  } finally {
+    Pop-Location
+  }
+}
+
+if ($NoExamples) {
+  Write-Host "Skipping example builds (-NoExamples)"
+  exit 0
 }
 
 $examples = @(

@@ -2,12 +2,15 @@
 name = "oxide_core"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "Rust engine primitives for Oxide (store, snapshot streams, error model, optional persistence)."
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/Oxide-Stack/Oxide"
 repository = "https://github.com/Oxide-Stack/Oxide"
-documentation = "https://github.com/Oxide-Stack/Oxide"
+documentation = "https://docs.rs/oxide_core"
+keywords = ["oxide", "state-management", "redux", "async", "ffi"]
+categories = ["asynchronous", "concurrency", "api-bindings"]
 
 [dependencies]
 tokio = { version = "1.34.0", features = ["full"] }     

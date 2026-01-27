@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 use oxide_core::{Reducer, ReducerEngine, StateChange};
 
@@ -15,9 +15,17 @@ impl Reducer for BenchReducer {
     type Action = BenchAction;
     type SideEffect = ();
 
-    fn init(&mut self, _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>) {}
+    fn init(
+        &mut self,
+        _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
+    ) {
+    }
 
-    fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> oxide_core::CoreResult<StateChange> {
+    fn reduce(
+        &mut self,
+        state: &mut Self::State,
+        action: Self::Action,
+    ) -> oxide_core::CoreResult<StateChange> {
         match action {
             BenchAction::Increment => {
                 *state = state.saturating_add(1);
@@ -26,7 +34,11 @@ impl Reducer for BenchReducer {
         }
     }
 
-    fn effect(&mut self, _state: &mut Self::State, _effect: Self::SideEffect) -> oxide_core::CoreResult<StateChange> {
+    fn effect(
+        &mut self,
+        _state: &mut Self::State,
+        _effect: Self::SideEffect,
+    ) -> oxide_core::CoreResult<StateChange> {
         Ok(StateChange::None)
     }
 }

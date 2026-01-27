@@ -1,41 +1,8 @@
-//! Procedural macros for Oxide.
-//!
-//! This crate provides attribute macros that reduce boilerplate when defining
-//! Oxide reducers, actions, and state types.
-//!
-//! ## Usage
-//! Add `oxide_macros` as a dependency and apply the macros to your types:
-//!
-//! ```rust,ignore
-//! use oxide_macros::{actions, reducer, state};
-//!
-//! #[state]
-//! struct CounterState {
-//!     value: u64,
-//! }
-//!
-//! #[actions]
-//! enum CounterAction {
-//!     Increment,
-//! }
-//!
-//! #[reducer(state = CounterState, actions = CounterAction)]
-//! fn counter_reduce(state: &mut CounterState, action: CounterAction) -> oxide_core::CoreResult<()> {
-//!     match action {
-//!         CounterAction::Increment => {
-//!             state.value += 1;
-//!             Ok(())
-//!         }
-//!     }
-//! }
-//! ```
-//!
-//! Exact generated code is considered an implementation detail, but the intent
-//! is to produce types compatible with the `oxide_core::Reducer` API.
+#![doc = include_str!("../README.md")]
 
 use proc_macro::TokenStream;
-use syn::parse_macro_input;
 use syn::Item;
+use syn::parse_macro_input;
 
 mod derive;
 mod meta;

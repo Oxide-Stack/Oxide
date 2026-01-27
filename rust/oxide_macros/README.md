@@ -20,7 +20,12 @@ oxide_macros = "1.0.0"
 oxide_core = "1.0.0"
 ```
 
-When working inside this repository, the examples use path dependencies instead.
+When working inside this repository, use combined version + path dependencies (Cargo prefers `path` locally, while published crates resolve by `version`):
+
+```toml
+oxide_core = { version = "1.0.0", path = "../rust/oxide_core" }
+oxide_macros = { version = "1.0.0", path = "../rust/oxide_macros" }
+```
 
 ## Macros
 
@@ -36,7 +41,7 @@ Serialization derives (`Serialize`, `Deserialize`) are only added when the `stat
 
 Example (struct state):
 
-```rust
+```rust,ignore
 use oxide_macros::state;
 
 #[state]
@@ -47,7 +52,7 @@ pub struct AppState {
 
 Example (enum state):
 
-```rust
+```rust,ignore
 use oxide_macros::state;
 
 #[state]
@@ -65,7 +70,7 @@ The macro injects the same derives and serde crate attribute as `#[state]`.
 
 Example:
 
-```rust
+```rust,ignore
 use oxide_macros::actions;
 
 #[actions]
@@ -103,7 +108,7 @@ The annotated impl must define:
 
 Example:
 
-```rust
+```rust,ignore
 use oxide_macros::{actions, reducer, state};
 
 #[state]

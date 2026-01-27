@@ -2,13 +2,28 @@
 Usage:
   .\tools\scripts\version_sync.ps1
   .\tools\scripts\version_sync.ps1 -Verify
+  .\tools\scripts\version_sync.ps1 --verify
 Syncs VERSION into Rust workspace, Flutter packages, and example app manifests.
 #>
 param(
-  [switch] $Verify
+  [switch] $Verify,
+  [Parameter(ValueFromRemainingArguments = $true)]
+  [string[]] $RemainingArgs
 )
 
 $ErrorActionPreference = "Stop"
+
+$extraArgs = @()
+foreach ($arg in ($RemainingArgs | Where-Object { $_ -ne $null })) {
+  if ($arg -eq "--verify") {
+    $Verify = $true
+    continue
+  }
+  $extraArgs += $arg
+}
+if ($extraArgs.Count -gt 0) {
+  throw ("Unknown arguments: " + ($extraArgs -join " "))
+}
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rootDir = Resolve-Path (Join-Path $scriptDir "..\..")
@@ -72,29 +87,30 @@ function Set-PubspecVersion([string] $pubspecPath, [string] $newVersion) {
 
 $changes = @()
 
-$pubspecs = @(
-  "flutter\oxide_runtime\pubspec.yaml",
-  "flutter\oxide_generator\pubspec.yaml",
-  "flutter\oxide_annotations\pubspec.yaml",
-  "examples\counter_app\pubspec.yaml",
-  "examples\todos_app\pubspec.yaml",
-  "examples\ticker_app\pubspec.yaml",
-  "examples\benchmark_app\pubspec.yaml"
+$pubspecPaths = @()
+$pubspecRoots = @(
+  (Join-Path $rootDir "flutter"),
+  (Join-Path $rootDir "examples")
 )
+foreach ($root in $pubspecRoots) {
+  if (-not (Test-Path $root)) {
+    continue
+  }
+  $pubspecPaths += Get-ChildItem -Path $root -Filter "pubspec.yaml" -Recurse -File |
+    Where-Object {
+      $_.FullName -notmatch '[\\/](build|ephemeral|\.plugin_symlinks|\.dart_tool)[\\/]'
+    } |
+    ForEach-Object { $_.FullName }
+}
+$pubspecPaths = $pubspecPaths | Sort-Object -Unique
 
-foreach ($relativePath in $pubspecs) {
-  $change = Set-PubspecVersion (Join-Path $rootDir $relativePath) $version
+foreach ($pubspecPath in $pubspecPaths) {
+  $change = Set-PubspecVersion $pubspecPath $version
   if ($change) { $changes += $change }
 }
 
-# Sync intra-repo Flutter dependency constraints.
-$flutterDepPubspecs = @(
-  "flutter\oxide_runtime\pubspec.yaml",
-  "flutter\oxide_generator\pubspec.yaml"
-)
-foreach ($relativePath in $flutterDepPubspecs) {
-  $path = Join-Path $rootDir $relativePath
-  $change = Update-FileText $path {
+foreach ($pubspecPath in $pubspecPaths) {
+  $change = Update-FileText $pubspecPath {
     param($content)
     [regex]::Replace(
       $content,
@@ -102,19 +118,7 @@ foreach ($relativePath in $flutterDepPubspecs) {
       { param($m) $m.Groups['indent'].Value + $m.Groups['name'].Value + ": ^$version" },
       [System.Text.RegularExpressions.RegexOptions]::Multiline
     )
-  } "pubspec deps: $relativePath"
-  if ($change) { $changes += $change }
-}
-
-# Sync example rust_builder pubspecs + podspecs.
-$rustBuilderPubspecs = @(
-  "examples\benchmark_app\rust_builder\pubspec.yaml",
-  "examples\counter_app\rust_builder\pubspec.yaml",
-  "examples\ticker_app\rust_builder\pubspec.yaml",
-  "examples\todos_app\rust_builder\pubspec.yaml"
-)
-foreach ($relativePath in $rustBuilderPubspecs) {
-  $change = Set-PubspecVersion (Join-Path $rootDir $relativePath) $version
+  } "pubspec deps: $pubspecPath"
   if ($change) { $changes += $change }
 }
 
@@ -139,18 +143,6 @@ foreach ($relativePath in $podspecs) {
       [System.Text.RegularExpressions.RegexOptions]::Multiline
     )
   } "podspec version: $relativePath"
-  if ($change) { $changes += $change }
-}
-
-# Sync cargokit build tool versions embedded in example rust_builder folders.
-$cargokitBuildToolPubspecs = @(
-  "examples\benchmark_app\rust_builder\cargokit\build_tool\pubspec.yaml",
-  "examples\counter_app\rust_builder\cargokit\build_tool\pubspec.yaml",
-  "examples\ticker_app\rust_builder\cargokit\build_tool\pubspec.yaml",
-  "examples\todos_app\rust_builder\cargokit\build_tool\pubspec.yaml"
-)
-foreach ($relativePath in $cargokitBuildToolPubspecs) {
-  $change = Set-PubspecVersion (Join-Path $rootDir $relativePath) $version
   if ($change) { $changes += $change }
 }
 
@@ -206,16 +198,80 @@ $change = Update-FileText $cargoTomlPath {
 } "rust workspace version: rust/Cargo.toml"
 if ($change) { $changes += $change }
 
-# Sync documented versions (README + changelog).
+# Sync example Rust crate package versions.
+$exampleCargoTomlPaths = @()
+$examplesDir = Join-Path $rootDir "examples"
+if (Test-Path $examplesDir) {
+  $exampleCargoTomlPaths = Get-ChildItem -Path $examplesDir -Filter "Cargo.toml" -Recurse -File |
+    Where-Object {
+      $_.FullName -match '[\\/]examples[\\/][^\\/]+[\\/]rust[\\/]Cargo\.toml$' -and
+      $_.FullName -notmatch '[\\/](build|ephemeral|\.plugin_symlinks|\.dart_tool)[\\/]'
+    } |
+    ForEach-Object { $_.FullName } |
+    Sort-Object -Unique
+}
+foreach ($cargoPath in $exampleCargoTomlPaths) {
+  $change = Update-FileText $cargoPath {
+    param($content)
+    $match = [regex]::Match(
+      $content,
+      '(?ms)^\[package\]\s*$([\s\S]*?)(?=^\[|\z)'
+    )
+    if (-not $match.Success) {
+      return $content
+    }
+    $section = $match.Value
+    $versionMatch = [regex]::Match($section, '(?m)^version\s*=\s*\"[^\"]*\"')
+    if (-not $versionMatch.Success) {
+      return $content
+    }
+    $updatedSection = $section.Remove($versionMatch.Index, $versionMatch.Length).Insert(
+      $versionMatch.Index,
+      "version = ""$version"""
+    )
+    return $content.Remove($match.Index, $match.Length).Insert($match.Index, $updatedSection)
+  } "cargo package version sync: $cargoPath"
+  if ($change) { $changes += $change }
+}
+
+# Sync Oxide intra-repo Rust dependency versions in Cargo manifests (version + path entries).
+$cargoTomlPaths = @()
+$cargoRoots = @(
+  (Join-Path $rootDir "rust"),
+  (Join-Path $rootDir "examples")
+)
+foreach ($root in $cargoRoots) {
+  if (-not (Test-Path $root)) {
+    continue
+  }
+  $cargoTomlPaths += Get-ChildItem -Path $root -Filter "Cargo.toml" -Recurse -File |
+    Where-Object {
+      $_.FullName -notmatch '[\\/]rust[\\/]target[\\/]'
+    } |
+    Where-Object {
+      $_.FullName -notmatch '[\\/](build|ephemeral|\.plugin_symlinks|\.dart_tool)[\\/]'
+    } |
+    ForEach-Object { $_.FullName }
+}
+$cargoTomlPaths = $cargoTomlPaths | Sort-Object -Unique
+foreach ($cargoPath in $cargoTomlPaths) {
+  $change = Update-FileText $cargoPath {
+    param($content)
+    [regex]::Replace(
+      $content,
+      '(?<name>oxide_(core|macros))\s*=\s*\{\s*version\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"',
+      { param($m) $m.Groups['name'].Value + " = { version = ""$version""" }
+    )
+  } "cargo dep sync: $cargoPath"
+  if ($change) { $changes += $change }
+}
+
+# Sync documented versions (README).
 $docsToUpdate = @(
   @{ Path = "README.md"; Label = "root README" },
-  @{ Path = "CHANGELOG.md"; Label = "root changelog" },
   @{ Path = "rust\oxide_core\README.md"; Label = "oxide_core README" },
   @{ Path = "rust\oxide_macros\README.md"; Label = "oxide_macros README" },
-  @{ Path = "flutter\oxide_generator\README.md"; Label = "oxide_generator README" },
-  @{ Path = "flutter\oxide_runtime\CHANGELOG.md"; Label = "oxide_runtime changelog" },
-  @{ Path = "flutter\oxide_generator\CHANGELOG.md"; Label = "oxide_generator changelog" },
-  @{ Path = "flutter\oxide_annotations\CHANGELOG.md"; Label = "oxide_annotations changelog" }
+  @{ Path = "flutter\oxide_generator\README.md"; Label = "oxide_generator README" }
 )
 
 foreach ($entry in $docsToUpdate) {

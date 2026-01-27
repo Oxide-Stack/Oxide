@@ -9,7 +9,6 @@ flutter/target/
 **/linux/flutter/ephemeral/
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
-**/pubspec_overrides.yaml
 .env
 .env.*
 *.key

@@ -1,4 +1,4 @@
-use tokio_stream::{wrappers::WatchStream, StreamExt};
+use tokio_stream::{StreamExt, wrappers::WatchStream};
 
 use crate::{CoreError, CoreResult, Reducer, ReducerEngine, StateChange};
 
@@ -105,7 +105,10 @@ async fn engine_does_not_commit_state_on_error() {
     assert_eq!(before.revision, 0);
     assert_eq!(before.state, TestState { value: 0 });
 
-    let err = engine.dispatch(TestAction::MutateThenFail).await.unwrap_err();
+    let err = engine
+        .dispatch(TestAction::MutateThenFail)
+        .await
+        .unwrap_err();
     assert!(err.to_string().contains("boom"));
 
     let after = engine.current().await;

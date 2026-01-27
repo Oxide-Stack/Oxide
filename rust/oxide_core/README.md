@@ -18,7 +18,11 @@ In your `Cargo.toml`:
 oxide_core = "1.0.0"
 ```
 
-When working inside this repository, the examples use path dependencies instead.
+When working inside this repository, use a combined version + path dependency (Cargo prefers `path` locally, while published crates resolve by `version`):
+
+```toml
+oxide_core = { version = "1.0.0", path = "../rust/oxide_core" }
+```
 
 ## Core Concepts
 
@@ -77,14 +81,51 @@ impl Reducer for CounterReducer {
 ```rust
 use oxide_core::ReducerEngine;
 
-#[tokio::main]
-async fn main() {
-  let engine = ReducerEngine::<CounterReducer>::new(CounterReducer::default(), CounterState { value: 0 });
+# use oxide_core::{CoreResult, Reducer, StateChange};
+# use oxide_core::tokio::sync::mpsc;
+# #[derive(Debug, Clone, PartialEq, Eq)]
+# pub struct CounterState {
+#   pub value: u64,
+# }
+# #[derive(Debug, Clone, PartialEq, Eq)]
+# pub enum CounterAction {
+#   Inc,
+# }
+# pub enum CounterSideEffect {}
+# #[derive(Default)]
+# pub struct CounterReducer;
+# impl Reducer for CounterReducer {
+#   type State = CounterState;
+#   type Action = CounterAction;
+#   type SideEffect = CounterSideEffect;
+#
+#   fn init(&mut self, _sideeffect_tx: mpsc::UnboundedSender<Self::SideEffect>) {}
+#
+#   fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
+#     match action {
+#       CounterAction::Inc => state.value = state.value.saturating_add(1),
+#     }
+#     Ok(StateChange::FullUpdate)
+#   }
+#
+#   fn effect(
+#     &mut self,
+#     _state: &mut Self::State,
+#     _effect: Self::SideEffect,
+#   ) -> CoreResult<StateChange> {
+#     Ok(StateChange::None)
+#   }
+# }
+let runtime = tokio::runtime::Runtime::new().unwrap();
+runtime.block_on(async {
+  let engine = ReducerEngine::<CounterReducer>::new(
+    CounterReducer::default(),
+    CounterState { value: 0 },
+  );
   let snap = engine.dispatch(CounterAction::Inc).await.unwrap();
   let current = engine.current().await;
-
   assert_eq!(snap.revision, current.revision);
-}
+});
 ```
 
 ### Async Runtime Behavior
@@ -97,7 +138,7 @@ async fn main() {
 
 In a normal Rust binary, the simplest approach is to run inside a Tokio runtime:
 
-```rust
+```rust,ignore
 use oxide_core::ReducerEngine;
 
 #[tokio::main(flavor = "multi_thread")]

@@ -2,7 +2,7 @@ use quote::{format_ident, quote};
 use syn::parse::{Parse, ParseStream};
 use syn::{Ident, ImplItem, ItemImpl, Token};
 
-use crate::meta::{push_meta_doc, ReducerMeta};
+use crate::meta::{ReducerMeta, push_meta_doc};
 
 pub(crate) struct ReducerArgs {
     pub(crate) engine_ident: Ident,
@@ -244,7 +244,9 @@ fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) -> syn::Resul
     if item_fn.sig.inputs.len() != 3 {
         return Err(syn::Error::new_spanned(
             &item_fn.sig.inputs,
-            format!("`{name}` must take exactly 3 arguments: `&mut self`, `&mut State`, and the input value"),
+            format!(
+                "`{name}` must take exactly 3 arguments: `&mut self`, `&mut State`, and the input value"
+            ),
         ));
     }
 
@@ -423,7 +425,9 @@ pub(crate) fn expand_reducer_impl(
     let marker_ident = format_ident!("__OxideReducerMarker_{reducer_ident}");
 
     let mut marker_item: syn::ItemStruct = syn::parse_quote!(struct #marker_ident;);
-    marker_item.attrs.push(syn::parse_quote!(#[doc = "oxide:reducer"]));
+    marker_item
+        .attrs
+        .push(syn::parse_quote!(#[doc = "oxide:reducer"]));
     push_meta_doc(
         &mut marker_item.attrs,
         &ReducerMeta {
@@ -435,9 +439,9 @@ pub(crate) fn expand_reducer_impl(
         },
     );
 
-    let reducer_init_expr = reducer_expr.unwrap_or_else(|| {
-        syn::parse_quote!(<#reducer_ident as ::core::default::Default>::default())
-    });
+    let reducer_init_expr = reducer_expr.unwrap_or_else(
+        || syn::parse_quote!(<#reducer_ident as ::core::default::Default>::default()),
+    );
 
     let engine_init_default = if cfg!(feature = "state-persistence") {
         if let Some(persist_key) = &persist_key {

@@ -1,0 +1,13 @@
+pubspec_overrides.yaml
+.dart_tool/
+build/
+.pub/
+.packages
+.metadata
+.flutter-plugins
+.flutter-plugins-dependencies
+.idea/
+.vscode/
+*.iml
+.DS_Store
+pubspec.lock

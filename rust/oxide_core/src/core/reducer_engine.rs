@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use tokio::sync::{mpsc, watch, Mutex};
+use tokio::sync::{Mutex, mpsc, watch};
 
-use crate::core::{CoreResult, Reducer, StateChange, StateSnapshot};
 use crate::core::task::{spawn_detached, spawn_detached_with_handle};
+use crate::core::{CoreResult, Reducer, StateChange, StateSnapshot};
 
 #[cfg(feature = "state-persistence")]
 use crate::persistence::{
-    decode, default_persistence_path, encode, FilePersistenceWorker, PersistenceConfig,
+    FilePersistenceWorker, PersistenceConfig, decode, default_persistence_path, encode,
 };
 
 struct EngineState<R: Reducer> {
@@ -95,16 +95,14 @@ impl<R: Reducer> ReducerEngine<R> {
     ///
     /// When persistence is enabled, every emitted snapshot is encoded and queued for writing
     /// by a background persistence worker (using `config.min_interval` for write throttling).
-    pub fn new_persistent(
-        reducer: R,
-        initial_state: R::State,
-        config: PersistenceConfig,
-    ) -> Self
+    pub fn new_persistent(reducer: R, initial_state: R::State, config: PersistenceConfig) -> Self
     where
         R::State: crate::serde::Serialize + crate::serde::de::DeserializeOwned,
     {
         let path = default_persistence_path(&config.key);
-        let restored = std::fs::read(&path).ok().and_then(|bytes| decode(&bytes).ok());
+        let restored = std::fs::read(&path)
+            .ok()
+            .and_then(|bytes| decode(&bytes).ok());
         let state = restored.unwrap_or(initial_state);
         let worker = FilePersistenceWorker::new(path, config.min_interval);
         let persistence = PersistenceHooks {
@@ -129,7 +127,9 @@ impl<R: Reducer> ReducerEngine<R> {
         R::State: crate::serde::Serialize + crate::serde::de::DeserializeOwned,
     {
         let path = default_persistence_path(&config.key);
-        let restored = std::fs::read(&path).ok().and_then(|bytes| decode(&bytes).ok());
+        let restored = std::fs::read(&path)
+            .ok()
+            .and_then(|bytes| decode(&bytes).ok());
         let state = restored.unwrap_or(initial_state);
         let worker = FilePersistenceWorker::new(path, config.min_interval);
         let persistence = PersistenceHooks {
@@ -185,7 +185,10 @@ impl<R: Reducer> ReducerEngine<R> {
         });
 
         if let Some(handle) = handle.as_ref() {
-            spawn_detached_with_handle(Some(handle), sideeffect_loop(Arc::clone(&shared), sideeffect_rx));
+            spawn_detached_with_handle(
+                Some(handle),
+                sideeffect_loop(Arc::clone(&shared), sideeffect_rx),
+            );
         } else {
             spawn_detached(sideeffect_loop(Arc::clone(&shared), sideeffect_rx));
         }
@@ -259,7 +262,10 @@ impl<R: Reducer> ReducerEngine<R> {
     }
 }
 
-async fn sideeffect_loop<R: Reducer>(shared: Arc<Shared<R>>, mut rx: mpsc::UnboundedReceiver<R::SideEffect>) {
+async fn sideeffect_loop<R: Reducer>(
+    shared: Arc<Shared<R>>,
+    mut rx: mpsc::UnboundedReceiver<R::SideEffect>,
+) {
     while let Some(effect) = rx.recv().await {
         let mut state = shared.state.lock().await;
         let mut next_state = state.state.clone();
@@ -291,4 +297,3 @@ async fn sideeffect_loop<R: Reducer>(shared: Arc<Shared<R>>, mut rx: mpsc::Unbou
         }
     }
 }
-

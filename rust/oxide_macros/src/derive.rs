@@ -1,7 +1,9 @@
 use quote::quote;
 use syn::{Attribute, ItemEnum, ItemStruct, Token};
 
-use crate::meta::{collect_doc_lines, enum_variants, push_meta_doc, struct_fields, ActionsMeta, StateMeta};
+use crate::meta::{
+    ActionsMeta, StateMeta, collect_doc_lines, enum_variants, push_meta_doc, struct_fields,
+};
 
 fn ensure_required_derives(attrs: &mut Vec<Attribute>) {
     let mut required: Vec<syn::Path> = vec![

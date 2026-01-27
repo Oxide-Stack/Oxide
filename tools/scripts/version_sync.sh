@@ -21,9 +21,12 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 VERIFY=0
-if [[ "${1:-}" == "--verify" ]]; then
-  VERIFY=1
-fi
+for arg in "$@"; do
+  case "$arg" in
+    --verify) VERIFY=1 ;;
+    *) echo "Unknown argument: $arg" >&2; exit 1 ;;
+  esac
+done
 
 update_pubspec_version() {
   local file="$1"
@@ -55,20 +58,6 @@ update_pubspec_version() {
   fi
   mv "$file.tmp" "$file"
 }
-
-pubspecs=(
-  "$ROOT_DIR/flutter/oxide_runtime/pubspec.yaml"
-  "$ROOT_DIR/flutter/oxide_generator/pubspec.yaml"
-  "$ROOT_DIR/flutter/oxide_annotations/pubspec.yaml"
-  "$ROOT_DIR/examples/counter_app/pubspec.yaml"
-  "$ROOT_DIR/examples/todos_app/pubspec.yaml"
-  "$ROOT_DIR/examples/ticker_app/pubspec.yaml"
-  "$ROOT_DIR/examples/benchmark_app/pubspec.yaml"
-)
-
-for file in "${pubspecs[@]}"; do
-  update_pubspec_version "$file" "$VERSION" || exit $?
-done
 
 update_pubspec_oxide_deps() {
   local file="$1"
@@ -110,18 +99,52 @@ update_file_regex() {
   mv "$file.tmp" "$file"
 }
 
-update_pubspec_oxide_deps "$ROOT_DIR/flutter/oxide_runtime/pubspec.yaml" || exit $?
-update_pubspec_oxide_deps "$ROOT_DIR/flutter/oxide_generator/pubspec.yaml" || exit $?
+update_cargo_package_version() {
+  local file="$1"
+  if [[ ! -f "$file" ]]; then
+    echo "Missing file: $file" >&2
+    exit 1
+  fi
+  awk -v ver="$VERSION" '
+    BEGIN{in_package=0; done=0}
+    {
+      if ($0 ~ /^\[package\][[:space:]]*$/) { in_package=1; print; next }
+      if ($0 ~ /^\[[^]]+\][[:space:]]*$/) { in_package=0 }
+      if (in_package && !done && $0 ~ /^version[[:space:]]*=[[:space:]]*"/) {
+        print "version = \"" ver "\""
+        done=1
+        next
+      }
+      print
+    }
+  ' "$file" > "$file.tmp"
+  if [[ "$VERIFY" -eq 1 ]]; then
+    if ! cmp -s "$file" "$file.tmp"; then
+      echo "out of date: cargo package version: $file" >&2
+      rm -f "$file.tmp"
+      return 2
+    fi
+    rm -f "$file.tmp"
+    return 0
+  fi
+  mv "$file.tmp" "$file"
+}
 
-# Example rust_builder pubspecs + podspecs.
-rust_builder_pubspecs=(
-  "$ROOT_DIR/examples/benchmark_app/rust_builder/pubspec.yaml"
-  "$ROOT_DIR/examples/counter_app/rust_builder/pubspec.yaml"
-  "$ROOT_DIR/examples/ticker_app/rust_builder/pubspec.yaml"
-  "$ROOT_DIR/examples/todos_app/rust_builder/pubspec.yaml"
+pubspec_files=()
+while IFS= read -r -d '' file; do
+  pubspec_files+=("$file")
+done < <(
+  find "$ROOT_DIR/flutter" "$ROOT_DIR/examples" \
+    \( -path '*/build/*' -o -path '*/ephemeral/*' -o -path '*/.plugin_symlinks/*' -o -path '*/.dart_tool/*' \) -prune -o \
+    -type f -name pubspec.yaml -print0
 )
-for file in "${rust_builder_pubspecs[@]}"; do
+
+for file in "${pubspec_files[@]}"; do
   update_pubspec_version "$file" "$VERSION" || exit $?
+done
+
+for file in "${pubspec_files[@]}"; do
+  update_pubspec_oxide_deps "$file" || exit $?
 done
 
 podspecs=(
@@ -136,17 +159,6 @@ podspecs=(
 )
 for file in "${podspecs[@]}"; do
   update_file_regex "$file" "podspec version" "s/^([[:space:]]*s\\.version[[:space:]]*=[[:space:]]*)'[^']*'([[:space:]]*)$/\\1'$VERSION'\\2/" || exit $?
-done
-
-# Cargokit build tool version stamps in example rust_builder folders.
-cargokit_build_tool_pubspecs=(
-  "$ROOT_DIR/examples/benchmark_app/rust_builder/cargokit/build_tool/pubspec.yaml"
-  "$ROOT_DIR/examples/counter_app/rust_builder/cargokit/build_tool/pubspec.yaml"
-  "$ROOT_DIR/examples/ticker_app/rust_builder/cargokit/build_tool/pubspec.yaml"
-  "$ROOT_DIR/examples/todos_app/rust_builder/cargokit/build_tool/pubspec.yaml"
-)
-for file in "${cargokit_build_tool_pubspecs[@]}"; do
-  update_pubspec_version "$file" "$VERSION" || exit $?
 done
 
 cargokit_version_stamps=(
@@ -168,16 +180,39 @@ done
 # Update Rust workspace version.
 update_file_regex "$ROOT_DIR/rust/Cargo.toml" "rust workspace version" "s/^version = \".*\"/version = \"$VERSION\"/" || exit $?
 
-# Docs: README + changelogs + crate/package READMEs.
+# Sync Rust example crate package versions.
+example_cargo_tomls=()
+while IFS= read -r -d '' file; do
+  example_cargo_tomls+=("$file")
+done < <(
+  find "$ROOT_DIR/examples" \
+    \( -path '*/build/*' -o -path '*/ephemeral/*' -o -path '*/.plugin_symlinks/*' -o -path '*/.dart_tool/*' \) -prune -o \
+    -type f -path '*/rust/Cargo.toml' -print0
+)
+for file in "${example_cargo_tomls[@]}"; do
+  update_cargo_package_version "$file" || exit $?
+done
+
+# Sync Oxide intra-repo Rust dependency versions in Cargo manifests (version + path entries).
+cargo_tomls=()
+while IFS= read -r -d '' file; do
+  cargo_tomls+=("$file")
+done < <(
+  find "$ROOT_DIR/rust" "$ROOT_DIR/examples" \
+    \( -path '*/rust/target/*' -o -path '*/build/*' -o -path '*/ephemeral/*' -o -path '*/.plugin_symlinks/*' -o -path '*/.dart_tool/*' \) -prune -o \
+    -type f -name Cargo.toml -print0
+)
+for file in "${cargo_tomls[@]}"; do
+  update_file_regex "$file" "cargo dep sync" \
+    "s/(oxide_(core|macros))[[:space:]]*=[[:space:]]*\\{[[:space:]]*version[[:space:]]*=[[:space:]]*\"[0-9]+\\.[0-9]+\\.[0-9]+\"/\\1 = { version = \"$VERSION\"/g" || exit $?
+done
+
+# Docs: README + crate/package READMEs.
 docs=(
   "$ROOT_DIR/README.md"
-  "$ROOT_DIR/CHANGELOG.md"
   "$ROOT_DIR/rust/oxide_core/README.md"
   "$ROOT_DIR/rust/oxide_macros/README.md"
   "$ROOT_DIR/flutter/oxide_generator/README.md"
-  "$ROOT_DIR/flutter/oxide_runtime/CHANGELOG.md"
-  "$ROOT_DIR/flutter/oxide_generator/CHANGELOG.md"
-  "$ROOT_DIR/flutter/oxide_annotations/CHANGELOG.md"
 )
 
 for file in "${docs[@]}"; do
@@ -185,6 +220,7 @@ for file in "${docs[@]}"; do
     "s/^(Status:[[:space:]]*)\`[^\`]*\`([.][[:space:]]*)$/\\1\`$VERSION\`\\2/; \
      s/^([[:space:]]*)(oxide_(annotations|runtime|generator)):[[:space:]]*\\^?[0-9]+\\.[0-9]+\\.[0-9]+.*$/\\1\\2: ^$VERSION/; \
      s/(oxide_(core|macros))[[:space:]]*=[[:space:]]*\"[0-9]+\\.[0-9]+\\.[0-9]+\"/\\1 = \"$VERSION\"/g; \
+     s/(oxide_(core|macros))[[:space:]]*=[[:space:]]*\\{[[:space:]]*version[[:space:]]*=[[:space:]]*\"[0-9]+\\.[0-9]+\\.[0-9]+\"/\\1 = { version = \"$VERSION\"/g; \
      s/^(##[[:space:]]+)[0-9]+\\.[0-9]+\\.[0-9]+[[:space:]]*$/\\1$VERSION/" || exit $?
 done
 

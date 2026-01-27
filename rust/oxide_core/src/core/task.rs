@@ -25,10 +25,8 @@ where
     spawn_detached_with_handle::<F>(None, future);
 }
 
-pub(crate) fn spawn_detached_with_handle<F>(
-    handle: Option<&tokio::runtime::Handle>,
-    future: F,
-) where
+pub(crate) fn spawn_detached_with_handle<F>(handle: Option<&tokio::runtime::Handle>, future: F)
+where
     F: Future<Output = ()> + Send + 'static,
 {
     // Spawn priority:

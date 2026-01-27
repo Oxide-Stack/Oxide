@@ -34,7 +34,11 @@ impl Reducer for TestReducer {
     ) {
     }
 
-    fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<oxide_core::StateChange> {
+    fn reduce(
+        &mut self,
+        state: &mut Self::State,
+        action: Self::Action,
+    ) -> CoreResult<oxide_core::StateChange> {
         match action {
             Action::Inc => {
                 state.value = state.value.saturating_add(1);
@@ -70,7 +74,10 @@ fn bincode_round_trip_enum_state() {
 
 #[tokio::test]
 async fn dispatch_then_encode_decode_snapshot() {
-    let engine = oxide_core::ReducerEngine::<TestReducer>::new(TestReducer::default(), StructState { value: 0 });
+    let engine = oxide_core::ReducerEngine::<TestReducer>::new(
+        TestReducer::default(),
+        StructState { value: 0 },
+    );
     let snapshot = engine.dispatch(Action::Inc).await.expect("dispatch");
     assert_eq!(snapshot.revision, 1);
     assert_eq!(snapshot.state.value, 1);

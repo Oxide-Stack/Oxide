@@ -111,7 +111,7 @@ The repo keeps a single `VERSION` file and syncs versions via scripts under [too
 
 - Version sync: `tools/scripts/version_sync.ps1` / `tools/scripts/version_sync.sh`
 - Tests: `tools/scripts/qa.ps1` / `tools/scripts/qa.sh`
-- Builds (platform required): `tools/scripts/build.ps1 -Platform windows` / `tools/scripts/build.sh linux`
+- Builds (platform required): `tools/scripts/build.ps1 -Platform windows` / `tools/scripts/build.sh linux` (add `-NoExamples` / `--no-examples` to skip building examples)
 - Git flow helpers: `tools/scripts/git_flow.ps1`, `tools/scripts/git_flow.sh`
 
 ## Versioning

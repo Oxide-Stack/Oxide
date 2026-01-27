@@ -87,12 +87,12 @@ jobs:
       - name: Publish oxide_annotations
         if: ${{ env.PUB_CREDENTIALS != '' }}
         working-directory: flutter/oxide_annotations
-        run: dart pub publish --force
+        run: dart pub publish 
       - name: Publish oxide_generator
         if: ${{ env.PUB_CREDENTIALS != '' }}
         working-directory: flutter/oxide_generator
-        run: dart pub publish --force
+        run: dart pub publish 
       - name: Publish oxide_runtime
         if: ${{ env.PUB_CREDENTIALS != '' }}
         working-directory: flutter/oxide_runtime
-        run: dart pub publish --force
+        run: dart pub publish 

@@ -15,7 +15,7 @@ From the repo root:
   - `.\tools\scripts\qa.ps1`
 - Keep versions consistent (single source of truth is `VERSION`):
   - Apply sync: `.\tools\scripts\version_sync.ps1`
-  - Verify only (CI-style): `.\tools\scripts\version_sync.ps1 -Verify`
+  - Verify only (CI-style): `.\tools\scripts\version_sync.ps1 -Verify` (or `.\tools\scripts\version_sync.ps1 --verify`)
 
 ## Pull Requests
 

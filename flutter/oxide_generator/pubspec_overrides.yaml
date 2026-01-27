@@ -1,0 +1,3 @@
+dependency_overrides:
+  oxide_annotations:
+    path: ../oxide_annotations
