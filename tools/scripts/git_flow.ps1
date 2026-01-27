@@ -3,6 +3,8 @@ Usage:
   pwsh ./tools/scripts/git_flow.ps1 status
   pwsh ./tools/scripts/git_flow.ps1 feature <name>
   pwsh ./tools/scripts/git_flow.ps1 hotfix <name>
+  pwsh ./tools/scripts/git_flow.ps1 backmerge
+  pwsh ./tools/scripts/git_flow.ps1 -Cmd backmerge -DryRun
   pwsh ./tools/scripts/git_flow.ps1 release <version>
   pwsh ./tools/scripts/git_flow.ps1 -Cmd release -Name <version> -DryRun
   pwsh ./tools/scripts/git_flow.ps1 sync
@@ -21,6 +23,8 @@ Commands:
       Creates feature/<name> from the latest develop.
   - hotfix <name>
       Creates hotfix/<name> from the latest develop.
+  - backmerge
+      Merges main back into develop to keep develop up-to-date with main-only changes.
   - sync
       Updates local develop and main from origin (ff-only).
   - release <version>
@@ -35,7 +39,7 @@ Recommended release steps:
 #>
 param(
   [Parameter(Mandatory=$true)]
-  [ValidateSet("status","feature","hotfix","release","sync")]
+  [ValidateSet("status","feature","hotfix","backmerge","release","sync")]
   [string]$Cmd,
 
   [string]$Name,
@@ -130,6 +134,45 @@ switch ($Cmd) {
     $branch = "hotfix/$Name"
     Assert-BranchDoesNotExist $branch
     gitx checkout -b $branch
+  }
+
+  "backmerge" {
+    Assert-InGitRepo
+    gitx fetch --prune
+    Assert-BranchExists "develop"
+    Assert-BranchExists "main"
+    $aheadBehind = (& git rev-list --left-right --count origin/develop...origin/main 2>$null).Trim()
+    if (-not [string]::IsNullOrWhiteSpace($aheadBehind)) {
+      $parts = $aheadBehind -split '\s+'
+      if ($parts.Count -ge 2) {
+        $developOnly = [int]$parts[0]
+        $mainOnly = [int]$parts[1]
+        if ($mainOnly -eq 0) {
+          Write-Host "develop already contains all commits from main."
+          return
+        }
+        if ($developOnly -gt 0) {
+          Write-Warning ("origin/develop has {0} commit(s) not in origin/main. Backmerging main will create a merge commit." -f $developOnly)
+        }
+        Write-Host ("main has {0} commit(s) to backmerge into develop." -f $mainOnly)
+      }
+    }
+
+    if ($DryRun) {
+      Write-Host "Dry run: would merge main into develop."
+      Write-Host "To run: pwsh ./tools/scripts/git_flow.ps1 backmerge"
+      return
+    }
+
+    Assert-CleanWorkingTree
+    Checkout-Branch "main"
+    gitx pull --ff-only
+    Checkout-Branch "develop"
+    gitx pull --ff-only
+    Checkout-Branch "develop"
+    gitx merge --no-ff main -m "backmerge: main -> develop"
+    Write-Host "Backmerge complete (local)."
+    Write-Host "Push develop: git push origin develop"
   }
 
   "release" {

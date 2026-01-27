@@ -5,6 +5,7 @@ set -euo pipefail
 #   ./tools/scripts/git_flow.sh status
 #   ./tools/scripts/git_flow.sh feature <name>
 #   ./tools/scripts/git_flow.sh hotfix <name>
+#   ./tools/scripts/git_flow.sh backmerge
 #   ./tools/scripts/git_flow.sh release <version>
 #   ./tools/scripts/git_flow.sh sync
 #
@@ -22,6 +23,8 @@ set -euo pipefail
 #       Creates feature/<name> from the latest develop.
 #   - hotfix <name>
 #       Creates hotfix/<name> from the latest develop.
+#   - backmerge
+#       Merges main back into develop to keep develop up-to-date with main-only changes.
 #   - sync
 #       Updates local develop and main from origin (ff-only).
 #   - release <version>
@@ -94,9 +97,7 @@ case "$COMMAND" in
     gitx tag --list --sort=-creatordate | head -n 5
     ;;
   feature)
-    if [[ -z "$NAME" ]]; then
-      die "Feature name required"
-    fi
+    [[ -n "$NAME" ]] || die "Feature name required"
     assert_in_git_repo
     assert_clean_working_tree
     gitx fetch --prune
@@ -108,9 +109,7 @@ case "$COMMAND" in
     gitx checkout -b "$branch"
     ;;
   hotfix)
-    if [[ -z "$NAME" ]]; then
-      die "Hotfix name required"
-    fi
+    [[ -n "$NAME" ]] || die "Hotfix name required"
     assert_in_git_repo
     assert_clean_working_tree
     gitx fetch --prune
@@ -121,10 +120,37 @@ case "$COMMAND" in
     assert_branch_does_not_exist "$branch"
     gitx checkout -b "$branch"
     ;;
-  release)
-    if [[ -z "$NAME" ]]; then
-      die "Version required (e.g. 1.1.0 or v1.1.0)"
+  backmerge)
+    assert_in_git_repo
+    assert_clean_working_tree
+    gitx fetch --prune
+    assert_branch_exists "develop"
+    assert_branch_exists "main"
+    checkout_branch "main"
+    gitx pull --ff-only
+    checkout_branch "develop"
+    gitx pull --ff-only
+
+    ahead_behind="$(git rev-list --left-right --count origin/develop...origin/main 2>/dev/null || true)"
+    develop_only="$(echo "$ahead_behind" | awk '{print $1}' 2>/dev/null || echo "")"
+    main_only="$(echo "$ahead_behind" | awk '{print $2}' 2>/dev/null || echo "")"
+    if [[ -n "$main_only" && "$main_only" -eq 0 ]]; then
+      echo "develop already contains all commits from main."
+      exit 0
     fi
+    if [[ -n "$develop_only" && "$develop_only" -gt 0 ]]; then
+      echo "warning: origin/develop has $develop_only commit(s) not in origin/main. Backmerging main will create a merge commit." >&2
+    fi
+    if [[ -n "$main_only" ]]; then
+      echo "main has $main_only commit(s) to backmerge into develop."
+    fi
+
+    gitx merge --no-ff main -m "backmerge: main -> develop"
+    echo "Backmerge complete (local)."
+    echo "Push develop: git push origin develop"
+    ;;
+  release)
+    [[ -n "$NAME" ]] || die "Version required (e.g. 1.1.0 or v1.1.0)"
     assert_in_git_repo
     assert_clean_working_tree
     version="$NAME"
@@ -170,6 +196,6 @@ case "$COMMAND" in
     checkout_branch "develop"
     ;;
   *)
-    die "Usage: git_flow.sh <status|feature|hotfix|release|sync> [name|version]"
+    die "Usage: git_flow.sh <status|feature|hotfix|backmerge|release|sync> [name|version]"
     ;;
 esac
