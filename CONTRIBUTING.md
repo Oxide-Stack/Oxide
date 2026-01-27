@@ -23,6 +23,14 @@ From the repo root:
 - Add or update tests when behavior changes.
 - Update READMEs and changelogs when user-facing behavior changes.
 
+## Publishing (Maintainers)
+
+Publishing is automated via GitHub Actions and runs on `vX.Y.Z` tags. The release workflow will only publish if the required secrets are present.
+
+- Rust (crates.io): set `CARGO_REGISTRY_TOKEN`
+- Flutter/Dart (pub.dev): prefer `PUB_TOKEN` (API token) for non-interactive CI publishing
+  - Legacy fallback: `PUB_CREDENTIALS` (contents of `~/.config/dart/pub-credentials.json`)
+
 ## Reporting Issues
 
 Please include:
