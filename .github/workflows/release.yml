@@ -149,7 +149,7 @@ jobs:
           function Invoke-Native {
             param(
               [Parameter(Mandatory = $true)][string]$Command,
-              [Parameter(ValueFromRemainingArguments = $true)][string[]]$Args
+              [Parameter(Mandatory = $true)][string[]]$Args
             )
             & $Command @Args
             $exitCode = $LASTEXITCODE
@@ -166,13 +166,13 @@ jobs:
           foreach ($dir in $exampleDirs) {
             Push-Location $dir
             try {
-              Invoke-Native flutter pub get
-              Invoke-Native dart @("run", "build_runner", "build", "-d")
-              Invoke-Native flutter test
+              Invoke-Native -Command flutter -Args @("pub", "get")
+              Invoke-Native -Command dart -Args @("run", "build_runner", "build", "-d")
+              Invoke-Native -Command flutter -Args @("test")
               if (Test-Path "integration_test") {
                 $tests = Get-ChildItem -Path "integration_test" -Filter "*_test.dart" -File
                 foreach ($test in $tests) {
-                  Invoke-Native flutter @("test", "-d", "windows", $test.FullName)
+                  Invoke-Native -Command flutter -Args @("test", "-d", "windows", $test.FullName)
                 }
               }
             } finally {
