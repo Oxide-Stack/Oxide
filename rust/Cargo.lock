@@ -745,7 +745,7 @@ dependencies = [
 
 [[package]]
 name = "oxide_core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bincode",
  "criterion",
@@ -760,7 +760,7 @@ dependencies = [
 
 [[package]]
 name = "oxide_generator_rs"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "oxide_core",
  "proc-macro2",
