@@ -24,6 +24,19 @@ jobs:
       - name: Test (Rust workspace)
         working-directory: rust
         run: cargo test --workspace
+      - name: Test (Example Rust crates)
+        shell: bash
+        run: |
+          set -euo pipefail
+          examples=(
+            "examples/counter_app/rust"
+            "examples/todos_app/rust"
+            "examples/ticker_app/rust"
+            "examples/benchmark_app/rust"
+          )
+          for dir in "${examples[@]}"; do
+            (cd "$dir" && cargo test)
+          done
 
   flutter:
     runs-on: ubuntu-latest
@@ -46,3 +59,59 @@ jobs:
       - name: Analyze oxide_annotations
         working-directory: flutter/oxide_annotations
         run: dart analyze
+
+      - name: Test examples (Flutter tests)
+        shell: bash
+        run: |
+          set -euo pipefail
+          examples=(
+            "examples/counter_app"
+            "examples/todos_app"
+            "examples/ticker_app"
+            "examples/benchmark_app"
+          )
+          for dir in "${examples[@]}"; do
+            (
+              cd "$dir"
+              flutter pub get
+              dart run build_runner build -d
+              flutter test
+            )
+          done
+
+  examples-windows:
+    runs-on: windows-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Test examples (Windows integration tests)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exampleDirs = @(
+            "examples\counter_app",
+            "examples\todos_app",
+            "examples\ticker_app",
+            "examples\benchmark_app"
+          )
+          foreach ($dir in $exampleDirs) {
+            Push-Location $dir
+            try {
+              flutter pub get
+              dart run build_runner build -d
+              flutter test
+              if (Test-Path "integration_test") {
+                $tests = Get-ChildItem -Path "integration_test" -Filter "*_test.dart" -File
+                foreach ($test in $tests) {
+                  flutter test $test.FullName -d windows
+                }
+              }
+            } finally {
+              Pop-Location
+            }
+          }
