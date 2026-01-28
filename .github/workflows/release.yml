@@ -167,12 +167,12 @@ jobs:
             Push-Location $dir
             try {
               Invoke-Native flutter pub get
-              Invoke-Native dart run build_runner build -d
+              Invoke-Native dart @("run", "build_runner", "build", "-d")
               Invoke-Native flutter test
               if (Test-Path "integration_test") {
                 $tests = Get-ChildItem -Path "integration_test" -Filter "*_test.dart" -File
                 foreach ($test in $tests) {
-                  Invoke-Native flutter test -d windows $test.FullName
+                  Invoke-Native flutter @("test", "-d", "windows", $test.FullName)
                 }
               }
             } finally {
