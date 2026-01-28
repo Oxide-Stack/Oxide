@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,392 +9,329 @@ part of 'json_action.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
-
 /// @nodoc
 mixin _$JsonAction {
-  int get iterations => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(int iterations) runLight,
-    required TResult Function(int iterations) runHeavy,
-  }) => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(int iterations)? runLight,
-    TResult? Function(int iterations)? runHeavy,
-  }) => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(int iterations)? runLight,
-    TResult Function(int iterations)? runHeavy,
-    required TResult orElse(),
-  }) => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(JsonAction_RunLight value) runLight,
-    required TResult Function(JsonAction_RunHeavy value) runHeavy,
-  }) => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(JsonAction_RunLight value)? runLight,
-    TResult? Function(JsonAction_RunHeavy value)? runHeavy,
-  }) => throw _privateConstructorUsedError;
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(JsonAction_RunLight value)? runLight,
-    TResult Function(JsonAction_RunHeavy value)? runHeavy,
-    required TResult orElse(),
-  }) => throw _privateConstructorUsedError;
 
-  /// Create a copy of JsonAction
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $JsonActionCopyWith<JsonAction> get copyWith =>
-      throw _privateConstructorUsedError;
+ int get iterations;
+/// Create a copy of JsonAction
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$JsonActionCopyWith<JsonAction> get copyWith => _$JsonActionCopyWithImpl<JsonAction>(this as JsonAction, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is JsonAction&&(identical(other.iterations, iterations) || other.iterations == iterations));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,iterations);
+
+@override
+String toString() {
+  return 'JsonAction(iterations: $iterations)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $JsonActionCopyWith<$Res> {
-  factory $JsonActionCopyWith(
-    JsonAction value,
-    $Res Function(JsonAction) then,
-  ) = _$JsonActionCopyWithImpl<$Res, JsonAction>;
-  @useResult
-  $Res call({int iterations});
-}
+abstract mixin class $JsonActionCopyWith<$Res>  {
+  factory $JsonActionCopyWith(JsonAction value, $Res Function(JsonAction) _then) = _$JsonActionCopyWithImpl;
+@useResult
+$Res call({
+ int iterations
+});
 
+
+
+
+}
 /// @nodoc
-class _$JsonActionCopyWithImpl<$Res, $Val extends JsonAction>
+class _$JsonActionCopyWithImpl<$Res>
     implements $JsonActionCopyWith<$Res> {
-  _$JsonActionCopyWithImpl(this._value, this._then);
+  _$JsonActionCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final JsonAction _self;
+  final $Res Function(JsonAction) _then;
 
-  /// Create a copy of JsonAction
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? iterations = null}) {
-    return _then(
-      _value.copyWith(
-            iterations: null == iterations
-                ? _value.iterations
-                : iterations // ignore: cast_nullable_to_non_nullable
-                      as int,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of JsonAction
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? iterations = null,}) {
+  return _then(_self.copyWith(
+iterations: null == iterations ? _self.iterations : iterations // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
 }
 
-/// @nodoc
-abstract class _$$JsonAction_RunLightImplCopyWith<$Res>
-    implements $JsonActionCopyWith<$Res> {
-  factory _$$JsonAction_RunLightImplCopyWith(
-    _$JsonAction_RunLightImpl value,
-    $Res Function(_$JsonAction_RunLightImpl) then,
-  ) = __$$JsonAction_RunLightImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({int iterations});
 }
 
-/// @nodoc
-class __$$JsonAction_RunLightImplCopyWithImpl<$Res>
-    extends _$JsonActionCopyWithImpl<$Res, _$JsonAction_RunLightImpl>
-    implements _$$JsonAction_RunLightImplCopyWith<$Res> {
-  __$$JsonAction_RunLightImplCopyWithImpl(
-    _$JsonAction_RunLightImpl _value,
-    $Res Function(_$JsonAction_RunLightImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of JsonAction
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? iterations = null}) {
-    return _then(
-      _$JsonAction_RunLightImpl(
-        iterations: null == iterations
-            ? _value.iterations
-            : iterations // ignore: cast_nullable_to_non_nullable
-                  as int,
-      ),
-    );
-  }
+/// Adds pattern-matching-related methods to [JsonAction].
+extension JsonActionPatterns on JsonAction {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( JsonAction_RunLight value)?  runLight,TResult Function( JsonAction_RunHeavy value)?  runHeavy,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case JsonAction_RunLight() when runLight != null:
+return runLight(_that);case JsonAction_RunHeavy() when runHeavy != null:
+return runHeavy(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( JsonAction_RunLight value)  runLight,required TResult Function( JsonAction_RunHeavy value)  runHeavy,}){
+final _that = this;
+switch (_that) {
+case JsonAction_RunLight():
+return runLight(_that);case JsonAction_RunHeavy():
+return runHeavy(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( JsonAction_RunLight value)?  runLight,TResult? Function( JsonAction_RunHeavy value)?  runHeavy,}){
+final _that = this;
+switch (_that) {
+case JsonAction_RunLight() when runLight != null:
+return runLight(_that);case JsonAction_RunHeavy() when runHeavy != null:
+return runHeavy(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int iterations)?  runLight,TResult Function( int iterations)?  runHeavy,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case JsonAction_RunLight() when runLight != null:
+return runLight(_that.iterations);case JsonAction_RunHeavy() when runHeavy != null:
+return runHeavy(_that.iterations);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int iterations)  runLight,required TResult Function( int iterations)  runHeavy,}) {final _that = this;
+switch (_that) {
+case JsonAction_RunLight():
+return runLight(_that.iterations);case JsonAction_RunHeavy():
+return runHeavy(_that.iterations);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int iterations)?  runLight,TResult? Function( int iterations)?  runHeavy,}) {final _that = this;
+switch (_that) {
+case JsonAction_RunLight() when runLight != null:
+return runLight(_that.iterations);case JsonAction_RunHeavy() when runHeavy != null:
+return runHeavy(_that.iterations);case _:
+  return null;
+
+}
 }
 
-/// @nodoc
-
-class _$JsonAction_RunLightImpl extends JsonAction_RunLight {
-  const _$JsonAction_RunLightImpl({required this.iterations}) : super._();
-
-  @override
-  final int iterations;
-
-  @override
-  String toString() {
-    return 'JsonAction.runLight(iterations: $iterations)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$JsonAction_RunLightImpl &&
-            (identical(other.iterations, iterations) ||
-                other.iterations == iterations));
-  }
-
-  @override
-  int get hashCode => Object.hash(runtimeType, iterations);
-
-  /// Create a copy of JsonAction
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$JsonAction_RunLightImplCopyWith<_$JsonAction_RunLightImpl> get copyWith =>
-      __$$JsonAction_RunLightImplCopyWithImpl<_$JsonAction_RunLightImpl>(
-        this,
-        _$identity,
-      );
-
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(int iterations) runLight,
-    required TResult Function(int iterations) runHeavy,
-  }) {
-    return runLight(iterations);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(int iterations)? runLight,
-    TResult? Function(int iterations)? runHeavy,
-  }) {
-    return runLight?.call(iterations);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(int iterations)? runLight,
-    TResult Function(int iterations)? runHeavy,
-    required TResult orElse(),
-  }) {
-    if (runLight != null) {
-      return runLight(iterations);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(JsonAction_RunLight value) runLight,
-    required TResult Function(JsonAction_RunHeavy value) runHeavy,
-  }) {
-    return runLight(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(JsonAction_RunLight value)? runLight,
-    TResult? Function(JsonAction_RunHeavy value)? runHeavy,
-  }) {
-    return runLight?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(JsonAction_RunLight value)? runLight,
-    TResult Function(JsonAction_RunHeavy value)? runHeavy,
-    required TResult orElse(),
-  }) {
-    if (runLight != null) {
-      return runLight(this);
-    }
-    return orElse();
-  }
-}
-
-abstract class JsonAction_RunLight extends JsonAction {
-  const factory JsonAction_RunLight({required final int iterations}) =
-      _$JsonAction_RunLightImpl;
-  const JsonAction_RunLight._() : super._();
-
-  @override
-  int get iterations;
-
-  /// Create a copy of JsonAction
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$JsonAction_RunLightImplCopyWith<_$JsonAction_RunLightImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class _$$JsonAction_RunHeavyImplCopyWith<$Res>
-    implements $JsonActionCopyWith<$Res> {
-  factory _$$JsonAction_RunHeavyImplCopyWith(
-    _$JsonAction_RunHeavyImpl value,
-    $Res Function(_$JsonAction_RunHeavyImpl) then,
-  ) = __$$JsonAction_RunHeavyImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({int iterations});
-}
-
-/// @nodoc
-class __$$JsonAction_RunHeavyImplCopyWithImpl<$Res>
-    extends _$JsonActionCopyWithImpl<$Res, _$JsonAction_RunHeavyImpl>
-    implements _$$JsonAction_RunHeavyImplCopyWith<$Res> {
-  __$$JsonAction_RunHeavyImplCopyWithImpl(
-    _$JsonAction_RunHeavyImpl _value,
-    $Res Function(_$JsonAction_RunHeavyImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of JsonAction
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? iterations = null}) {
-    return _then(
-      _$JsonAction_RunHeavyImpl(
-        iterations: null == iterations
-            ? _value.iterations
-            : iterations // ignore: cast_nullable_to_non_nullable
-                  as int,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$JsonAction_RunHeavyImpl extends JsonAction_RunHeavy {
-  const _$JsonAction_RunHeavyImpl({required this.iterations}) : super._();
 
-  @override
-  final int iterations;
+class JsonAction_RunLight extends JsonAction {
+  const JsonAction_RunLight({required this.iterations}): super._();
+  
 
-  @override
-  String toString() {
-    return 'JsonAction.runHeavy(iterations: $iterations)';
-  }
+@override final  int iterations;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$JsonAction_RunHeavyImpl &&
-            (identical(other.iterations, iterations) ||
-                other.iterations == iterations));
-  }
+/// Create a copy of JsonAction
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$JsonAction_RunLightCopyWith<JsonAction_RunLight> get copyWith => _$JsonAction_RunLightCopyWithImpl<JsonAction_RunLight>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, iterations);
 
-  /// Create a copy of JsonAction
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$JsonAction_RunHeavyImplCopyWith<_$JsonAction_RunHeavyImpl> get copyWith =>
-      __$$JsonAction_RunHeavyImplCopyWithImpl<_$JsonAction_RunHeavyImpl>(
-        this,
-        _$identity,
-      );
 
-  @override
-  @optionalTypeArgs
-  TResult when<TResult extends Object?>({
-    required TResult Function(int iterations) runLight,
-    required TResult Function(int iterations) runHeavy,
-  }) {
-    return runHeavy(iterations);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(int iterations)? runLight,
-    TResult? Function(int iterations)? runHeavy,
-  }) {
-    return runHeavy?.call(iterations);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeWhen<TResult extends Object?>({
-    TResult Function(int iterations)? runLight,
-    TResult Function(int iterations)? runHeavy,
-    required TResult orElse(),
-  }) {
-    if (runHeavy != null) {
-      return runHeavy(iterations);
-    }
-    return orElse();
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult map<TResult extends Object?>({
-    required TResult Function(JsonAction_RunLight value) runLight,
-    required TResult Function(JsonAction_RunHeavy value) runHeavy,
-  }) {
-    return runHeavy(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult? mapOrNull<TResult extends Object?>({
-    TResult? Function(JsonAction_RunLight value)? runLight,
-    TResult? Function(JsonAction_RunHeavy value)? runHeavy,
-  }) {
-    return runHeavy?.call(this);
-  }
-
-  @override
-  @optionalTypeArgs
-  TResult maybeMap<TResult extends Object?>({
-    TResult Function(JsonAction_RunLight value)? runLight,
-    TResult Function(JsonAction_RunHeavy value)? runHeavy,
-    required TResult orElse(),
-  }) {
-    if (runHeavy != null) {
-      return runHeavy(this);
-    }
-    return orElse();
-  }
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is JsonAction_RunLight&&(identical(other.iterations, iterations) || other.iterations == iterations));
 }
 
-abstract class JsonAction_RunHeavy extends JsonAction {
-  const factory JsonAction_RunHeavy({required final int iterations}) =
-      _$JsonAction_RunHeavyImpl;
-  const JsonAction_RunHeavy._() : super._();
 
-  @override
-  int get iterations;
+@override
+int get hashCode => Object.hash(runtimeType,iterations);
 
-  /// Create a copy of JsonAction
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$JsonAction_RunHeavyImplCopyWith<_$JsonAction_RunHeavyImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'JsonAction.runLight(iterations: $iterations)';
 }
+
+
+}
+
+/// @nodoc
+abstract mixin class $JsonAction_RunLightCopyWith<$Res> implements $JsonActionCopyWith<$Res> {
+  factory $JsonAction_RunLightCopyWith(JsonAction_RunLight value, $Res Function(JsonAction_RunLight) _then) = _$JsonAction_RunLightCopyWithImpl;
+@override @useResult
+$Res call({
+ int iterations
+});
+
+
+
+
+}
+/// @nodoc
+class _$JsonAction_RunLightCopyWithImpl<$Res>
+    implements $JsonAction_RunLightCopyWith<$Res> {
+  _$JsonAction_RunLightCopyWithImpl(this._self, this._then);
+
+  final JsonAction_RunLight _self;
+  final $Res Function(JsonAction_RunLight) _then;
+
+/// Create a copy of JsonAction
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? iterations = null,}) {
+  return _then(JsonAction_RunLight(
+iterations: null == iterations ? _self.iterations : iterations // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class JsonAction_RunHeavy extends JsonAction {
+  const JsonAction_RunHeavy({required this.iterations}): super._();
+  
+
+@override final  int iterations;
+
+/// Create a copy of JsonAction
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$JsonAction_RunHeavyCopyWith<JsonAction_RunHeavy> get copyWith => _$JsonAction_RunHeavyCopyWithImpl<JsonAction_RunHeavy>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is JsonAction_RunHeavy&&(identical(other.iterations, iterations) || other.iterations == iterations));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,iterations);
+
+@override
+String toString() {
+  return 'JsonAction.runHeavy(iterations: $iterations)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $JsonAction_RunHeavyCopyWith<$Res> implements $JsonActionCopyWith<$Res> {
+  factory $JsonAction_RunHeavyCopyWith(JsonAction_RunHeavy value, $Res Function(JsonAction_RunHeavy) _then) = _$JsonAction_RunHeavyCopyWithImpl;
+@override @useResult
+$Res call({
+ int iterations
+});
+
+
+
+
+}
+/// @nodoc
+class _$JsonAction_RunHeavyCopyWithImpl<$Res>
+    implements $JsonAction_RunHeavyCopyWith<$Res> {
+  _$JsonAction_RunHeavyCopyWithImpl(this._self, this._then);
+
+  final JsonAction_RunHeavy _self;
+  final $Res Function(JsonAction_RunHeavy) _then;
+
+/// Create a copy of JsonAction
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? iterations = null,}) {
+  return _then(JsonAction_RunHeavy(
+iterations: null == iterations ? _self.iterations : iterations // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+// dart format on

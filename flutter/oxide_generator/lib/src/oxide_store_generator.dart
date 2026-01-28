@@ -23,7 +23,11 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
     }
 
     final nameOverride = annotation.peek('name')?.stringValue;
-    final prefix = (nameOverride == null || nameOverride.isEmpty) ? element.name : nameOverride;
+    final className = element.name;
+    if (className == null || className.isEmpty) {
+      throw InvalidGenerationSourceError('@OxideStore can only be used on named classes.', element: element);
+    }
+    final prefix = (nameOverride == null || nameOverride.isEmpty) ? className : nameOverride;
 
     final stateType = _readType(annotation, 'state');
     final snapshotType = _readType(annotation, 'snapshot');
@@ -75,18 +79,19 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
       for (final ctor in actionsElement.constructors) {
         if (!ctor.isFactory) continue;
         if (ctor.isPrivate) continue;
-        if (ctor.name.isEmpty) continue;
+        final ctorName = ctor.name;
+        if (ctorName == null || ctorName.isEmpty) continue;
 
         actionConstructors.add(
           OxideActionConstructor(
-            name: ctor.name,
-            positionalParams: ctor.parameters
-                .where((p) => p.isPositional)
-                .map((p) => OxideActionParam(name: p.name, type: p.type.getDisplayString(withNullability: true), isRequiredNamed: false))
+            name: ctorName,
+            positionalParams: ctor.formalParameters
+                .where((p) => p.isPositional && (p.name?.isNotEmpty ?? false))
+                .map((p) => OxideActionParam(name: p.name!, type: p.type.getDisplayString(withNullability: true), isRequiredNamed: false))
                 .toList(growable: false),
-            namedParams: ctor.parameters
-                .where((p) => p.isNamed)
-                .map((p) => OxideActionParam(name: p.name, type: p.type.getDisplayString(withNullability: true), isRequiredNamed: p.isRequiredNamed))
+            namedParams: ctor.formalParameters
+                .where((p) => p.isNamed && (p.name?.isNotEmpty ?? false))
+                .map((p) => OxideActionParam(name: p.name!, type: p.type.getDisplayString(withNullability: true), isRequiredNamed: p.isRequiredNamed))
                 .toList(growable: false),
           ),
         );
@@ -111,7 +116,9 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
       } else {
         for (final field in actionsElement.fields) {
           if (!field.isEnumConstant) continue;
-          actionConstructors.add(OxideActionConstructor(name: field.name, positionalParams: const [], namedParams: const []));
+          final fieldName = field.name;
+          if (fieldName == null || fieldName.isEmpty) continue;
+          actionConstructors.add(OxideActionConstructor(name: fieldName, positionalParams: const [], namedParams: const []));
         }
       }
     }

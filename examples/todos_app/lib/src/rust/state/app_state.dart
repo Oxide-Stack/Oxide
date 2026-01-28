@@ -6,10 +6,14 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// State for the todos example.
 ///oxide:state
-///oxide:meta:{"kind":"state","name":"AppState","docs":[],"fields":[{"name":"todos","ty":"Vec < TodoItem >"},{"name":"next_id","ty":"u64"}],"variants":null}
+///oxide:meta:{"kind":"state","name":"AppState","docs":["State for the todos example."],"fields":[{"name":"todos","ty":"Vec < TodoItem >"},{"name":"next_id","ty":"u64"}],"variants":null}
 class AppState {
+  /// Current list of todos.
   final List<TodoItem> todos;
+
+  /// Monotonically increasing ID source.
   final BigInt nextId;
 
   const AppState({required this.todos, required this.nextId});
@@ -26,11 +30,17 @@ class AppState {
           nextId == other.nextId;
 }
 
+/// Single todo item stored in [`AppState`].
 ///oxide:state
-///oxide:meta:{"kind":"state","name":"TodoItem","docs":[],"fields":[{"name":"id","ty":"String"},{"name":"title","ty":"String"},{"name":"completed","ty":"bool"}],"variants":null}
+///oxide:meta:{"kind":"state","name":"TodoItem","docs":["Single todo item stored in [`AppState`]."],"fields":[{"name":"id","ty":"String"},{"name":"title","ty":"String"},{"name":"completed","ty":"bool"}],"variants":null}
 class TodoItem {
+  /// Stable identifier for this item.
   final String id;
+
+  /// Display title.
   final String title;
+
+  /// Whether the item is completed.
   final bool completed;
 
   const TodoItem({

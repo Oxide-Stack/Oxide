@@ -85,8 +85,7 @@ pub enum AppSideEffect {
 }
 
 #[derive(Default)]
-pub struct AppReducer;
+pub struct AppReducer {}
 
 static SIDEFFECT_TX: OnceLock<oxide_core::tokio::sync::mpsc::UnboundedSender<AppSideEffect>> =
     OnceLock::new();
-

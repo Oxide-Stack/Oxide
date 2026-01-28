@@ -12,9 +12,14 @@ part 'app_action.freezed.dart';
 sealed class AppAction with _$AppAction {
   const AppAction._();
 
+  /// Add a new todo with the given title.
   const factory AppAction.addTodo({required String title}) = AppAction_AddTodo;
+
+  /// Toggle completion for the todo with the given ID.
   const factory AppAction.toggleTodo({required String id}) =
       AppAction_ToggleTodo;
+
+  /// Delete the todo with the given ID.
   const factory AppAction.deleteTodo({required String id}) =
       AppAction_DeleteTodo;
 }

@@ -1,5 +1,5 @@
-// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 part of 'oxide.dart';
 
@@ -24,16 +24,14 @@ class BenchCounterRiverpodOxideActions {
 }
 
 final benchCounterRiverpodOxideProvider =
-    AutoDisposeNotifierProvider<
+    NotifierProvider.autoDispose<
       BenchCounterRiverpodOxideNotifier,
       OxideView<CounterState, BenchCounterRiverpodOxideActions>
     >(() => BenchCounterRiverpodOxideNotifier());
 
 class BenchCounterRiverpodOxideNotifier
     extends
-        AutoDisposeNotifier<
-          OxideView<CounterState, BenchCounterRiverpodOxideActions>
-        > {
+        Notifier<OxideView<CounterState, BenchCounterRiverpodOxideActions>> {
   BenchCounterRiverpodOxideNotifier();
 
   late final BenchCounterRiverpodOxideActions actions =
@@ -422,16 +420,13 @@ class BenchJsonRiverpodOxideActions {
 }
 
 final benchJsonRiverpodOxideProvider =
-    AutoDisposeNotifierProvider<
+    NotifierProvider.autoDispose<
       BenchJsonRiverpodOxideNotifier,
       OxideView<JsonState, BenchJsonRiverpodOxideActions>
     >(() => BenchJsonRiverpodOxideNotifier());
 
 class BenchJsonRiverpodOxideNotifier
-    extends
-        AutoDisposeNotifier<
-          OxideView<JsonState, BenchJsonRiverpodOxideActions>
-        > {
+    extends Notifier<OxideView<JsonState, BenchJsonRiverpodOxideActions>> {
   BenchJsonRiverpodOxideNotifier();
 
   late final BenchJsonRiverpodOxideActions actions =
@@ -802,16 +797,13 @@ class BenchSieveRiverpodOxideActions {
 }
 
 final benchSieveRiverpodOxideProvider =
-    AutoDisposeNotifierProvider<
+    NotifierProvider.autoDispose<
       BenchSieveRiverpodOxideNotifier,
       OxideView<SieveState, BenchSieveRiverpodOxideActions>
     >(() => BenchSieveRiverpodOxideNotifier());
 
 class BenchSieveRiverpodOxideNotifier
-    extends
-        AutoDisposeNotifier<
-          OxideView<SieveState, BenchSieveRiverpodOxideActions>
-        > {
+    extends Notifier<OxideView<SieveState, BenchSieveRiverpodOxideActions>> {
   BenchSieveRiverpodOxideNotifier();
 
   late final BenchSieveRiverpodOxideActions actions =

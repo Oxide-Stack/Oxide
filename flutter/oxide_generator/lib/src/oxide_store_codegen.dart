@@ -234,14 +234,14 @@ OxideView<${c.stateType}, ${c.prefix}Actions> use${c.prefix}Oxide() {
 
   final riverpodBackend =
       '''
-final ${_lowerFirst(c.prefix)}Provider = ${c.keepAlive ? 'NotifierProvider' : 'AutoDisposeNotifierProvider'}<
+final ${_lowerFirst(c.prefix)}Provider = ${c.keepAlive ? 'NotifierProvider' : 'NotifierProvider.autoDispose'}<
     ${c.prefix}Notifier,
     OxideView<${c.stateType}, ${c.prefix}Actions>>(
   () => ${c.prefix}Notifier(),
 );
 
 class ${c.prefix}Notifier
-    extends ${c.keepAlive ? 'Notifier' : 'AutoDisposeNotifier'}<OxideView<${c.stateType}, ${c.prefix}Actions>> {
+    extends Notifier<OxideView<${c.stateType}, ${c.prefix}Actions>> {
   ${c.prefix}Notifier();
 
   late final ${c.prefix}Actions actions = ${c.prefix}Actions._(_dispatch);

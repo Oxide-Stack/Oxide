@@ -1,4 +1,4 @@
-use oxide_core::CoreError;
+use oxide_core::{CoreError,CoreResult};
 use oxide_generator_rs::reducer;
 
 /// Error type exposed across the FFI boundary.
@@ -6,7 +6,7 @@ pub use oxide_core::OxideError;
 
 use std::sync::OnceLock;
 
-use crate::state::{AppAction, AppState, TodoItem};
+use crate::state::{AppAction, TodoItem,AppState};
 
 #[flutter_rust_bridge::frb(init)]
 /// Initializes Flutter Rust Bridge for this library.
@@ -96,8 +96,7 @@ pub enum AppSideEffect {
 }
 
 #[derive(Default)]
-pub struct AppReducer;
+pub struct AppReducer {}
 
 static SIDEFFECT_TX: OnceLock<oxide_core::tokio::sync::mpsc::UnboundedSender<AppSideEffect>> =
     OnceLock::new();
-

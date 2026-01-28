@@ -18,8 +18,15 @@ In your Rust crate (the one FRB will bind to), add dependencies:
 
 ```toml
 [dependencies]
-oxide_core = "1.0.0"
-oxide_generator_rs = "1.0.0"
+oxide_core = "0.1.0"
+oxide_generator_rs = "0.1.0"
+```
+
+When working inside this repository, use combined version + path dependencies (Cargo prefers `path` locally, while published crates resolve by `version`):
+
+```toml
+oxide_core = { version = "0.1.0", path = "../rust/oxide_core" }
+oxide_generator_rs = { version = "0.1.0", path = "../rust/oxide_generator_rs" }
 ```
 
 Then define state/actions and a reducer implementation.
@@ -40,7 +47,7 @@ pub enum AppAction {
 pub enum AppSideEffect {}
 
 #[derive(Default)]
-pub struct AppReducer;
+pub struct AppReducer {}
 
 #[reducer(
   engine = AppEngine,
@@ -96,6 +103,40 @@ Typical regeneration command:
 flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 ```
 
+Common error: FRB crash on unit structs
+
+If your reducer is declared as a unit struct (e.g. `pub struct AppReducer;`), `flutter_rust_bridge_codegen` may log something like:
+
+```text
+Skip parsing enum_or_struct ... AppReducer ... struct with unit fields are not supported yet
+...
+panicked ... no entry found for key=MirStructIdent(... AppReducer ...)
+```
+
+Fix: change the reducer declaration to a braced struct:
+
+```rust
+#[derive(Default)]
+pub struct AppReducer {}
+```
+
+Alternatively, mark it as opaque (FRB will treat it as an opaque handle):
+
+```rust
+#[flutter_rust_bridge::frb(opaque)]
+pub struct AppReducer;
+```
+
+Important: make sure `OxideError` is re-exported from the Rust module tree that FRB scans (based on your `flutter_rust_bridge.yaml` `rust_input`; the examples use `rust_input: crate::api`).
+
+At minimum, re-export it from your crate root (`src/lib.rs`):
+
+```rust
+pub use oxide_core::OxideError;
+```
+
+If your `rust_input` points at an `api` module, it’s also common to re-export `OxideError` from within that module tree (e.g. `src/api/bridge.rs`), mirroring this repo’s examples.
+
 After generation, your Flutter code imports the FRB-generated Dart API (types like `ArcAppEngine`, `AppStateSnapshot`, and functions like `createEngine`, `dispatch`, `current`, `stateStream`, `disposeEngine`).
 
 ## 3) Flutter: Add Oxide Packages And Configure Codegen
@@ -110,12 +151,12 @@ In your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  oxide_annotations: ^1.0.0
-  oxide_runtime: ^1.0.0
+  oxide_annotations: ^0.1.0
+  oxide_runtime: ^0.1.0
 
 dev_dependencies:
   build_runner: ^2.4.0
-  oxide_generator: ^1.0.0
+  oxide_generator: ^0.1.0
 ```
 
 Then run:
@@ -240,7 +281,9 @@ class CounterCard extends StatelessWidget {
 
 ### Inherited Hooks backend (`OxideBackend.inheritedHooks`)
 
-This backend is the InheritedWidget backend plus a generated hook helper function: `use<Name>Oxide()`.
+This backend is the InheritedWidget backend plus a generated hook helper function.
+
+Naming note: the generated hook function appends `Oxide` to the store class name. If your store name already ends with `Oxide`, the generated hook ends up with `...OxideOxide()` (this is expected).
 
 Add dependencies in your app:
 
@@ -287,7 +330,7 @@ class CounterCard extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final view = useAppHooksOxide();
+    final view = useAppHooksOxideOxide();
 
     if (view.isLoading) return const CircularProgressIndicator();
     if (view.error != null) return Text('Error: ${view.error}');
@@ -307,7 +350,12 @@ class CounterCard extends HookWidget {
 
 ### Riverpod backend (`OxideBackend.riverpod`)
 
-This backend generates an `AutoDisposeNotifierProvider` that yields `OxideView<State, Actions>`.
+This backend generates a Riverpod provider that yields `OxideView<State, Actions>`.
+
+Provider type depends on `@OxideStore(keepAlive: ...)`:
+
+- `keepAlive: false` (default) → `NotifierProvider.autoDispose`
+- `keepAlive: true` → `NotifierProvider`
 
 Add dependencies in your app:
 
@@ -437,13 +485,13 @@ Enable it in your Rust dependency:
 
 ```toml
 [dependencies]
-oxide_core = { version = "1.0.0", features = ["state-persistence"] }
+oxide_core = { version = "0.1.0", features = ["state-persistence"] }
 ```
 
 When working inside this repository, use a combined version + path dependency (Cargo prefers `path` locally, while published crates resolve by `version`):
 
 ```toml
-oxide_core = { version = "1.0.0", path = "../rust/oxide_core", features = ["state-persistence"] }
+oxide_core = { version = "0.1.0", path = "../rust/oxide_core", features = ["state-persistence"] }
 ```
 
 Then use the persistence options supported by the reducer macro (see the `todos_app` example for a working configuration).

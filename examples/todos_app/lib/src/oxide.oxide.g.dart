@@ -1,5 +1,5 @@
-// dart format width=80
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 part of 'oxide.dart';
 
@@ -344,16 +344,13 @@ class StateBridgeRiverpodOxideActions {
 }
 
 final stateBridgeRiverpodOxideProvider =
-    AutoDisposeNotifierProvider<
+    NotifierProvider.autoDispose<
       StateBridgeRiverpodOxideNotifier,
       OxideView<AppState, StateBridgeRiverpodOxideActions>
     >(() => StateBridgeRiverpodOxideNotifier());
 
 class StateBridgeRiverpodOxideNotifier
-    extends
-        AutoDisposeNotifier<
-          OxideView<AppState, StateBridgeRiverpodOxideActions>
-        > {
+    extends Notifier<OxideView<AppState, StateBridgeRiverpodOxideActions>> {
   StateBridgeRiverpodOxideNotifier();
 
   late final StateBridgeRiverpodOxideActions actions =
