@@ -133,6 +133,14 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Enable Windows desktop and list devices
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Set-StrictMode -Version Latest
+          flutter config --enable-windows-desktop
+          flutter doctor -v
+          flutter devices
       - name: Test examples (Windows integration tests)
         shell: pwsh
         run: |
@@ -164,7 +172,7 @@ jobs:
               if (Test-Path "integration_test") {
                 $tests = Get-ChildItem -Path "integration_test" -Filter "*_test.dart" -File
                 foreach ($test in $tests) {
-                  Invoke-Native flutter test $test.FullName -d windows
+                  Invoke-Native flutter test -d windows $test.FullName
                 }
               }
             } finally {
