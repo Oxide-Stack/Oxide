@@ -27,9 +27,38 @@ examples=(
   "$ROOT_DIR/examples/benchmark_app"
 )
 
+device_id=""
+if [[ -z "${QA_INTEGRATION_DEVICE_ID:-}" ]]; then
+  case "$(uname -s)" in
+    Linux*) device_id="linux" ;;
+    Darwin*) device_id="macos" ;;
+    MINGW*|MSYS*|CYGWIN*) device_id="windows" ;;
+    *) device_id="" ;;
+  esac
+else
+  device_id="${QA_INTEGRATION_DEVICE_ID}"
+fi
+
 for dir in "${examples[@]}"; do
+  if [[ -f "$dir/rust/Cargo.toml" ]]; then
+    cd "$dir/rust"
+    cargo test
+  fi
+
   cd "$dir"
   flutter pub get
   dart run build_runner build -d
   flutter test
+
+  if [[ "${QA_SKIP_INTEGRATION_TESTS:-}" != "1" && -d "integration_test" && -n "$device_id" ]]; then
+    if flutter devices | grep -q "• $device_id •"; then
+      shopt -s nullglob
+      for test_file in integration_test/*_test.dart; do
+        flutter test "$test_file" -d "$device_id"
+      done
+      shopt -u nullglob
+    else
+      echo "Skipping integration tests in $dir (device '$device_id' not available)."
+    fi
+  fi
 done

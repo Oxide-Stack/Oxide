@@ -139,6 +139,64 @@ If your `rust_input` points at an `api` module, it’s also common to re-export 
 
 After generation, your Flutter code imports the FRB-generated Dart API (types like `ArcAppEngine`, `AppStateSnapshot`, and functions like `createEngine`, `dispatch`, `current`, `stateStream`, `disposeEngine`).
 
+## 2.1) Tokio Runtime Initialization (FRB + Reducers)
+
+Oxide uses Tokio to drive reducer side-effects and background tasks. In Flutter apps using FRB, you should ensure there is a Tokio runtime available before creating an engine.
+
+### Recommended pattern (single runtime per Rust library)
+
+Create a runtime module in your Rust crate (mirrors this repo’s examples):
+
+```rust
+use std::sync::OnceLock;
+
+static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
+
+pub fn runtime() -> &'static tokio::runtime::Runtime {
+  RUNTIME.get_or_init(|| {
+    tokio::runtime::Builder::new_multi_thread()
+      .enable_all()
+      .build()
+      .expect("failed to build Tokio runtime")
+  })
+}
+
+pub fn handle() -> tokio::runtime::Handle {
+  runtime().handle().clone()
+}
+```
+
+Then, in your FRB init entrypoint, initialize the runtime:
+
+```rust
+#[flutter_rust_bridge::frb(init)]
+pub fn init_app() {
+  let _ = crate::runtime::runtime();
+  flutter_rust_bridge::setup_default_user_utils();
+}
+```
+
+### Wiring the runtime into reducers
+
+When declaring a reducer with `#[reducer(...)]`, pass a Tokio handle so Oxide spawns background tasks on your runtime:
+
+```rust
+#[reducer(
+  engine = AppEngine,
+  snapshot = AppStateSnapshot,
+  initial = AppState::new(),
+  tokio_handle = crate::runtime::handle(),
+)]
+impl oxide_core::Reducer for AppReducer {
+  /* ... */
+}
+```
+
+### Best practices
+
+- Prefer one shared runtime per Rust library (avoid creating multiple runtimes).
+- Keep reducer logic async-friendly; don’t block inside Rust functions called from Dart.
+- Dispose engines/controllers when no longer needed so subscriptions and background tasks are cleaned up.
 ## 3) Flutter: Add Oxide Packages And Configure Codegen
 
 Add the packages you need in your Flutter app:

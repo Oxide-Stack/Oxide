@@ -30,12 +30,12 @@ impl JsonReducer {
 
 fn run_json_once(state: &mut JsonState, json: &str) -> oxide_core::CoreResult<()> {
     let mut value: serde_json::Value =
-        serde_json::from_str(json).map_err(|e| oxide_core::CoreError::Validation { message: e.to_string() })?;
+        serde_json::from_str(json).map_err(|e| oxide_core::OxideError::Validation { message: e.to_string() })?;
 
     canonicalize_json(&mut value);
     let entries = count_entries(&value);
     let serialized =
-        serde_json::to_string(&value).map_err(|e| oxide_core::CoreError::Validation { message: e.to_string() })?;
+        serde_json::to_string(&value).map_err(|e| oxide_core::OxideError::Validation { message: e.to_string() })?;
     let json_len = serialized.len() as u64;
     let hash = fnv1a64(serialized.as_bytes());
 

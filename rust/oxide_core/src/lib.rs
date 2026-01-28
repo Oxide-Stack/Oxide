@@ -9,8 +9,8 @@ pub mod ffi;
 /// Optional state persistence utilities.
 pub mod persistence;
 
-pub use core::{CoreError, CoreResult, Reducer, ReducerEngine, StateChange, StateSnapshot};
-pub use ffi::{OxideError, watch_receiver_to_stream};
+pub use core::{CoreResult, OxideError, Reducer, ReducerEngine, StateChange, StateSnapshot};
+pub use ffi::watch_receiver_to_stream;
 pub use tokio;
 
 #[cfg(feature = "state-persistence")]

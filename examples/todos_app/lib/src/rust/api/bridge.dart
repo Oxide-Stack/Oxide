@@ -10,7 +10,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppSideEffect`, `__OxideReducerMarker_AppReducer`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `effect`, `from`, `init`, `reduce`
-// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new_with_handle`, `new_with_runtime`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `decode_state_value`, `dispatch`, `encode_current_state`, `encode_state_value`, `new_with_handle`, `new_with_runtime`, `new`, `subscribe`
 
 Future<ArcAppEngine> createEngine() =>
     RustLib.instance.api.crateApiBridgeCreateEngine();
@@ -30,30 +30,8 @@ Future<AppStateSnapshot> current({required ArcAppEngine engine}) =>
 Stream<AppStateSnapshot> stateStream({required ArcAppEngine engine}) =>
     RustLib.instance.api.crateApiBridgeStateStream(engine: engine);
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AppEngine>>
-abstract class AppEngine implements RustOpaqueInterface {
-  static Future<CoreResultAppState> decodeStateValue({
-    required List<int> bytes,
-  }) => RustLib.instance.api.crateApiBridgeAppEngineDecodeStateValue(
-    bytes: bytes,
-  );
-
-  Future<CoreResultVecU8> encodeCurrentState();
-
-  static Future<CoreResultVecU8> encodeStateValue({required AppState value}) =>
-      RustLib.instance.api.crateApiBridgeAppEngineEncodeStateValue(
-        value: value,
-      );
-}
-
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< Arc < AppEngine >>>
 abstract class ArcAppEngine implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< CoreResult < AppState >>>
-abstract class CoreResultAppState implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< CoreResult < Vec < u8 > >>>
-abstract class CoreResultVecU8 implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< OxideError>>
 abstract class OxideError implements RustOpaqueInterface {}

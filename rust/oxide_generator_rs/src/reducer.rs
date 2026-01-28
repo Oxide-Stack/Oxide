@@ -424,7 +424,7 @@ pub(crate) fn expand_reducer_impl(
 
     let marker_ident = format_ident!("__OxideReducerMarker_{reducer_ident}");
 
-    let mut marker_item: syn::ItemStruct = syn::parse_quote!(struct #marker_ident;);
+    let mut marker_item: syn::ItemStruct = syn::parse_quote!(struct #marker_ident {});
     marker_item
         .attrs
         .push(syn::parse_quote!(#[doc = "oxide:reducer"]));
@@ -626,8 +626,15 @@ pub(crate) fn expand_reducer_impl(
         quote!()
     };
 
+    let engine_method_ignore_attr = if cfg!(feature = "frb") && include_frb {
+        quote!(#[flutter_rust_bridge::frb(ignore)])
+    } else {
+        quote! {}
+    };
+
     let engine_persistence_tokens = if cfg!(feature = "state-persistence") {
         quote! {
+            #engine_method_ignore_attr
             pub async fn encode_current_state(&self) -> oxide_core::CoreResult<Vec<u8>>
             where
                 #state_ty: oxide_core::serde::Serialize,
@@ -636,6 +643,7 @@ pub(crate) fn expand_reducer_impl(
                 oxide_core::persistence::encode(&snapshot.state)
             }
 
+            #engine_method_ignore_attr
             pub fn encode_state_value(value: &#state_ty) -> oxide_core::CoreResult<Vec<u8>>
             where
                 #state_ty: oxide_core::serde::Serialize,
@@ -643,6 +651,7 @@ pub(crate) fn expand_reducer_impl(
                 oxide_core::persistence::encode(value)
             }
 
+            #engine_method_ignore_attr
             pub fn decode_state_value(bytes: &[u8]) -> oxide_core::CoreResult<#state_ty>
             where
                 #state_ty: oxide_core::serde::de::DeserializeOwned,
@@ -650,12 +659,6 @@ pub(crate) fn expand_reducer_impl(
                 oxide_core::persistence::decode(bytes)
             }
         }
-    } else {
-        quote! {}
-    };
-
-    let engine_method_ignore_attr = if cfg!(feature = "frb") && include_frb {
-        quote!(#[flutter_rust_bridge::frb(ignore)])
     } else {
         quote! {}
     };

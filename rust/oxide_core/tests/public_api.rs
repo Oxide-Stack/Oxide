@@ -1,4 +1,4 @@
-use oxide_core::{CoreError, CoreResult, Reducer, ReducerEngine, StateChange};
+use oxide_core::{CoreResult, OxideError, Reducer, ReducerEngine, StateChange};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct State {
@@ -32,7 +32,7 @@ impl Reducer for ReducerImpl {
                 state.value = state.value.saturating_add(1);
                 Ok(StateChange::FullUpdate)
             }
-            Action::Fail => Err(CoreError::Internal {
+            Action::Fail => Err(OxideError::Internal {
                 message: "expected failure".to_string(),
             }),
         }
@@ -59,7 +59,7 @@ async fn reducer_engine_round_trip() {
 async fn reducer_engine_dispatch_returns_error() {
     let engine = ReducerEngine::<ReducerImpl>::new(ReducerImpl::default(), State { value: 0 });
     let err = engine.dispatch(Action::Fail).await.unwrap_err();
-    assert!(matches!(err, CoreError::Internal { .. }));
+    assert!(matches!(err, OxideError::Internal { .. }));
 
     let snapshot = engine.current().await;
     assert_eq!(snapshot.revision, 0);

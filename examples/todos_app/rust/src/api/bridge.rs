@@ -1,4 +1,4 @@
-use oxide_core::{CoreError,CoreResult};
+
 use oxide_generator_rs::reducer;
 
 /// Error type exposed across the FFI boundary.
@@ -44,7 +44,7 @@ impl oxide_core::Reducer for AppReducer {
             AppAction::AddTodo { title } => {
                 let trimmed = title.trim();
                 if trimmed.is_empty() {
-                    return Err(CoreError::Validation {
+                    return Err(OxideError::Validation {
                         message: "todo title must not be empty".to_string(),
                     });
                 }
@@ -61,7 +61,7 @@ impl oxide_core::Reducer for AppReducer {
                     .todos
                     .iter_mut()
                     .find(|t| t.id == id)
-                    .ok_or_else(|| CoreError::NotFound {
+                    .ok_or_else(|| OxideError::NotFound {
                         resource: format!("todo:{id}"),
                     })?;
                 todo.completed = !todo.completed;
@@ -70,7 +70,7 @@ impl oxide_core::Reducer for AppReducer {
                 let before_len = state.todos.len();
                 state.todos.retain(|t| t.id != id);
                 if state.todos.len() == before_len {
-                    return Err(CoreError::NotFound {
+                    return Err(OxideError::NotFound {
                         resource: format!("todo:{id}"),
                     });
                 }

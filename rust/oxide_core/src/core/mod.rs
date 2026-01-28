@@ -12,7 +12,7 @@ mod snapshot;
 mod store;
 pub(crate) mod task;
 
-pub use error::{CoreError, CoreResult};
+pub use error::{CoreResult, OxideError};
 pub use reducer_engine::ReducerEngine;
 pub use snapshot::StateSnapshot;
 pub use store::{Reducer, StateChange};

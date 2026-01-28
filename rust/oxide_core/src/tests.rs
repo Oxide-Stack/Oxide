@@ -1,6 +1,6 @@
 use tokio_stream::{StreamExt, wrappers::WatchStream};
 
-use crate::{CoreError, CoreResult, Reducer, ReducerEngine, StateChange};
+use crate::{CoreResult, OxideError, Reducer, ReducerEngine, StateChange};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct TestState {
@@ -42,7 +42,7 @@ impl Reducer for TestReducer {
             TestAction::Noop => Ok(StateChange::None),
             TestAction::MutateThenFail => {
                 state.value = state.value.saturating_add(1);
-                Err(CoreError::Internal {
+                Err(OxideError::Internal {
                     message: "boom".to_string(),
                 })
             }

@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 /// Convenience alias used throughout the crate.
-pub type CoreResult<T> = Result<T, CoreError>;
+pub type CoreResult<T> = Result<T, OxideError>;
 
 /// Error type for core operations.
 ///
@@ -9,7 +9,7 @@ pub type CoreResult<T> = Result<T, CoreError>;
 /// embedded in different contexts (including FFI boundaries) without exposing
 /// many dependency-specific error types.
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
-pub enum CoreError {
+pub enum OxideError {
     /// An unexpected error that indicates a bug or invariant violation.
     #[error("internal error: {message}")]
     Internal { message: String },
