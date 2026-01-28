@@ -1,3 +1,15 @@
+## 0.1.1
+- Upgrade flutter_riverpod to ^3.2.0 across all examples and runtime
+- Update analyzer, build, source_gen, and lints to latest versions in oxide_generator
+- Fix unit struct handling in Rust reducers (change `AppReducer;` to `AppReducer {}`)
+- Improve generated Riverpod provider syntax to match Riverpod 3.x patterns
+- Add comprehensive documentation about FRB compatibility and error handling
+- Fix Dart analyzer warnings in oxide_store_generator
+- Update release workflow to handle version verification and pub.dev publishing
+- Rename CoreError to OxideError and consolidate error types
+- Add integration tests for state persistence and controller lifecycle
+- Extend QA scripts to run Rust tests and integration tests on detected devices
+
 ## 0.1.0
 - Initial release of Oxide (Rust engine + Flutter codegen workflow).
 - Rust: `oxide_core` store engine primitives and snapshot streaming.
