@@ -111,6 +111,24 @@ where
     wasm_bindgen_futures::spawn_local(future);
 }
 
+#[cfg(all(feature = "frb-spawn", target_family = "wasm"))]
+/// Spawns a background task safely, using `spawn_local` on WASM.
+pub fn safe_spawn<F>(future: F)
+where
+    F: Future<Output = ()> + 'static,
+{
+    spawn_local(future);
+}
+
+#[cfg(all(feature = "frb-spawn", not(target_family = "wasm")))]
+/// Spawns a background task safely, using `spawn` on native.
+pub fn safe_spawn<F>(future: F)
+where
+    F: Future<Output = ()> + Send + 'static,
+{
+    spawn(future);
+}
+
 #[cfg(feature = "frb-spawn")]
 /// Spawns a blocking function via Flutter Rust Bridge.
 ///
@@ -123,14 +141,7 @@ where
 {
     ensure_initialized().expect("oxide_core runtime must be initialized before spawning");
     let pool = thread_pool().expect("thread pool present after ensure_initialized");
-    #[cfg(target_family = "wasm")]
-    {
-        flutter_rust_bridge::spawn_blocking_with(f, &pool)
-    }
-    #[cfg(not(target_family = "wasm"))]
-    {
-        flutter_rust_bridge::spawn_blocking_with(f, pool)
-    }
+    flutter_rust_bridge::spawn_blocking_with(f, pool)
 }
 
 #[cfg(not(feature = "frb-spawn"))]
@@ -150,6 +161,14 @@ pub fn spawn<F>(_future: F) -> ()
 where
     F: Future + Send + 'static,
     F::Output: Send + 'static,
+{
+    unreachable!("oxide_core built without frb-spawn; enable the `frb-spawn` feature")
+}
+
+#[cfg(not(feature = "frb-spawn"))]
+pub fn safe_spawn<F>(_future: F)
+where
+    F: Future<Output = ()> + 'static,
 {
     unreachable!("oxide_core built without frb-spawn; enable the `frb-spawn` feature")
 }

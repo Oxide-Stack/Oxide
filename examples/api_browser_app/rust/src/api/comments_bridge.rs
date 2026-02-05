@@ -75,8 +75,7 @@ impl oxide_core::Reducer for CommentsReducer {
                     return Ok(StateChange::FullUpdate);
                 };
 
-                #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-                oxide_core::runtime::spawn_local(async move {
+                oxide_core::runtime::safe_spawn(async move {
                     let path = format!("comments?postId={post_id}");
                     match util::get_json::<Vec<Comment>>(&path).await {
                         Ok(comments) => {
@@ -88,18 +87,7 @@ impl oxide_core::Reducer for CommentsReducer {
                     }
                 });
 
-                #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
-                oxide_core::runtime::spawn(async move {
-                    let path = format!("comments?postId={post_id}");
-                    match util::get_json::<Vec<Comment>>(&path).await {
-                        Ok(comments) => {
-                            let _ = tx.send(CommentsSideEffect::Loaded { post_id, comments });
-                        }
-                        Err(err) => {
-                            let _ = tx.send(CommentsSideEffect::Failed { message: err.to_string() });
-                        }
-                    }
-                });
+              
 
                 Ok(StateChange::FullUpdate)
             }
