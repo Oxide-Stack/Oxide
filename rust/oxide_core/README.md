@@ -52,10 +52,7 @@ impl Reducer for CounterReducer {
   type Action = CounterAction;
   type SideEffect = CounterSideEffect;
 
-  fn init(
-    &mut self,
-    _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-  ) {}
+  async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
 
   fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
     match action {
@@ -82,7 +79,7 @@ impl Reducer for CounterReducer {
 use oxide_core::ReducerEngine;
 
 # use oxide_core::{CoreResult, Reducer, StateChange};
-# use oxide_core::tokio::sync::mpsc;
+# use oxide_core::InitContext;
 # #[derive(Debug, Clone, PartialEq, Eq)]
 # pub struct CounterState {
 #   pub value: u64,
@@ -99,7 +96,7 @@ use oxide_core::ReducerEngine;
 #   type Action = CounterAction;
 #   type SideEffect = CounterSideEffect;
 #
-#   fn init(&mut self, _sideeffect_tx: mpsc::UnboundedSender<Self::SideEffect>) {}
+#   async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 #
 #   fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
 #     match action {
@@ -118,10 +115,15 @@ use oxide_core::ReducerEngine;
 # }
 let runtime = tokio::runtime::Runtime::new().unwrap();
 runtime.block_on(async {
-  let engine = ReducerEngine::<CounterReducer>::new(
-    CounterReducer::default(),
-    CounterState { value: 0 },
-  );
+  fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+    static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> = std::sync::OnceLock::new();
+    POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+  }
+  let _ = oxide_core::runtime::init(thread_pool);
+
+  let engine = ReducerEngine::<CounterReducer>::new(CounterReducer::default(), CounterState { value: 0 })
+    .await
+    .unwrap();
   let snap = engine.dispatch(CounterAction::Inc).await.unwrap();
   let current = engine.current().await;
   assert_eq!(snap.revision, current.revision);
@@ -133,8 +135,8 @@ runtime.block_on(async {
 `ReducerEngine` starts an internal async loop to process side-effects. Engine creation is safe even when there is no ambient Tokio runtime (for example, when entered from a synchronous FFI boundary):
 
 - If a Tokio runtime is currently available, Oxide spawns tasks onto it.
-- Otherwise, when built with the default `frb-spawn` feature, Oxide uses Flutter Rust Bridge’s cross-platform `spawn` helper.
-- If `frb-spawn` is disabled, Oxide falls back to an internal global Tokio runtime for background work.
+- On native targets, if no runtime is available and `internal-runtime` is enabled (default), Oxide falls back to an internal global Tokio runtime for background work.
+- On web WASM (`wasm32-unknown-unknown`), Oxide uses `wasm-bindgen-futures` to spawn background work without requiring a Tokio runtime.
 
 In a normal Rust binary, the simplest approach is to run inside a Tokio runtime:
 
@@ -165,6 +167,43 @@ This makes it safe to write reducers as normal `&mut State` code while preservin
 - `state-persistence`: enables bincode encode/decode helpers in `oxide_core::persistence`
 - `persistence-json`: adds JSON encode/decode helpers (requires `state-persistence`)
 - `full`: enables all persistence features
+- `internal-runtime` (default): enables a global Tokio runtime fallback on native targets
+
+## Web / WASM Support
+
+`oxide_core` supports compiling for WebAssembly. The supported targets differ in what persistence backend is available:
+
+- `wasm32-unknown-unknown` (web): background tasks are spawned with `wasm-bindgen-futures`. When `state-persistence` is enabled, persisted snapshots are stored in `localStorage` using a stable key derived from `PersistenceConfig.key`.
+- `wasm32-wasip1` (WASI): compilation is supported. When `state-persistence` is enabled, snapshots are persisted to the filesystem.
+
+### Build Commands
+
+From `rust/`:
+
+```bash
+rustup target add wasm32-unknown-unknown wasm32-wasip1
+cargo check -p oxide_core --target wasm32-unknown-unknown --all-features
+cargo check -p oxide_core --target wasm32-wasip1 --all-features
+```
+
+### WASM Tests
+
+`oxide_core` includes WASM-focused regression tests:
+
+- `wasm_web_compat` (web): validates `ReducerEngine` dispatch in browser WASM and (when enabled) persistence restore using `localStorage`.
+- `wasm_wasi_compat` (WASI): compile-level compatibility check for `wasm32-wasip1`.
+
+To compile the web test crate:
+
+```bash
+cargo test -p oxide_core --target wasm32-unknown-unknown --all-features --no-run --test wasm_web_compat
+```
+
+### Troubleshooting
+
+- `#[tokio::test]` does not work on `wasm32-unknown-unknown`. Use `wasm-bindgen-test` for web WASM tests and keep Tokio-based tests for native targets.
+- Web persistence uses `localStorage` and therefore requires a browser environment. If you run WASM tests under Node.js, `window`/`localStorage` may not be available.
+- Persistence is debounced: writes are throttled to at most once per `PersistenceConfig.min_interval`, always persisting the latest snapshot payload observed during the interval.
 
 ## Commands
 

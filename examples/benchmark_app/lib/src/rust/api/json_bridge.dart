@@ -6,12 +6,14 @@
 import '../frb_generated.dart';
 import '../state/json_action.dart';
 import '../state/json_state.dart';
-import 'counter_bridge.dart';
+import 'bridge.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `JsonSideEffect`, `__OxideReducerMarker_JsonRootReducer`
+// These functions are ignored because they are not marked as `pub`: `run_json_once`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `JsonRootReducer`, `JsonSideEffect`, `__OxideReducerMarker_JsonRootReducer`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `effect`, `from`, `init`, `reduce`
-// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new_with_handle`, `new_with_runtime`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
 
 Future<ArcJsonEngine> createEngine() =>
     RustLib.instance.api.crateApiJsonBridgeCreateEngine();
@@ -35,21 +37,6 @@ Stream<JsonStateSnapshot> stateStream({required ArcJsonEngine engine}) =>
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< Arc < JsonEngine >>>
 abstract class ArcJsonEngine implements RustOpaqueInterface {}
-
-class JsonRootReducer {
-  const JsonRootReducer();
-
-  static Future<JsonRootReducer> default_() =>
-      RustLib.instance.api.crateApiJsonBridgeJsonRootReducerDefault();
-
-  @override
-  int get hashCode => 0;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is JsonRootReducer && runtimeType == other.runtimeType;
-}
 
 class JsonStateSnapshot {
   final BigInt revision;

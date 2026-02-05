@@ -6,12 +6,14 @@
 import '../frb_generated.dart';
 import '../state/sieve_action.dart';
 import '../state/sieve_state.dart';
-import 'counter_bridge.dart';
+import 'bridge.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `SieveSideEffect`, `__OxideReducerMarker_SieveRootReducer`
+// These functions are ignored because they are not marked as `pub`: `run_sieve`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `SieveRootReducer`, `SieveSideEffect`, `__OxideReducerMarker_SieveRootReducer`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `effect`, `from`, `init`, `reduce`
-// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new_with_handle`, `new_with_runtime`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
 
 Future<ArcSieveEngine> createEngine() =>
     RustLib.instance.api.crateApiSieveBridgeCreateEngine();
@@ -35,21 +37,6 @@ Stream<SieveStateSnapshot> stateStream({required ArcSieveEngine engine}) =>
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< Arc < SieveEngine >>>
 abstract class ArcSieveEngine implements RustOpaqueInterface {}
-
-class SieveRootReducer {
-  const SieveRootReducer();
-
-  static Future<SieveRootReducer> default_() =>
-      RustLib.instance.api.crateApiSieveBridgeSieveRootReducerDefault();
-
-  @override
-  int get hashCode => 0;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SieveRootReducer && runtimeType == other.runtimeType;
-}
 
 class SieveStateSnapshot {
   final BigInt revision;

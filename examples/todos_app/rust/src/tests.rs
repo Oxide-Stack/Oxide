@@ -1,5 +1,6 @@
 use crate::state::AppAction;
-use crate::{api::bridge::AppReducer, AppState};
+use crate::api::bridge::AppRootReducer;
+use crate::state::AppState;
 use oxide_core::OxideError;
 use oxide_core::ReducerEngine;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -17,16 +18,18 @@ fn reset_persistence_file(key: &str) {
     let _ = std::fs::remove_file(path);
 }
 
-fn create_test_engine(key: &str) -> ReducerEngine<AppReducer> {
-    ReducerEngine::<AppReducer>::new_persistent_with_handle(
-        AppReducer::default(),
+async fn create_test_engine(key: &str) -> ReducerEngine<AppRootReducer> {
+    crate::api::bridge::init_oxide().await.unwrap();
+    ReducerEngine::<AppRootReducer>::new_persistent(
+        AppRootReducer::default(),
         AppState::new(),
         oxide_core::persistence::PersistenceConfig {
             key: key.to_string(),
             min_interval: Duration::from_millis(0),
         },
-        crate::runtime::handle(),
     )
+    .await
+    .unwrap()
 }
 
 async fn wait_for_persistence_file(key: &str) {
@@ -53,12 +56,12 @@ async fn wait_for_persistence_file(key: &str) {
 async fn add_todo_creates_item() {
     let key = test_persistence_key("add_todo_creates_item");
     reset_persistence_file(&key);
-    let engine = create_test_engine(&key);
+    let engine = create_test_engine(&key).await;
     let snapshot = engine
         .dispatch(
-        AppAction::AddTodo {
-            title: "buy milk".to_string(),
-        },
+            AppAction::AddTodo {
+                title: "buy milk".to_string(),
+            },
         )
         .await
         .expect("dispatch");
@@ -71,14 +74,14 @@ async fn add_todo_creates_item() {
 async fn add_empty_title_returns_validation_error_and_preserves_state() {
     let key = test_persistence_key("add_empty_title_returns_validation_error_and_preserves_state");
     reset_persistence_file(&key);
-    let engine = create_test_engine(&key);
+    let engine = create_test_engine(&key).await;
     let before = engine.current().await;
 
     let err = engine
         .dispatch(
-        AppAction::AddTodo {
-            title: "   ".to_string(),
-        },
+            AppAction::AddTodo {
+                title: "   ".to_string(),
+            },
         )
         .await;
     assert!(matches!(err, Err(OxideError::Validation { .. })));
@@ -94,12 +97,12 @@ async fn persistence_restores_state_across_engines() {
     reset_persistence_file(&key);
 
     {
-        let engine = create_test_engine(&key);
+        let engine = create_test_engine(&key).await;
         let _ = engine
             .dispatch(
-            AppAction::AddTodo {
-                title: "persist me".to_string(),
-            },
+                AppAction::AddTodo {
+                    title: "persist me".to_string(),
+                },
             )
             .await
             .expect("dispatch");
@@ -107,7 +110,7 @@ async fn persistence_restores_state_across_engines() {
 
     wait_for_persistence_file(&key).await;
 
-    let engine = create_test_engine(&key);
+    let engine = create_test_engine(&key).await;
     let snapshot = engine.current().await;
     assert_eq!(snapshot.state.todos.len(), 1);
     assert_eq!(snapshot.state.todos[0].title, "persist me");

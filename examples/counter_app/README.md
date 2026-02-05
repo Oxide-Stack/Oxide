@@ -9,6 +9,16 @@ Minimal example showing basic state management with Oxide + Flutter Rust Bridge 
 - Flutter receives state updates as a typed stream of snapshots (`AppStateSnapshot`).
 - Four Flutter adapters for the same store idea (Inherited, Hooks, Riverpod, BLoC) shown as tabs.
 
+## Rust Surface
+
+- Intended FRB surface: `init_app`, `init_oxide`, the engine type, and the state/action/snapshot types.
+- Not part of the FRB surface: reducer implementation structs and any internal side-effect wiring.
+
+## Changes Applied
+
+- Hid reducer implementation types from FRB to avoid redundant Dart-visible “reducer” artifacts.
+- Removed crate-root Rust re-exports (e.g., tokio watch types) that FRB can accidentally pick up.
+
 ## State lifetime (tabs)
 
 Each tab owns its own store instance. If a tab subtree is disposed and rebuilt (common in tab/page views), the store may be disposed and recreated, which resets Rust state back to its initial value.
@@ -33,7 +43,7 @@ flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 
 ## Key Files
 
-- Rust reducer + FRB surface: [rust/src/api/bridge.rs](./rust/src/api/bridge.rs)
+- Rust FRB surface + engine macro: [rust/src/api/bridge.rs](./rust/src/api/bridge.rs)
 - Flutter store declaration (annotation): [lib/src/oxide.dart](./lib/src/oxide.dart)
 - Generated glue (do not edit): [lib/src/oxide.oxide.g.dart](./lib/src/oxide.oxide.g.dart)
 

@@ -51,7 +51,8 @@ $examples = @(
   "examples\counter_app",
   "examples\todos_app",
   "examples\ticker_app",
-  "examples\benchmark_app"
+  "examples\benchmark_app",
+  "examples\api_browser_app"
 )
 
 foreach ($dir in $examples) {

@@ -1,3 +1,13 @@
+//! Expansion helpers for `#[state]` and `#[actions]`.
+//!
+//! These macros are intentionally lightweight:
+//!
+//! - They ensure common derives exist for ergonomic use in Rust and across FFI boundaries.
+//! - They inject structured metadata as doc strings so other code generators can inspect
+//!   the state/action shapes without needing a Rust type-checker.
+//!
+//! The metadata format is implemented in [`crate::meta`].
+
 use quote::quote;
 use syn::{Attribute, ItemEnum, ItemStruct, Token};
 
@@ -6,6 +16,7 @@ use crate::meta::{
 };
 
 fn ensure_required_derives(attrs: &mut Vec<Attribute>) {
+    // These are the baseline derives Oxide expects for state and actions.
     let mut required: Vec<syn::Path> = vec![
         syn::parse_quote!(Debug),
         syn::parse_quote!(Clone),
@@ -14,6 +25,8 @@ fn ensure_required_derives(attrs: &mut Vec<Attribute>) {
     ];
 
     if cfg!(feature = "state-persistence") {
+        // When persistence is enabled, we inject serde derives using oxide_core's re-export
+        // so downstream crates do not need to depend on serde directly.
         required.push(syn::parse_quote!(::oxide_core::serde::Serialize));
         required.push(syn::parse_quote!(::oxide_core::serde::Deserialize));
     }
@@ -22,6 +35,7 @@ fn ensure_required_derives(attrs: &mut Vec<Attribute>) {
 }
 
 fn ensure_derive(attrs: &mut Vec<Attribute>, required: &[syn::Path]) {
+    // We either update the first existing `#[derive(...)]` attribute, or insert a new one.
     let mut existing: Vec<syn::Path> = Vec::new();
     let mut derive_attr_idx: Option<usize> = None;
 
@@ -40,6 +54,8 @@ fn ensure_derive(attrs: &mut Vec<Attribute>, required: &[syn::Path]) {
     }
 
     for req in required {
+        // Compare by last path segment so `Serialize` and `oxide_core::serde::Serialize`
+        // are treated as the same derive.
         let req_last = req.segments.last().map(|s| s.ident.to_string());
         let already = existing.iter().any(|p| {
             p.segments
@@ -60,6 +76,8 @@ fn ensure_derive(attrs: &mut Vec<Attribute>, required: &[syn::Path]) {
 }
 
 fn has_serde_crate_attr(attrs: &[Attribute]) -> bool {
+    // We only inject `#[serde(crate = "oxide_core::serde")]` if the user hasn't already
+    // configured serde's crate path.
     for attr in attrs {
         if !attr.path().is_ident("serde") {
             continue;
@@ -89,6 +107,7 @@ fn ensure_serde_crate_attr(attrs: &mut Vec<Attribute>) {
 }
 
 pub(crate) fn expand_state_struct(mut item: ItemStruct) -> proc_macro2::TokenStream {
+    // Capture high-level information for metadata while we still have the original item.
     let name = item.ident.to_string();
     let ident = item.ident.clone();
     ensure_required_derives(&mut item.attrs);
@@ -97,6 +116,7 @@ pub(crate) fn expand_state_struct(mut item: ItemStruct) -> proc_macro2::TokenStr
     }
     let docs = collect_doc_lines(&item.attrs);
     let fields = struct_fields(&item);
+    // Marker docs are easy to grep for, even without parsing the JSON meta payload.
     item.attrs.push(syn::parse_quote!(#[doc = "oxide:state"]));
     push_meta_doc(
         &mut item.attrs,
@@ -117,6 +137,8 @@ pub(crate) fn expand_state_struct(mut item: ItemStruct) -> proc_macro2::TokenStr
     quote!(
         #item
         const _: () = {
+            // Emit a small monomorphized function that forces the required bounds at compile time,
+            // producing friendly errors if the user's type violates expectations.
             fn _oxide_require_state_traits<T>()
             where
                 T: ::core::fmt::Debug + Clone + PartialEq + Eq #persistence_bounds,

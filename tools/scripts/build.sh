@@ -60,6 +60,7 @@ examples=(
   "$ROOT_DIR/examples/todos_app"
   "$ROOT_DIR/examples/ticker_app"
   "$ROOT_DIR/examples/benchmark_app"
+  "$ROOT_DIR/examples/api_browser_app"
 )
 
 for dir in "${examples[@]}"; do

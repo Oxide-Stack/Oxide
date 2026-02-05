@@ -8,9 +8,12 @@ import '../state/app_action.dart';
 import '../state/app_state.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppSideEffect`, `__OxideReducerMarker_AppReducer`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppRootReducer`, `AppSideEffect`, `__OxideReducerMarker_AppRootReducer`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `effect`, `from`, `init`, `reduce`
-// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `decode_state_value`, `dispatch`, `encode_current_state`, `encode_state_value`, `new_with_handle`, `new_with_runtime`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `decode_state_value`, `dispatch`, `encode_current_state`, `encode_state_value`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
+
+Future<void> initOxide() => RustLib.instance.api.crateApiBridgeInitOxide();
 
 Future<ArcAppEngine> createEngine() =>
     RustLib.instance.api.crateApiBridgeCreateEngine();
@@ -35,21 +38,6 @@ abstract class ArcAppEngine implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< OxideError>>
 abstract class OxideError implements RustOpaqueInterface {}
-
-class AppReducer {
-  const AppReducer();
-
-  static Future<AppReducer> default_() =>
-      RustLib.instance.api.crateApiBridgeAppReducerDefault();
-
-  @override
-  int get hashCode => 0;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AppReducer && runtimeType == other.runtimeType;
-}
 
 class AppStateSnapshot {
   final BigInt revision;

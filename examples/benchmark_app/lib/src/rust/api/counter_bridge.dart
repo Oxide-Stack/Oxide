@@ -6,11 +6,13 @@
 import '../frb_generated.dart';
 import '../state/counter_action.dart';
 import '../state/counter_state.dart';
+import 'bridge.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `CounterSideEffect`, `__OxideReducerMarker_CounterRootReducer`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `CounterRootReducer`, `CounterSideEffect`, `__OxideReducerMarker_CounterRootReducer`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `effect`, `from`, `init`, `reduce`
-// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new_with_handle`, `new_with_runtime`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
 
 Future<ArcCounterEngine> createEngine() =>
     RustLib.instance.api.crateApiCounterBridgeCreateEngine();
@@ -34,24 +36,6 @@ Stream<CounterStateSnapshot> stateStream({required ArcCounterEngine engine}) =>
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< Arc < CounterEngine >>>
 abstract class ArcCounterEngine implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< OxideError>>
-abstract class OxideError implements RustOpaqueInterface {}
-
-class CounterRootReducer {
-  const CounterRootReducer();
-
-  static Future<CounterRootReducer> default_() =>
-      RustLib.instance.api.crateApiCounterBridgeCounterRootReducerDefault();
-
-  @override
-  int get hashCode => 0;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CounterRootReducer && runtimeType == other.runtimeType;
-}
 
 class CounterStateSnapshot {
   final BigInt revision;

@@ -1,3 +1,6 @@
+// Smoke test for basic OxideStoreCore lifecycle.
+//
+// Why: confirms the minimum contract expected by generated store wrappers.
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:oxide_runtime/oxide_runtime.dart';

@@ -1,5 +1,32 @@
+// Annotation contracts shared between user code, generator, and generated output.
+//
+// Why: the generator needs stable metadata to produce predictable glue code.
+// How: expose a minimal annotation API with clear backend options.
 /// Backend integration strategy used by generated store code.
-enum OxideBackend { inherited, inheritedHooks, riverpod, bloc }
+enum OxideBackend {
+  /// Generates an `InheritedNotifier`-based scope widget plus a `ChangeNotifier`
+  /// controller.
+  ///
+  /// This backend is framework-light (no Riverpod/BLoC dependency) and works
+  /// well for smaller apps or for embedding Oxide into existing widget trees.
+  inherited,
+
+  /// Same as [inherited], but also generates a `use<Store>Oxide()` hook helper.
+  ///
+  /// This backend requires `flutter_hooks`.
+  inheritedHooks,
+
+  /// Generates a Riverpod `NotifierProvider` (or non-autoDispose variant when
+  /// `keepAlive: true`) that owns the store lifecycle.
+  ///
+  /// This backend requires `flutter_riverpod`.
+  riverpod,
+
+  /// Generates a `Cubit` plus a `BlocProvider` scope widget.
+  ///
+  /// This backend requires `bloc` and `flutter_bloc`.
+  bloc,
+}
 
 /// Annotation describing an Oxide store to generate.
 ///
@@ -44,6 +71,7 @@ final class OxideStore {
   final Type snapshot;
   final Type actions;
   final Type engine;
+
   /// Which Flutter state-management backend to generate for.
   final OxideBackend backend;
 
@@ -74,22 +102,38 @@ final class OxideStore {
 
   /// Engine creation method name on the bindings object.
   final String createEngine;
+
   /// Engine disposal method name on the bindings object.
   final String disposeEngine;
+
   /// Action dispatch method name on the bindings object.
   final String dispatch;
+
   /// Snapshot stream method name on the bindings object.
   final String stateStream;
+
   /// Current snapshot method name on the bindings object.
   final String current;
+
   /// Optional one-time application initialization hook method name.
+  ///
+  /// When set, the generated controller calls this hook once as part of store
+  /// initialization (before creating the engine). This can be used for
+  /// per-library initialization steps required by your bindings layer.
+  ///
+  /// In FRB-based apps, Oxide recommends calling `RustLib.init()` and the
+  /// app-provided `initOxide()` from `main()` instead of relying on this hook.
   final String? initApp;
+
   /// Optional method name for encoding current state bytes for persistence.
   final String? encodeCurrentState;
+
   /// Optional method name for encoding a provided state value.
   final String? encodeState;
+
   /// Optional method name for decoding bytes into a state value.
   final String? decodeState;
+
   /// Optional prefix override used for generated type names.
   final String? name;
 }

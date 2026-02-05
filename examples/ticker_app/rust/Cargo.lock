@@ -88,6 +88,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
 name = "bitflags"
 version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -378,6 +384,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4271d37baee1b8c7e4b708028c57d816cf9d2434acb33a549475f78c181f6253"
 
 [[package]]
+name = "gloo-timers"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbb143cf96099802033e0d4f4963b19fd2e0b728bcf076cd9cf7f6634f092994"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "js-sys",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -513,11 +531,16 @@ dependencies = [
 name = "oxide_core"
 version = "0.1.1"
 dependencies = [
+ "base64",
  "flutter_rust_bridge",
  "futures",
+ "gloo-timers",
+ "js-sys",
  "thiserror",
  "tokio",
  "tokio-stream",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -633,6 +656,8 @@ name = "rust_lib_ticker_app"
 version = "0.1.1"
 dependencies = [
  "flutter_rust_bridge",
+ "futures",
+ "gloo-timers",
  "oxide_core",
  "oxide_generator_rs",
  "tokio",

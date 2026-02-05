@@ -1,7 +1,7 @@
 #![cfg(feature = "state-persistence")]
 
 use oxide_core::persistence::PersistenceConfig;
-use oxide_core::{CoreResult, OxideError, Reducer, ReducerEngine, StateChange};
+use oxide_core::{CoreResult, InitContext, OxideError, Reducer, ReducerEngine, StateChange};
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 struct State {
@@ -24,11 +24,7 @@ impl Reducer for ReducerImpl {
     type Action = Action;
     type SideEffect = SideEffect;
 
-    fn init(
-        &mut self,
-        _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-    }
+    async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 
     fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
         match action {
@@ -53,6 +49,13 @@ impl Reducer for ReducerImpl {
 
 #[tokio::test]
 async fn persistence_restores_state_across_engines() {
+    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+            std::sync::OnceLock::new();
+        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+    }
+    let _ = oxide_core::runtime::init(thread_pool);
+
     let key = "oxide_core.test.persistence_engine_restore.v1".to_string();
     let path = oxide_core::persistence::default_persistence_path(&key);
     let _ = std::fs::remove_file(&path);
@@ -65,7 +68,9 @@ async fn persistence_restores_state_across_engines() {
                 key: key.clone(),
                 min_interval: std::time::Duration::from_millis(0),
             },
-        );
+        )
+        .await
+        .unwrap();
         let _ = engine.dispatch(Action::Inc).await.expect("dispatch");
         let _ = engine.dispatch(Action::Fail).await.unwrap_err();
     }
@@ -79,7 +84,9 @@ async fn persistence_restores_state_across_engines() {
             key: key.clone(),
             min_interval: std::time::Duration::from_millis(0),
         },
-    );
+    )
+    .await
+    .unwrap();
     let snap = engine.current().await;
     assert_eq!(snap.revision, 0);
     assert_eq!(snap.state.counter, 1);

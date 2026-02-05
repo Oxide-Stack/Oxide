@@ -7,7 +7,7 @@ import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 ///oxide:state
-///oxide:meta:{"kind":"state","name":"JsonState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)"],"fields":[{"name":"counter","ty":"u64"},{"name":"checksum","ty":"u64"}],"variants":null}
+///oxide:meta:{"kind":"state","name":"JsonState","docs":[],"fields":[{"name":"counter","ty":"u64"},{"name":"checksum","ty":"u64"}],"variants":null}
 class JsonState {
   final BigInt counter;
   final BigInt checksum;

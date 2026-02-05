@@ -84,6 +84,27 @@ pub enum AppAction {
 
 Use on an `impl oxide_core::Reducer for <Type>` block.
 
+#### Argument syntax
+
+The macro uses a small, keyword-based mini-language inside the attribute. Each entry is either:
+
+- a key-value pair: `key = <value>`
+- a flag: `no_frb`
+
+Entries are comma-separated and can appear in any order:
+
+```rust,ignore
+#[reducer(
+  engine = MyEngine,
+  snapshot = MySnapshot,
+  initial = MyState { count: 0 },
+  reducer = MyReducer::default(),
+  persist = "my.app.persistence.key",
+  persist_min_interval_ms = 200,
+  no_frb,
+)]
+```
+
 Required arguments:
 
 - `engine = <Ident>`: generated engine wrapper type
@@ -93,16 +114,24 @@ Required arguments:
 Optional arguments:
 
 - `reducer = <expr>`: reducer construction expression (defaults to `Default::default()`)
-- `init_app`: emits a Flutter Rust Bridge `init` function (when FRB glue is enabled)
 - `no_frb`: disables emitting Flutter Rust Bridge glue for this reducer (useful for pure-Rust reducers)
 - `persist = "some.key"` and `persist_min_interval_ms = 200`: enables persistent engine wiring (requires `state-persistence` feature)
+
+#### Value kinds
+
+- `engine` and `snapshot` must be plain identifiers (not paths). The macro generates a new type with that name.
+- `initial` is any Rust expression that evaluates to `State`.
+- `reducer` is any Rust expression that evaluates to the reducer type (defaults to `Default::default()`).
+- `persist` must be a string literal (`"..."`).
+- `persist_min_interval_ms` must be an integer literal (milliseconds).
+- `no_frb` is a bare identifier flag.
 
 The annotated impl must define:
 
 - `type State = ...;`
 - `type Action = ...;`
 - `type SideEffect = ...;`
-- `fn init(&mut self, sideeffect_tx: tokio::sync::mpsc::UnboundedSender<Self::SideEffect>)`
+- `async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>)`
 - `fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> oxide_core::CoreResult<oxide_core::StateChange>`
 - `fn effect(&mut self, state: &mut Self::State, effect: Self::SideEffect) -> oxide_core::CoreResult<oxide_core::StateChange>`
 
@@ -124,7 +153,7 @@ pub enum AppAction {
 pub enum AppSideEffect {}
 
 #[derive(Default)]
-pub struct AppReducer;
+pub struct AppReducer {}
 
 #[reducer(engine = AppEngine, snapshot = AppSnapshot, initial = AppState { counter: 0 }, no_frb)]
 impl oxide_core::Reducer for AppReducer {
@@ -132,10 +161,7 @@ impl oxide_core::Reducer for AppReducer {
   type Action = AppAction;
   type SideEffect = AppSideEffect;
 
-  fn init(
-    &mut self,
-    _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-  ) {}
+  async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
 
   fn reduce(
     &mut self,

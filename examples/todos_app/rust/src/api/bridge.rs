@@ -4,15 +4,22 @@ use oxide_generator_rs::reducer;
 /// Error type exposed across the FFI boundary.
 pub use oxide_core::OxideError;
 
-use std::sync::OnceLock;
-
-use crate::state::{AppAction, TodoItem,AppState};
+use crate::state::{AppAction, AppState, TodoItem};
 
 #[flutter_rust_bridge::frb(init)]
 /// Initializes Flutter Rust Bridge for this library.
 pub fn init_app() {
-    let _ = crate::runtime::runtime();
     flutter_rust_bridge::setup_default_user_utils();
+}
+
+#[flutter_rust_bridge::frb]
+pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
+    fn thread_pool() -> oxide_core::runtime::ThreadPool {
+        crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
+    }
+
+    let _ = oxide_core::runtime::init(thread_pool);
+    Ok(())
 }
 
 #[reducer(
@@ -21,19 +28,13 @@ pub fn init_app() {
     initial = AppState::new(),
     persist = "oxide.todos.state.v1",
     persist_min_interval_ms = 200,
-    tokio_handle = crate::runtime::handle()
 )]
-impl oxide_core::Reducer for AppReducer {
+impl oxide_core::Reducer for AppRootReducer {
     type State = AppState;
     type Action = AppAction;
     type SideEffect = AppSideEffect;
 
-    fn init(
-        &mut self,
-        sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-        let _ = SIDEFFECT_TX.set(sideeffect_tx);
-    }
+    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
 
     fn reduce(
         &mut self,
@@ -82,21 +83,16 @@ impl oxide_core::Reducer for AppReducer {
 
     fn effect(
         &mut self,
-        state: &mut Self::State,
-        effect: Self::SideEffect,
+        _state: &mut Self::State,
+        _effect: Self::SideEffect,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match effect {
-            AppSideEffect::SyncAddTodo { title } => self.reduce(state, AppAction::AddTodo { title }),
-        }
+        Ok(oxide_core::StateChange::None)
     }
 }
 
-pub enum AppSideEffect {
-    SyncAddTodo { title: String },
-}
+#[flutter_rust_bridge::frb(ignore)]
+pub(crate) enum AppSideEffect {}
 
+#[flutter_rust_bridge::frb(ignore)]
 #[derive(Default)]
-pub struct AppReducer {}
-
-static SIDEFFECT_TX: OnceLock<oxide_core::tokio::sync::mpsc::UnboundedSender<AppSideEffect>> =
-    OnceLock::new();
+pub(crate) struct AppRootReducer {}

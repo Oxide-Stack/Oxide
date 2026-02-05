@@ -1,10 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:todos_app/main.dart';
+import 'package:todos_app/src/rust/api/bridge.dart' show initOxide;
 import 'package:todos_app/src/rust/frb_generated.dart';
 
 void main() {
@@ -32,6 +34,7 @@ void main() {
   setUpAll(() async {
     await deletePersistenceFiles();
     await RustLib.init();
+    await initOxide();
   });
 
   tearDownAll(() async {
@@ -39,16 +42,12 @@ void main() {
   });
 
   testWidgets('State persists across widget re-mounts', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(const ProviderScope(child: MyApp()));
+    await tester.pump(const Duration(milliseconds: 250));
 
-    await tester.enterText(
-      find.byWidgetPredicate((w) {
-        if (w is! TextField) return false;
-        return w.decoration?.labelText == 'Add Todo Title (must be non-empty)';
-      }),
-      'persist me',
-    );
+    final input = find.byType(TextField);
+    expect(input, findsWidgets);
+    await tester.enterText(input.first, 'persist me');
     await tester.tap(find.text('Add Todo'));
     await tester.pumpAndSettle(const Duration(seconds: 1));
     expect(find.text('persist me'), findsOneWidget);
@@ -57,7 +56,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pump(const Duration(milliseconds: 250));
 
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const ProviderScope(child: MyApp()));
     await tester.pumpAndSettle(const Duration(seconds: 1));
     expect(find.text('persist me'), findsOneWidget);
   });

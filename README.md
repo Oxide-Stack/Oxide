@@ -12,6 +12,8 @@ Oxide is a Rust ↔ Flutter workflow for building apps where:
 
 This repository is structured so **package code stays usage-agnostic**, and complete runnable usage lives under [examples/](./examples).
 
+Architecture overview: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+
 ## Acknowledgements
 
 Oxide is powered by [Flutter Rust Bridge (FRB)](https://github.com/fzyzcjy/flutter_rust_bridge). Huge thanks to the FRB maintainers and contributors for making Rust ↔ Dart interoperability approachable and productive.
@@ -104,6 +106,7 @@ flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 
 - Rust crates: `cargo test` (from `./rust`)
 - Flutter runtime package: `flutter test` (from `./flutter/oxide_runtime`)
+- Web/WASM compatibility (Rust): see `rust/oxide_core` for target builds and test compilation instructions
 
 ### Repo Scripts
 
@@ -112,6 +115,7 @@ The repo keeps a single `VERSION` file and syncs versions via scripts under [too
 - Version sync: `tools/scripts/version_sync.ps1` / `tools/scripts/version_sync.sh`
 - Tests: `tools/scripts/qa.ps1` / `tools/scripts/qa.sh`
 - Builds (platform required): `tools/scripts/build.ps1 -Platform windows` / `tools/scripts/build.sh linux` (add `-NoExamples` / `--no-examples` to skip building examples)
+- Disk cleanup: `tools/scripts/clean.ps1` / `tools/scripts/clean.sh` (add `-DryRun` / `--dry-run` to preview)
 - Git flow helpers: `tools/scripts/git_flow.ps1`, `tools/scripts/git_flow.sh`
 
 ## Versioning

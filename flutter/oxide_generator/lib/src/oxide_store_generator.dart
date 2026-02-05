@@ -1,3 +1,8 @@
+// Analyzer-driven configuration extraction for Oxide store generation.
+//
+// Why: Dart analyzer types are powerful but hard to unit-test. This layer
+// translates analyzer metadata into a pure-data config consumed by the string
+// emitter.
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
@@ -10,6 +15,15 @@ import 'oxide_store_codegen.dart';
 ///
 /// This generator emits glue code that instantiates `OxideStoreCore` and
 /// provides a backend-specific controller/actions API.
+///
+/// ## High-level flow
+///
+/// 1. Read annotation configuration (`state`, `actions`, binding function names, backend).
+/// 2. Inspect the `actions` type:
+///    - If it is an enum, generate one method per enum constant.
+///    - If it is a class, generate one method per public factory constructor.
+/// 3. Feed a normalized [OxideCodegenConfig] into the string-based generator in
+///    `oxide_store_codegen.dart` to produce the `part` output.
 final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
   /// Generates code for a single annotated element.
   ///
@@ -76,6 +90,8 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
 
     final actionConstructors = <OxideActionConstructor>[];
     if (actionsElement is ClassElement) {
+      // Union-class actions are represented as a Dart class with factory constructors.
+      // Each public factory becomes a method on the generated `...Actions` facade.
       for (final ctor in actionsElement.constructors) {
         if (!ctor.isFactory) continue;
         if (ctor.isPrivate) continue;
@@ -97,6 +113,10 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
         );
       }
     } else if (actionsElement is EnumElement) {
+      // Enum actions are represented as enum constants (no parameters).
+      //
+      // Newer analyzer versions provide `EnumElement.constants`, but we also
+      // support older versions by falling back to scanning fields.
       final constants = (() {
         final dynamic dyn = actionsElement;
         try {

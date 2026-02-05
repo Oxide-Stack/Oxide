@@ -9,9 +9,10 @@ import '../state/app_state.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `ensure_ticker_thread`, `start`, `stop_ticker_thread`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppSideEffect`, `_TickerTask`, `__OxideReducerMarker_AppReducer`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppRootReducer`, `AppSideEffect`, `_TickerTask`, `__OxideReducerMarker_AppRootReducer`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `effect`, `from`, `init`, `reduce`
-// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new_with_handle`, `new_with_runtime`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new`, `subscribe`
+// These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
 
 Future<ArcAppEngine> createEngine() =>
     RustLib.instance.api.crateApiBridgeCreateEngine();
@@ -31,11 +32,7 @@ Future<AppStateSnapshot> current({required ArcAppEngine engine}) =>
 Stream<AppStateSnapshot> stateStream({required ArcAppEngine engine}) =>
     RustLib.instance.api.crateApiBridgeStateStream(engine: engine);
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AppReducer>>
-abstract class AppReducer implements RustOpaqueInterface {
-  static Future<AppReducer> default_() =>
-      RustLib.instance.api.crateApiBridgeAppReducerDefault();
-}
+Future<void> initOxide() => RustLib.instance.api.crateApiBridgeInitOxide();
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< Arc < AppEngine >>>
 abstract class ArcAppEngine implements RustOpaqueInterface {}

@@ -5,6 +5,7 @@ pub use oxide_core::OxideError;
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::Mutex as StdMutex;
 use std::time::Duration;
 
 use crate::state::{AppAction, AppState};
@@ -13,18 +14,14 @@ use crate::state::{AppAction, AppState};
     engine = AppEngine,
     snapshot = AppStateSnapshot,
     initial = AppState::new(),
-    tokio_handle = crate::runtime::handle()
 )]
-impl oxide_core::Reducer for AppReducer {
+impl oxide_core::Reducer for AppRootReducer {
     type State = AppState;
     type Action = AppAction;
     type SideEffect = AppSideEffect;
 
-    fn init(
-        &mut self,
-        sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-        self.sideeffect_tx = Some(sideeffect_tx);
+    async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>) {
+        self.sideeffect_tx = Some(ctx.sideeffect_tx);
     }
 
     fn reduce(
@@ -120,18 +117,19 @@ impl oxide_core::Reducer for AppReducer {
     }
 }
 
-pub enum AppSideEffect {
+#[flutter_rust_bridge::frb(ignore)]
+enum AppSideEffect {
     AutoTickFromThread,
     TickFromSideEffect,
 }
 
-#[flutter_rust_bridge::frb(opaque)]
-pub struct AppReducer {
+#[flutter_rust_bridge::frb(ignore)]
+struct AppRootReducer {
     sideeffect_tx: Option<oxide_core::tokio::sync::mpsc::UnboundedSender<AppSideEffect>>,
     ticker: Option<_TickerTask>,
 }
 
-impl Default for AppReducer {
+impl Default for AppRootReducer {
     fn default() -> Self {
         Self {
             sideeffect_tx: None,
@@ -140,7 +138,7 @@ impl Default for AppReducer {
     }
 }
 
-impl AppReducer {
+impl AppRootReducer {
     fn ensure_ticker_thread(&mut self, interval_ms: u64) {
         if let Some(ticker) = self.ticker.as_ref() {
             ticker.interval_ms.store(interval_ms, Ordering::Relaxed);
@@ -157,7 +155,9 @@ impl AppReducer {
     fn stop_ticker_thread(&mut self) {
         if let Some(ticker) = self.ticker.take() {
             let _ = ticker.stop_tx.send(());
-            ticker.join.abort();
+            if let Some(join) = ticker.join.lock().expect("ticker join mutex").take() {
+                join.abort();
+            }
         }
     }
 }
@@ -165,7 +165,7 @@ impl AppReducer {
 struct _TickerTask {
     interval_ms: Arc<AtomicU64>,
     stop_tx: oxide_core::tokio::sync::oneshot::Sender<()>,
-    join: oxide_core::tokio::task::JoinHandle<()>,
+    join: StdMutex<Option<flutter_rust_bridge::JoinHandle<()>>>,
 }
 
 impl _TickerTask {
@@ -177,15 +177,35 @@ impl _TickerTask {
         let interval_clone = Arc::clone(&interval_ms);
         let (stop_tx, mut stop_rx) = oxide_core::tokio::sync::oneshot::channel::<()>();
 
-        let join = crate::runtime::handle().spawn(async move {
+        let join = oxide_core::runtime::spawn(async move {
             loop {
                 let ms = interval_clone.load(Ordering::Relaxed).max(1);
-                oxide_core::tokio::select! {
-                    _ = oxide_core::tokio::time::sleep(Duration::from_millis(ms)) => {
-                        let _ = sideeffect_tx.send(AppSideEffect::AutoTickFromThread);
+
+                #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+                {
+                    oxide_core::tokio::select! {
+                        _ = oxide_core::tokio::time::sleep(Duration::from_millis(ms)) => {
+                            let _ = sideeffect_tx.send(AppSideEffect::AutoTickFromThread);
+                        }
+                        _ = &mut stop_rx => {
+                            break;
+                        }
                     }
-                    _ = &mut stop_rx => {
-                        break;
+                }
+
+                #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+                {
+                    use futures::FutureExt as _;
+
+                    let stop_fut = (&mut stop_rx).fuse();
+                    let sleep_fut = gloo_timers::future::TimeoutFuture::new(ms.min(u64::from(u32::MAX)) as u32).fuse();
+                    futures::pin_mut!(stop_fut, sleep_fut);
+
+                    futures::select_biased! {
+                        _ = stop_fut => break,
+                        _ = sleep_fut => {
+                            let _ = sideeffect_tx.send(AppSideEffect::AutoTickFromThread);
+                        }
                     }
                 }
             }
@@ -194,7 +214,7 @@ impl _TickerTask {
         Self {
             interval_ms,
             stop_tx,
-            join,
+            join: StdMutex::new(Some(join)),
         }
     }
 }
@@ -202,6 +222,15 @@ impl _TickerTask {
 #[flutter_rust_bridge::frb(init)]
 /// Initializes Flutter Rust Bridge for this library.
 pub fn init_app() {
-    let _ = crate::runtime::runtime();
     flutter_rust_bridge::setup_default_user_utils();
+}
+
+#[flutter_rust_bridge::frb]
+pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
+    fn thread_pool() -> oxide_core::runtime::ThreadPool {
+        crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
+    }
+
+    let _ = oxide_core::runtime::init(thread_pool);
+    Ok(())
 }

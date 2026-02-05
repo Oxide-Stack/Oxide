@@ -40,7 +40,8 @@ $exampleDirs = @(
   "examples\counter_app",
   "examples\todos_app",
   "examples\ticker_app",
-  "examples\benchmark_app"
+  "examples\benchmark_app",
+  "examples\api_browser_app"
 )
 
 $skipIntegration = $env:QA_SKIP_INTEGRATION_TESTS -eq "1"
@@ -59,6 +60,14 @@ foreach ($dir in $exampleDirs) {
       }
     }
 
+    $buildDir = Join-Path (Get-Location) "build"
+    if (Test-Path $buildDir) {
+      try {
+        Remove-Item -Recurse -Force $buildDir -ErrorAction Stop
+      } catch {
+        Write-Host "Skipping build cleanup in $dir ($($_.Exception.Message))"
+      }
+    }
     flutter pub get
     dart run build_runner build -d
     flutter test

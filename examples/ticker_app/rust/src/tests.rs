@@ -3,7 +3,8 @@ use crate::state::AppAction;
 
 #[tokio::test]
 async fn manual_tick_increments_ticks() {
-    let engine = AppEngine::new();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = AppEngine::new().await.unwrap();
     let _ = engine.dispatch(AppAction::ManualTick).await.expect("dispatch");
     let snapshot = engine.current().await;
     assert!(snapshot.state.ticks > 0);
@@ -11,7 +12,8 @@ async fn manual_tick_increments_ticks() {
 
 #[tokio::test]
 async fn reset_sets_ticks_to_zero() {
-    let engine = AppEngine::new();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = AppEngine::new().await.unwrap();
     let _ = engine.dispatch(AppAction::ManualTick).await.expect("dispatch");
     let snapshot = engine.dispatch(AppAction::Reset).await.expect("dispatch");
     assert_eq!(snapshot.state.ticks, 0);
@@ -19,7 +21,8 @@ async fn reset_sets_ticks_to_zero() {
 
 #[tokio::test]
 async fn auto_tick_requires_running() {
-    let engine = AppEngine::new();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = AppEngine::new().await.unwrap();
     let before = engine.current().await;
     let _ = engine.dispatch(AppAction::AutoTick).await.expect("dispatch");
     let after = engine.current().await;
@@ -28,7 +31,8 @@ async fn auto_tick_requires_running() {
 
 #[tokio::test]
 async fn start_ticker_spawns_background_auto_ticks() {
-    let engine = AppEngine::new();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = AppEngine::new().await.unwrap();
     let mut rx = engine.subscribe();
     let before = rx.borrow().clone();
     let _ = engine
@@ -53,7 +57,8 @@ async fn start_ticker_spawns_background_auto_ticks() {
 
 #[tokio::test]
 async fn side_effect_tick_updates_state() {
-    let engine = AppEngine::new();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = AppEngine::new().await.unwrap();
     let mut rx = engine.subscribe();
     let before = rx.borrow().clone();
     let _ = engine

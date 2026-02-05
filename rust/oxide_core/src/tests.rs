@@ -1,6 +1,10 @@
+// Internal (crate-level) behavioral tests.
+//
+// Why: these tests validate invariants that are easy to accidentally break during
+// refactors (transactionality, snapshot emission rules, and error handling).
 use tokio_stream::{StreamExt, wrappers::WatchStream};
 
-use crate::{CoreResult, OxideError, Reducer, ReducerEngine, StateChange};
+use crate::{CoreResult, InitContext, OxideError, Reducer, ReducerEngine, StateChange};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct TestState {
@@ -27,11 +31,7 @@ impl Reducer for TestReducer {
     type Action = TestAction;
     type SideEffect = TestSideEffect;
 
-    fn init(
-        &mut self,
-        _sideeffect_tx: crate::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-    }
+    async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 
     fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
         match action {
@@ -63,7 +63,16 @@ impl Reducer for TestReducer {
 
 #[tokio::test]
 async fn engine_emits_after_full_update_dispatch() {
-    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 });
+    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+            std::sync::OnceLock::new();
+        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+    }
+    let _ = crate::runtime::init(thread_pool);
+
+    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
+        .await
+        .unwrap();
     let rx = engine.subscribe();
     let mut stream = WatchStream::new(rx);
 
@@ -82,7 +91,16 @@ async fn engine_emits_after_full_update_dispatch() {
 
 #[tokio::test]
 async fn engine_does_not_emit_or_bump_revision_on_none() {
-    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 });
+    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+            std::sync::OnceLock::new();
+        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+    }
+    let _ = crate::runtime::init(thread_pool);
+
+    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
+        .await
+        .unwrap();
     let rx = engine.subscribe();
     let mut stream = WatchStream::new(rx);
 
@@ -99,7 +117,16 @@ async fn engine_does_not_emit_or_bump_revision_on_none() {
 
 #[tokio::test]
 async fn engine_does_not_commit_state_on_error() {
-    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 });
+    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+            std::sync::OnceLock::new();
+        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+    }
+    let _ = crate::runtime::init(thread_pool);
+
+    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
+        .await
+        .unwrap();
 
     let before = engine.current().await;
     assert_eq!(before.revision, 0);
@@ -118,7 +145,16 @@ async fn engine_does_not_commit_state_on_error() {
 
 #[tokio::test]
 async fn engine_processes_sideeffects_and_emits_snapshots() {
-    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 });
+    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+            std::sync::OnceLock::new();
+        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+    }
+    let _ = crate::runtime::init(thread_pool);
+
+    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
+        .await
+        .unwrap();
     let tx = engine.sideeffect_sender();
     let rx = engine.subscribe();
     let mut stream = WatchStream::new(rx);

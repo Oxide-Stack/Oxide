@@ -8,6 +8,16 @@ Focused example showing CRUD operations over a Rust-owned todo list.
 - Receive state updates as a typed snapshot stream (`AppStateSnapshot`).
 - Rust-side validation and `NotFound` errors surfaced back to Flutter.
 
+## Rust Surface
+
+- Intended FRB surface: `init_app`, `init_oxide`, the engine type, and the state/action/snapshot types.
+- Not part of the FRB surface: reducer implementation structs and internal persistence/side-effect wiring details.
+
+## Changes Applied
+
+- Hid reducer implementation types from FRB to avoid redundant Dart-visible “reducer” artifacts.
+- Removed crate-root Rust re-exports that FRB can accidentally pick up (e.g., tokio watch types).
+
 ## Run
 
 ```bash
@@ -24,7 +34,7 @@ flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 
 ## Key Files
 
-- Rust reducer + FRB surface: [rust/src/api/bridge.rs](./rust/src/api/bridge.rs)
+- Rust FRB surface + engine macro: [rust/src/api/bridge.rs](./rust/src/api/bridge.rs)
 - Flutter store declaration (annotation): [lib/src/oxide.dart](./lib/src/oxide.dart)
 - Generated glue (do not edit): [lib/src/oxide.oxide.g.dart](./lib/src/oxide.oxide.g.dart)
 
