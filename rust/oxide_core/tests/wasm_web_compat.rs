@@ -46,7 +46,7 @@ impl Reducer for CounterReducer {
         match action {
             CounterAction::Inc => state.value = state.value.saturating_add(1),
         }
-        Ok(StateChange::FullUpdate)
+        Ok(StateChange::Full)
     }
 
     fn effect(

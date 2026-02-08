@@ -24,14 +24,14 @@ use std::sync::OnceLock;
 use crate::CoreResult;
 
 #[cfg(feature = "frb-spawn")]
-#[cfg(all(feature = "frb-spawn", target_family = "wasm"))]
+#[cfg(all(feature = "frb-spawn", target_arch = "wasm32"))]
 /// Thread pool provider used by `spawn_blocking` on WebAssembly targets.
 ///
 /// On web, FRB exposes a thread pool via a `thread_local!` key, so the runtime
 /// stores a reference to that key rather than a direct pool reference.
 pub type ThreadPool = &'static std::thread::LocalKey<flutter_rust_bridge::SimpleThreadPool>;
 
-#[cfg(all(feature = "frb-spawn", not(target_family = "wasm")))]
+#[cfg(all(feature = "frb-spawn", not(target_arch = "wasm32")))]
 /// Thread pool provider used by `spawn_blocking` on native targets.
 pub type ThreadPool = &'static flutter_rust_bridge::SimpleThreadPool;
 
@@ -102,7 +102,7 @@ where
     flutter_rust_bridge::spawn(future)
 }
 
-#[cfg(all(feature = "frb-spawn", target_family = "wasm"))]
+#[cfg(all(feature = "frb-spawn", target_arch = "wasm32", target_os = "unknown"))]
 pub fn spawn_local<F>(future: F)
 where
     F: Future<Output = ()> + 'static,
@@ -111,7 +111,7 @@ where
     wasm_bindgen_futures::spawn_local(future);
 }
 
-#[cfg(all(feature = "frb-spawn", target_family = "wasm"))]
+#[cfg(all(feature = "frb-spawn", target_arch = "wasm32", target_os = "unknown"))]
 /// Spawns a background task safely, using `spawn_local` on WASM.
 pub fn safe_spawn<F>(future: F)
 where
@@ -120,8 +120,17 @@ where
     spawn_local(future);
 }
 
-#[cfg(all(feature = "frb-spawn", not(target_family = "wasm")))]
+#[cfg(all(feature = "frb-spawn", not(target_arch = "wasm32")))]
 /// Spawns a background task safely, using `spawn` on native.
+pub fn safe_spawn<F>(future: F)
+where
+    F: Future<Output = ()> + Send + 'static,
+{
+    spawn(future);
+}
+
+#[cfg(all(feature = "frb-spawn", target_arch = "wasm32", target_os = "wasi"))]
+/// Spawns a background task safely on WASI targets.
 pub fn safe_spawn<F>(future: F)
 where
     F: Future<Output = ()> + Send + 'static,
@@ -141,7 +150,15 @@ where
 {
     ensure_initialized().expect("oxide_core runtime must be initialized before spawning");
     let pool = thread_pool().expect("thread pool present after ensure_initialized");
-    flutter_rust_bridge::spawn_blocking_with(f, pool)
+    #[cfg(target_arch = "wasm32")]
+    {
+        flutter_rust_bridge::spawn_blocking_with(f, &pool)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        flutter_rust_bridge::spawn_blocking_with(f, pool)
+    }
 }
 
 #[cfg(not(feature = "frb-spawn"))]

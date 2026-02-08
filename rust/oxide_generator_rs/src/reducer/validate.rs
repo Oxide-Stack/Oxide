@@ -191,7 +191,7 @@ pub(crate) fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) ->
     if !return_is_core_result_state_change(&item_fn.sig.output) {
         return Err(syn::Error::new_spanned(
             &item_fn.sig.output,
-            format!("`{name}` must return `oxide_core::CoreResult<oxide_core::StateChange>`"),
+            format!("`{name}` must return `oxide_core::CoreResult<oxide_core::StateChange<...>>`"),
         ));
     }
 

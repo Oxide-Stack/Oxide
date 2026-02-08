@@ -6,7 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import 'rust/api/bridge.dart' show ArcAppEngine, AppStateSnapshot, createEngine, current, dispatch, disposeEngine, stateStream;
+import 'rust/api/bridge.dart'
+    show ArcAppEngine, AppStateSnapshot, createSharedEngine, current, dispatch, disposeEngine, stateStream;
 import 'rust/state/app_action.dart';
 import 'rust/state/app_state.dart';
 
@@ -17,37 +18,93 @@ part 'oxide.oxide.g.dart';
   snapshot: AppStateSnapshot,
   actions: AppAction,
   engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.control],
   backend: OxideBackend.inherited,
-  name: 'StateBridgeOxide',
+  name: 'TickerControlInheritedOxide',
 )
-class StateBridgeOxide {}
+class TickerControlInheritedOxide {}
 
 @OxideStore(
   state: AppState,
   snapshot: AppStateSnapshot,
   actions: AppAction,
   engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.tick],
+  backend: OxideBackend.inherited,
+  name: 'TickerTickInheritedOxide',
+)
+class TickerTickInheritedOxide {}
+
+@OxideStore(
+  state: AppState,
+  snapshot: AppStateSnapshot,
+  actions: AppAction,
+  engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.control],
   backend: OxideBackend.inheritedHooks,
-  name: 'StateBridgeHooksOxide',
+  name: 'TickerControlHooksOxide',
 )
-class StateBridgeHooksOxide {}
+class TickerControlHooksOxide {}
 
 @OxideStore(
   state: AppState,
   snapshot: AppStateSnapshot,
   actions: AppAction,
   engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.tick],
+  backend: OxideBackend.inheritedHooks,
+  name: 'TickerTickHooksOxide',
+)
+class TickerTickHooksOxide {}
+
+@OxideStore(
+  state: AppState,
+  snapshot: AppStateSnapshot,
+  actions: AppAction,
+  engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.control],
   backend: OxideBackend.riverpod,
-  name: 'StateBridgeRiverpodOxide',
+  name: 'TickerControlRiverpodOxide',
 )
-class StateBridgeRiverpodOxide {}
+class TickerControlRiverpodOxide {}
 
 @OxideStore(
   state: AppState,
   snapshot: AppStateSnapshot,
   actions: AppAction,
   engine: ArcAppEngine,
-  backend: OxideBackend.bloc,
-  name: 'StateBridgeBlocOxide',
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.tick],
+  backend: OxideBackend.riverpod,
+  name: 'TickerTickRiverpodOxide',
 )
-class StateBridgeBlocOxide {}
+class TickerTickRiverpodOxide {}
+
+@OxideStore(
+  state: AppState,
+  snapshot: AppStateSnapshot,
+  actions: AppAction,
+  engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.control],
+  backend: OxideBackend.bloc,
+  name: 'TickerControlBlocOxide',
+)
+class TickerControlBlocOxide {}
+
+@OxideStore(
+  state: AppState,
+  snapshot: AppStateSnapshot,
+  actions: AppAction,
+  engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.tick],
+  backend: OxideBackend.bloc,
+  name: 'TickerTickBlocOxide',
+)
+class TickerTickBlocOxide {}

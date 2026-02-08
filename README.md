@@ -40,8 +40,18 @@ Snapshots are revisioned:
 pub struct StateSnapshot<T> {
   pub revision: u64,
   pub state: T,
+  pub slices: Vec<StateSlice>,
 }
 ```
+
+## 🧩 Sliced Updates (Optional)
+
+Sliced updates let Flutter stores rebuild only when specific *top-level* parts of state changed.
+
+- **Rust**: opt in on your state with `#[state(sliced = true)]`. This generates a slice enum named `<StateName>Slice` (for example, `AppStateSlice`).
+- **Rust reducer**: return `StateChange::Infer` (engine infers slices by comparing top-level fields) or `StateChange::Slices(&[...])` (explicit slices).
+- **Snapshots**: `snapshot.slices` is empty for full updates (`StateChange::Full` / legacy `FullUpdate`). Non-empty slices indicate which segments changed.
+- **Flutter**: use `@OxideStore(slices: [...])` to filter snapshots before they hit your chosen backend (InheritedWidget/Riverpod/BLoC).
 
 ## 📦 Packages
 
@@ -97,7 +107,7 @@ flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 
 ## 📚 Documentation
 
-- Usage / integration guide: [docs/USAGE.md](./docs/USAGE.md)
+- Usage / integration guide: [docs/usage/README.md](./docs/usage/README.md)
 - Contributing guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## 🛠️ Development

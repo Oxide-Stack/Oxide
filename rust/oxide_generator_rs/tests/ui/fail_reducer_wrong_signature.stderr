@@ -1,4 +1,4 @@
-error: `reduce` must return `oxide_core::CoreResult<oxide_core::StateChange>`
+error: `reduce` must return `oxide_core::CoreResult<oxide_core::StateChange<...>>`
   --> tests/ui/fail_reducer_wrong_signature.rs:20:7
    |
 20 |     ) -> oxide_core::CoreResult<()> {

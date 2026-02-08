@@ -32,6 +32,14 @@ jobs:
           cargo check -p oxide_core --target wasm32-wasip1 --all-features
           cargo test -p oxide_core --target wasm32-unknown-unknown --all-features --no-run --test wasm_web_compat
           cargo test -p oxide_core --target wasm32-wasip1 --all-features --no-run --test wasm_wasi_compat
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      - name: Coverage (Rust workspace)
+        working-directory: rust
+        run: |
+          rustup component add llvm-tools-preview
+          cargo llvm-cov --workspace --all-features --fail-under-lines 70 --fail-under-regions 75 --summary-only
       - name: Test (Example Rust crates)
         shell: bash
         run: |

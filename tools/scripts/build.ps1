@@ -14,6 +14,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Run([string] $exe, [string[]] $commandArgs) {
+  & $exe @commandArgs
+  if ($LASTEXITCODE -ne 0) {
+    throw "Command failed ($LASTEXITCODE): $exe $($commandArgs -join ' ')"
+  }
+}
+
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rootDir = Resolve-Path (Join-Path $scriptDir "..\..")
 
@@ -21,25 +28,33 @@ $rootDir = Resolve-Path (Join-Path $scriptDir "..\..")
 
 Push-Location (Join-Path $rootDir "rust")
 try {
-  cargo build --workspace
+  Run "cargo" @("build", "--workspace")
 } finally {
   Pop-Location
 }
 
-$flutterPackages = @(
-  "flutter\oxide_annotations",
-  "flutter\oxide_runtime",
-  "flutter\oxide_generator"
-)
+Push-Location (Join-Path $rootDir "flutter\oxide_runtime")
+try {
+  Run "flutter" @("pub", "get")
+  Run "flutter" @("test")
+} finally {
+  Pop-Location
+}
 
-foreach ($dir in $flutterPackages) {
-  Push-Location (Join-Path $rootDir $dir)
-  try {
-    flutter pub get
-    flutter test
-  } finally {
-    Pop-Location
-  }
+Push-Location (Join-Path $rootDir "flutter\oxide_generator")
+try {
+  Run "dart" @("pub", "get")
+  Run "dart" @("test")
+} finally {
+  Pop-Location
+}
+
+Push-Location (Join-Path $rootDir "flutter\oxide_annotations")
+try {
+  Run "dart" @("pub", "get")
+  Run "dart" @("analyze")
+} finally {
+  Pop-Location
 }
 
 if ($NoExamples) {
@@ -58,9 +73,9 @@ $examples = @(
 foreach ($dir in $examples) {
   Push-Location (Join-Path $rootDir $dir)
   try {
-    flutter pub get
-    dart run build_runner build -d
-    flutter build $Platform
+    Run "flutter" @("pub", "get")
+    Run "dart" @("run", "build_runner", "build", "-d")
+    Run "flutter" @("build", $Platform)
   } finally {
     Pop-Location
   }

@@ -52,7 +52,7 @@ impl oxide_core::Reducer for PostsReducer {
                 if let Some(tx) = self.sideeffect_tx.as_ref() {
                     let _ = tx.send(PostsSideEffect::Fetch { user_id });
                 }
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             PostsAction::Refresh => {
                 if let (Some(user_id), Some(tx)) = (state.selected_user_id, self.sideeffect_tx.as_ref()) {
@@ -62,7 +62,7 @@ impl oxide_core::Reducer for PostsReducer {
             }
             PostsAction::SelectPost { post_id } => {
                 state.selected_post_id = Some(post_id);
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
         }
     }
@@ -79,7 +79,7 @@ impl oxide_core::Reducer for PostsReducer {
                 state.selected_post_id = None;
 
                 let Some(tx) = self.sideeffect_tx.clone() else {
-                    return Ok(StateChange::FullUpdate);
+                    return Ok(StateChange::Full);
                 };
 
                 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
@@ -108,7 +108,7 @@ impl oxide_core::Reducer for PostsReducer {
                     }
                 });
 
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             PostsSideEffect::Loaded { user_id, posts } => {
                 if state.selected_user_id != Some(user_id) {
@@ -119,11 +119,11 @@ impl oxide_core::Reducer for PostsReducer {
                 if state.selected_post_id.is_none() {
                     state.selected_post_id = state.posts.first().map(|p| p.id);
                 }
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             PostsSideEffect::Failed { message } => {
                 state.phase = LoadPhase::Error { message };
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
         }
     }

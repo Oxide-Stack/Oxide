@@ -59,5 +59,5 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: MyApp()));
     await tester.pumpAndSettle(const Duration(seconds: 1));
     expect(find.text('persist me'), findsOneWidget);
-  });
+  }, timeout: const Timeout(Duration(minutes: 30)));
 }

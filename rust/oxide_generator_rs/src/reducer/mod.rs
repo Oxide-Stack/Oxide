@@ -4,6 +4,7 @@
 // concern are less likely to introduce subtle codegen regressions.
 mod args;
 mod expand;
+mod sliced_usage;
 mod validate;
 
 pub(crate) use args::ReducerArgs;

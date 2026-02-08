@@ -40,7 +40,7 @@ impl Reducer for TestReducer {
                 state.value = state.value.saturating_add(1);
             }
         }
-        Ok(oxide_core::StateChange::FullUpdate)
+        Ok(oxide_core::StateChange::Full)
     }
 
     fn effect(

@@ -4,3 +4,4 @@
 // refactors to split responsibilities into smaller files.
 export 'types.dart';
 export 'store_core.dart';
+export 'slices.dart';

@@ -50,7 +50,7 @@ impl oxide_core::Reducer for CommentsReducer {
                 if let Some(tx) = self.sideeffect_tx.as_ref() {
                     let _ = tx.send(CommentsSideEffect::Fetch { post_id });
                 }
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             CommentsAction::Refresh => {
                 if let (Some(post_id), Some(tx)) = (state.selected_post_id, self.sideeffect_tx.as_ref()) {
@@ -72,7 +72,7 @@ impl oxide_core::Reducer for CommentsReducer {
                 state.comments.clear();
 
                 let Some(tx) = self.sideeffect_tx.clone() else {
-                    return Ok(StateChange::FullUpdate);
+                    return Ok(StateChange::Full);
                 };
 
                 oxide_core::runtime::safe_spawn(async move {
@@ -89,7 +89,7 @@ impl oxide_core::Reducer for CommentsReducer {
 
               
 
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             CommentsSideEffect::Loaded { post_id, comments } => {
                 if state.selected_post_id != Some(post_id) {
@@ -97,11 +97,11 @@ impl oxide_core::Reducer for CommentsReducer {
                 }
                 state.comments = comments;
                 state.phase = LoadPhase::Ready;
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             CommentsSideEffect::Failed { message } => {
                 state.phase = LoadPhase::Error { message };
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
         }
     }

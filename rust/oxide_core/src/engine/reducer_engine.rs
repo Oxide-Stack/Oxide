@@ -17,7 +17,11 @@ use crate::persistence::{
 //
 // How: Guard state behind a mutex, broadcast snapshots through a watch channel,
 // and run side-effects in a background loop that uses the same commit rule.
-struct EngineState<R: Reducer> {
+struct EngineState<R, StateSlice>
+where
+    R: Reducer<StateSlice>,
+    StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
+{
     state: R::State,
     revision: u64,
     reducer: R,
@@ -29,9 +33,13 @@ struct PersistenceHooks<S> {
     encode: Box<dyn Fn(&S) -> CoreResult<Vec<u8>> + Send + Sync>,
 }
 
-struct Shared<R: Reducer> {
-    state: Mutex<EngineState<R>>,
-    tx: watch::Sender<StateSnapshot<R::State>>,
+struct Shared<R, StateSlice>
+where
+    R: Reducer<StateSlice>,
+    StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
+{
+    state: Mutex<EngineState<R, StateSlice>>,
+    tx: watch::Sender<StateSnapshot<R::State, StateSlice>>,
     sideeffect_tx: mpsc::UnboundedSender<R::SideEffect>,
     #[cfg(feature = "frb-spawn")]
     _sideeffect_task: StdMutex<Option<flutter_rust_bridge::JoinHandle<()>>>,
@@ -56,7 +64,7 @@ struct Shared<R: Reducer> {
 /// 2. Run reducer logic against the clone.
 /// 3. If the reducer returns an error, discard the clone (state is unchanged).
 /// 4. If the reducer returns [`StateChange::None`], discard the clone (no snapshot emitted).
-/// 5. If the reducer returns [`StateChange::FullUpdate`], commit the clone and emit a snapshot.
+/// 5. If the reducer returns [`StateChange::Full`], commit the clone and emit a snapshot.
 ///
 /// # Concurrency
 /// Actions are applied serially (behind an internal mutex). Snapshot updates are broadcast via
@@ -65,11 +73,19 @@ struct Shared<R: Reducer> {
 /// # Runtime requirements
 /// Creating an engine spawns a background task via Flutter Rust Bridge.
 /// Call `initOxide()` from Dart (after `RustLib.init()`) before creating engines.
-pub struct ReducerEngine<R: Reducer> {
-    shared: Arc<Shared<R>>,
+pub struct ReducerEngine<R, StateSlice = ()>
+where
+    R: Reducer<StateSlice>,
+    StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
+{
+    shared: Arc<Shared<R, StateSlice>>,
 }
 
-impl<R: Reducer> Clone for ReducerEngine<R> {
+impl<R, StateSlice> Clone for ReducerEngine<R, StateSlice>
+where
+    R: Reducer<StateSlice>,
+    StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
+{
     fn clone(&self) -> Self {
         Self {
             shared: Arc::clone(&self.shared),
@@ -77,7 +93,11 @@ impl<R: Reducer> Clone for ReducerEngine<R> {
     }
 }
 
-impl<R: Reducer> ReducerEngine<R> {
+impl<R, StateSlice> ReducerEngine<R, StateSlice>
+where
+    R: Reducer<StateSlice>,
+    StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
+{
     /// Creates a new engine with the given reducer and initial state.
     pub async fn new(reducer: R, initial_state: R::State) -> CoreResult<Self> {
         Self::new_inner(reducer, initial_state, None).await
@@ -133,6 +153,7 @@ impl<R: Reducer> ReducerEngine<R> {
         let initial_snapshot = StateSnapshot {
             revision: 0,
             state: initial_state.clone(),
+            slices: Vec::new(),
         };
         let (tx, _rx) = watch::channel(initial_snapshot);
 
@@ -183,7 +204,10 @@ impl<R: Reducer> ReducerEngine<R> {
     ///
     /// # Errors
     /// Returns any error produced by the reducer.
-    pub async fn dispatch(&self, action: R::Action) -> CoreResult<StateSnapshot<R::State>> {
+    pub async fn dispatch(
+        &self,
+        action: R::Action,
+    ) -> CoreResult<StateSnapshot<R::State, StateSlice>> {
         let mut state = self.shared.state.lock().await;
         // Apply reducer logic against a cloned state so failures never partially
         // mutate the committed state.
@@ -195,14 +219,44 @@ impl<R: Reducer> ReducerEngine<R> {
             StateChange::None => Ok(StateSnapshot {
                 revision: state.revision,
                 state: state.state.clone(),
+                slices: Vec::new(),
             }),
-            StateChange::FullUpdate => {
+            StateChange::Full => {
                 state.state = next_state;
                 state.revision = state.revision.saturating_add(1);
 
                 let snapshot = StateSnapshot {
                     revision: state.revision,
                     state: state.state.clone(),
+                    slices: Vec::new(),
+                };
+                let _ = self.shared.tx.send(snapshot.clone());
+                self.persist_if_enabled(&snapshot);
+                Ok(snapshot)
+            }
+            StateChange::Infer => {
+                let slices = state.reducer.infer_slices(&state.state, &next_state);
+
+                state.state = next_state;
+                state.revision = state.revision.saturating_add(1);
+
+                let snapshot = StateSnapshot {
+                    revision: state.revision,
+                    state: state.state.clone(),
+                    slices,
+                };
+                let _ = self.shared.tx.send(snapshot.clone());
+                self.persist_if_enabled(&snapshot);
+                Ok(snapshot)
+            }
+            StateChange::Slices(slices) => {
+                state.state = next_state;
+                state.revision = state.revision.saturating_add(1);
+
+                let snapshot = StateSnapshot {
+                    revision: state.revision,
+                    state: state.state.clone(),
+                    slices: slices.to_vec(),
                 };
                 let _ = self.shared.tx.send(snapshot.clone());
                 self.persist_if_enabled(&snapshot);
@@ -212,23 +266,24 @@ impl<R: Reducer> ReducerEngine<R> {
     }
 
     /// Returns the current snapshot without dispatching an action.
-    pub async fn current(&self) -> StateSnapshot<R::State> {
+    pub async fn current(&self) -> StateSnapshot<R::State, StateSlice> {
         let state = self.shared.state.lock().await;
         StateSnapshot {
             revision: state.revision,
             state: state.state.clone(),
+            slices: Vec::new(),
         }
     }
 
     /// Subscribes to snapshot updates.
     ///
     /// The returned receiver immediately contains the latest snapshot and will be notified on
-    /// every subsequent [`StateChange::FullUpdate`].
-    pub fn subscribe(&self) -> watch::Receiver<StateSnapshot<R::State>> {
+    /// every subsequent committed update.
+    pub fn subscribe(&self) -> watch::Receiver<StateSnapshot<R::State, StateSlice>> {
         self.shared.tx.subscribe()
     }
 
-    fn persist_if_enabled(&self, _snapshot: &StateSnapshot<R::State>) {
+    fn persist_if_enabled(&self, _snapshot: &StateSnapshot<R::State, StateSlice>) {
         #[cfg(feature = "state-persistence")]
         {
             if let Some(persistence) = &self.shared.persistence {
@@ -240,10 +295,13 @@ impl<R: Reducer> ReducerEngine<R> {
     }
 }
 
-async fn sideeffect_loop<R: Reducer>(
-    shared: Arc<Shared<R>>,
+async fn sideeffect_loop<R, StateSlice>(
+    shared: Arc<Shared<R, StateSlice>>,
     mut rx: mpsc::UnboundedReceiver<R::SideEffect>,
-) {
+) where
+    R: Reducer<StateSlice>,
+    StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
+{
     while let Some(effect) = rx.recv().await {
         let mut state = shared.state.lock().await;
         let mut next_state = state.state.clone();
@@ -254,22 +312,30 @@ async fn sideeffect_loop<R: Reducer>(
             }
         };
 
-        if change == StateChange::FullUpdate {
-            state.state = next_state;
-            state.revision = state.revision.saturating_add(1);
+        let slices: Vec<StateSlice> = match change {
+            StateChange::None => {
+                continue;
+            }
+            StateChange::Full => Vec::new(),
+            StateChange::Infer => state.reducer.infer_slices(&state.state, &next_state),
+            StateChange::Slices(slices) => slices.to_vec(),
+        };
 
-            let snapshot = StateSnapshot {
-                revision: state.revision,
-                state: state.state.clone(),
-            };
-            let _ = shared.tx.send(snapshot.clone());
+        state.state = next_state;
+        state.revision = state.revision.saturating_add(1);
 
-            #[cfg(feature = "state-persistence")]
-            {
-                if let Some(persistence) = &shared.persistence {
-                    if let Ok(bytes) = (persistence.encode)(&snapshot.state) {
-                        persistence.worker.queue(bytes);
-                    }
+        let snapshot = StateSnapshot {
+            revision: state.revision,
+            state: state.state.clone(),
+            slices,
+        };
+        let _ = shared.tx.send(snapshot.clone());
+
+        #[cfg(feature = "state-persistence")]
+        {
+            if let Some(persistence) = &shared.persistence {
+                if let Ok(bytes) = (persistence.encode)(&snapshot.state) {
+                    persistence.worker.queue(bytes);
                 }
             }
         }

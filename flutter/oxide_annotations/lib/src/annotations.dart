@@ -52,6 +52,7 @@ final class OxideStore {
     required this.snapshot,
     required this.actions,
     required this.engine,
+    this.slices,
     this.backend = OxideBackend.inherited,
     this.keepAlive = false,
     this.bindings,
@@ -71,6 +72,16 @@ final class OxideStore {
   final Type snapshot;
   final Type actions;
   final Type engine;
+
+  /// Optional slice subscription configuration for sliced updates.
+  ///
+  /// When set, the generated store only rebuilds when the incoming snapshot
+  /// indicates one of the requested slices changed (or when the snapshot
+  /// represents a full update).
+  ///
+  /// The values must be enum values from the state slice enum generated from
+  /// Rust (for example: `StateSlice.playback`).
+  final List<dynamic>? slices;
 
   /// Which Flutter state-management backend to generate for.
   final OxideBackend backend;

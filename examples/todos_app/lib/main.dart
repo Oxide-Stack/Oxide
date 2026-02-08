@@ -40,8 +40,12 @@ class MyApp extends StatelessWidget {
           ),
           body: const TabBarView(
             children: [
-              StateBridgeOxideScope(child: _InheritedPane()),
-              StateBridgeHooksOxideScope(child: _HooksPane()),
+              TodosListInheritedOxideScope(
+                child: TodosNextIdInheritedOxideScope(child: _InheritedPane()),
+              ),
+              TodosListHooksOxideScope(
+                child: TodosNextIdHooksOxideScope(child: _HooksPane()),
+              ),
               _RiverpodPane(),
               _BlocPane(),
             ],
@@ -70,82 +74,45 @@ class _InheritedPaneState extends State<_InheritedPane> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = StateBridgeOxideScope.controllerOf(context);
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, _) {
-        final oxide = controller.oxide;
-        final state = oxide.state;
-
-        if (oxide.isLoading) {
-          return const Center(child: Text('Loading state stream...'));
-        }
-
-        if (oxide.error != null) {
-          return Center(
-            child: Text('Error: ${oxide.error}', style: const TextStyle(color: Colors.red)),
-          );
-        }
-
-        if (state == null) {
-          return const Center(child: Text('No state available'));
-        }
-
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Todos: ${state.todos.length}'),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView(
-                  children: [
-                    TextField(
-                      controller: _todoTitleController,
-                      decoration: const InputDecoration(labelText: 'Add Todo Title (must be non-empty)', border: OutlineInputBorder()),
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton(
-                      onPressed: () {
-                        // This dispatches to Rust; validation errors are reported via `oxide.error`.
-                        oxide.actions.addTodo(title: _todoTitleController.text);
-                        _todoTitleController.clear();
-                      },
-                      child: const Text('Add Todo'),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Todos'),
-                    const SizedBox(height: 8),
-                    if (state.todos.isEmpty)
-                      const Text('No todos yet')
-                    else
-                      ...state.todos.map(
-                        (t) => Row(
-                          children: [
-                            Expanded(
-                              child: CheckboxListTile(
-                                value: t.completed,
-                                onChanged: (_) => oxide.actions.toggleTodo(id: t.id),
-                                title: Text(t.title),
-                                controlAffinity: ListTileControlAffinity.leading,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => oxide.actions.deleteTodo(id: t.id),
-                              icon: const Icon(Icons.delete),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+    final listController = TodosListInheritedOxideScope.controllerOf(context);
+    final nextIdController = TodosNextIdInheritedOxideScope.controllerOf(context);
+    return Column(
+      children: [
+        Expanded(
+          child: AnimatedBuilder(
+            animation: nextIdController,
+            builder: (context, _) {
+              final view = nextIdController.oxide;
+              final state = view.state;
+              if (view.isLoading) return const Center(child: Text('Loading…'));
+              if (view.error != null) return Center(child: Text('Error: ${view.error}'));
+              if (state == null) return const Center(child: Text('No state'));
+              return _NextIdSection(title: 'Next ID (slice: nextId)', nextId: state.nextId.toInt());
+            },
           ),
-        );
-      },
+        ),
+        Expanded(
+          flex: 3,
+          child: AnimatedBuilder(
+            animation: listController,
+            builder: (context, _) {
+              final view = listController.oxide;
+              final state = view.state;
+              if (view.isLoading) return const Center(child: Text('Loading…'));
+              if (view.error != null) return Center(child: Text('Error: ${view.error}', style: const TextStyle(color: Colors.red)));
+              if (state == null) return const Center(child: Text('No state'));
+              return _TodosListSection(
+                title: 'Todos (slice: todos)',
+                todos: state.todos,
+                controller: _todoTitleController,
+                onAdd: (title) => view.actions.addTodo(title: title),
+                onToggle: (id) => view.actions.toggleTodo(id: id),
+                onDelete: (id) => view.actions.deleteTodo(id: id),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -155,64 +122,42 @@ class _HooksPane extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final view = useStateBridgeHooksOxideOxide();
-    final state = view.state;
     final titleController = useTextEditingController();
-    if (view.isLoading) return const Center(child: Text('Loading…'));
-    if (view.error != null) return Center(child: Text('Error: ${view.error}'));
-    if (state == null) return const Center(child: Text('No state'));
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Todos: ${state.todos.length}'),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView(
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Add Todo Title (must be non-empty)', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: () {
-                    view.actions.addTodo(title: titleController.text);
-                    titleController.clear();
-                  },
-                  child: const Text('Add Todo'),
-                ),
-                const SizedBox(height: 16),
-                const Text('Todos'),
-                const SizedBox(height: 8),
-                if (state.todos.isEmpty)
-                  const Text('No todos yet')
-                else
-                  ...state.todos.map(
-                    (t) => Row(
-                      children: [
-                        Expanded(
-                          child: CheckboxListTile(
-                            value: t.completed,
-                            onChanged: (_) => view.actions.toggleTodo(id: t.id),
-                            title: Text(t.title),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => view.actions.deleteTodo(id: t.id),
-                          icon: const Icon(Icons.delete),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
+    final listView = useTodosListHooksOxideOxide();
+    final nextIdView = useTodosNextIdHooksOxideOxide();
+    return Column(
+      children: [
+        Expanded(
+          child: Builder(
+            builder: (context) {
+              final state = nextIdView.state;
+              if (nextIdView.isLoading) return const Center(child: Text('Loading…'));
+              if (nextIdView.error != null) return Center(child: Text('Error: ${nextIdView.error}'));
+              if (state == null) return const Center(child: Text('No state'));
+              return _NextIdSection(title: 'Next ID (slice: nextId)', nextId: state.nextId.toInt());
+            },
           ),
-        ],
-      ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Builder(
+            builder: (context) {
+              final state = listView.state;
+              if (listView.isLoading) return const Center(child: Text('Loading…'));
+              if (listView.error != null) return Center(child: Text('Error: ${listView.error}'));
+              if (state == null) return const Center(child: Text('No state'));
+              return _TodosListSection(
+                title: 'Todos (slice: todos)',
+                todos: state.todos,
+                controller: titleController,
+                onAdd: (title) => listView.actions.addTodo(title: title),
+                onToggle: (id) => listView.actions.toggleTodo(id: id),
+                onDelete: (id) => listView.actions.deleteTodo(id: id),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -222,65 +167,11 @@ class _RiverpodPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final view = ref.watch(stateBridgeRiverpodOxideProvider);
-    final state = view.state;
-    final actions = ref.read(stateBridgeRiverpodOxideProvider).actions;
-    final titleController = TextEditingController();
-    if (view.isLoading) return const Center(child: Text('Loading…'));
-    if (view.error != null) return Center(child: Text('Error: ${view.error}'));
-    if (state == null) return const Center(child: Text('No state'));
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Todos: ${state.todos.length}'),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView(
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Add Todo Title (must be non-empty)', border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: () {
-                    actions.addTodo(title: titleController.text);
-                    titleController.clear();
-                  },
-                  child: const Text('Add Todo'),
-                ),
-                const SizedBox(height: 16),
-                const Text('Todos'),
-                const SizedBox(height: 8),
-                if (state.todos.isEmpty)
-                  const Text('No todos yet')
-                else
-                  ...state.todos.map(
-                    (t) => Row(
-                      children: [
-                        Expanded(
-                          child: CheckboxListTile(
-                            value: t.completed,
-                            onChanged: (_) => actions.toggleTodo(id: t.id),
-                            title: Text(t.title),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => actions.deleteTodo(id: t.id),
-                          icon: const Icon(Icons.delete),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return Column(
+      children: const [
+        Expanded(child: _RiverpodNextIdSection()),
+        Expanded(flex: 3, child: _RiverpodTodosListSection()),
+      ],
     );
   }
 }
@@ -290,71 +181,228 @@ class _BlocPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => StateBridgeBlocOxideCubit(),
-      child: BlocBuilder<StateBridgeBlocOxideCubit, OxideView<AppState, StateBridgeBlocOxideActions>>(
-        builder: (context, view) {
-          final state = view.state;
-          final actions = context.read<StateBridgeBlocOxideCubit>().actions;
-          final titleController = TextEditingController();
-          if (view.isLoading) return const Center(child: Text('Loading…'));
-          if (view.error != null) return Center(child: Text('Error: ${view.error}'));
-          if (state == null) return const Center(child: Text('No state'));
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Todos: ${state.todos.length}'),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      TextField(
-                        controller: titleController,
-                        decoration: const InputDecoration(labelText: 'Add Todo Title (must be non-empty)', border: OutlineInputBorder()),
-                      ),
-                      const SizedBox(height: 8),
-                      FilledButton(
-                        onPressed: () {
-                          actions.addTodo(title: titleController.text);
-                          titleController.clear();
-                        },
-                        child: const Text('Add Todo'),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('Todos'),
-                      const SizedBox(height: 8),
-                      if (state.todos.isEmpty)
-                        const Text('No todos yet')
-                      else
-                        ...state.todos.map(
-                          (t) => Row(
-                            children: [
-                              Expanded(
-                                child: CheckboxListTile(
-                                  value: t.completed,
-                                  onChanged: (_) => actions.toggleTodo(id: t.id),
-                                  title: Text(t.title),
-                                  controlAffinity: ListTileControlAffinity.leading,
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: () => actions.deleteTodo(id: t.id),
-                                icon: const Icon(Icons.delete),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => TodosNextIdBlocOxideCubit()),
+        BlocProvider(create: (_) => TodosListBlocOxideCubit()),
+      ],
+      child: Column(
+        children: const [
+          Expanded(child: _BlocNextIdSection()),
+          Expanded(flex: 3, child: _BlocTodosListSection()),
+        ],
       ),
+    );
+  }
+}
+
+class _NextIdSection extends StatelessWidget {
+  const _NextIdSection({required this.title, required this.nextId});
+
+  final String title;
+  final int nextId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          Text('nextId: $nextId'),
+        ],
+      ),
+    );
+  }
+}
+
+class _TodosListSection extends StatelessWidget {
+  const _TodosListSection({
+    required this.title,
+    required this.todos,
+    required this.controller,
+    required this.onAdd,
+    required this.onToggle,
+    required this.onDelete,
+  });
+
+  final String title;
+  final List<TodoItem> todos;
+  final TextEditingController controller;
+  final void Function(String title) onAdd;
+  final void Function(String id) onToggle;
+  final void Function(String id) onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: ListView(
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          Text('Todos: ${todos.length}'),
+          const SizedBox(height: 12),
+          TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: 'Add Todo Title (must be non-empty)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          FilledButton(
+            onPressed: () {
+              onAdd(controller.text);
+              controller.clear();
+            },
+            child: const Text('Add Todo'),
+          ),
+          const SizedBox(height: 16),
+          const Text('Todos'),
+          const SizedBox(height: 8),
+          if (todos.isEmpty)
+            const Text('No todos yet')
+          else
+            ...todos.map(
+              (t) => Row(
+                children: [
+                  Expanded(
+                    child: CheckboxListTile(
+                      value: t.completed,
+                      onChanged: (_) => onToggle(t.id),
+                      title: Text(t.title),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => onDelete(t.id),
+                    icon: const Icon(Icons.delete),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RiverpodNextIdSection extends ConsumerWidget {
+  const _RiverpodNextIdSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final view = ref.watch(todosNextIdRiverpodOxideProvider);
+    final state = view.state;
+    if (view.isLoading) return const Center(child: Text('Loading…'));
+    if (view.error != null) return Center(child: Text('Error: ${view.error}'));
+    if (state == null) return const Center(child: Text('No state'));
+    return _NextIdSection(title: 'Next ID (slice: nextId)', nextId: state.nextId.toInt());
+  }
+}
+
+class _RiverpodTodosListSection extends ConsumerStatefulWidget {
+  const _RiverpodTodosListSection();
+
+  @override
+  ConsumerState<_RiverpodTodosListSection> createState() => _RiverpodTodosListSectionState();
+}
+
+class _RiverpodTodosListSectionState extends ConsumerState<_RiverpodTodosListSection> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final view = ref.watch(todosListRiverpodOxideProvider);
+    final state = view.state;
+    if (view.isLoading) return const Center(child: Text('Loading…'));
+    if (view.error != null) return Center(child: Text('Error: ${view.error}'));
+    if (state == null) return const Center(child: Text('No state'));
+    final actions = ref.read(todosListRiverpodOxideProvider).actions;
+    return _TodosListSection(
+      title: 'Todos (slice: todos)',
+      todos: state.todos,
+      controller: _controller,
+      onAdd: (title) => actions.addTodo(title: title),
+      onToggle: (id) => actions.toggleTodo(id: id),
+      onDelete: (id) => actions.deleteTodo(id: id),
+    );
+  }
+}
+
+class _BlocNextIdSection extends StatelessWidget {
+  const _BlocNextIdSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TodosNextIdBlocOxideCubit, OxideView<AppState, TodosNextIdBlocOxideActions>>(
+      builder: (context, view) {
+        final state = view.state;
+        if (view.isLoading) return const Center(child: Text('Loading…'));
+        if (view.error != null) return Center(child: Text('Error: ${view.error}'));
+        if (state == null) return const Center(child: Text('No state'));
+        return _NextIdSection(title: 'Next ID (slice: nextId)', nextId: state.nextId.toInt());
+      },
+    );
+  }
+}
+
+class _BlocTodosListSection extends StatefulWidget {
+  const _BlocTodosListSection();
+
+  @override
+  State<_BlocTodosListSection> createState() => _BlocTodosListSectionState();
+}
+
+class _BlocTodosListSectionState extends State<_BlocTodosListSection> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TodosListBlocOxideCubit, OxideView<AppState, TodosListBlocOxideActions>>(
+      builder: (context, view) {
+        final state = view.state;
+        if (view.isLoading) return const Center(child: Text('Loading…'));
+        if (view.error != null) return Center(child: Text('Error: ${view.error}'));
+        if (state == null) return const Center(child: Text('No state'));
+        final actions = context.read<TodosListBlocOxideCubit>().actions;
+        return _TodosListSection(
+          title: 'Todos (slice: todos)',
+          todos: state.todos,
+          controller: _controller,
+          onAdd: (title) => actions.addTodo(title: title),
+          onToggle: (id) => actions.toggleTodo(id: id),
+          onDelete: (id) => actions.deleteTodo(id: id),
+        );
+      },
     );
   }
 }

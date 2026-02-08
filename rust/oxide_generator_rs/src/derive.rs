@@ -9,11 +9,49 @@
 //! The metadata format is implemented in [`crate::meta`].
 
 use quote::quote;
-use syn::{Attribute, ItemEnum, ItemStruct, Token};
+use syn::parse::{Parse, ParseStream};
+use syn::{Attribute, Fields, Ident, ItemEnum, ItemStruct, LitBool, Token};
 
 use crate::meta::{
     ActionsMeta, StateMeta, collect_doc_lines, enum_variants, push_meta_doc, struct_fields,
 };
+
+#[derive(Debug, Clone, Copy, Default)]
+pub(crate) struct StateArgs {
+    pub sliced: bool,
+}
+
+impl Parse for StateArgs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        if input.is_empty() {
+            return Ok(Self::default());
+        }
+
+        let mut sliced: Option<bool> = None;
+        while !input.is_empty() {
+            let key: Ident = input.parse()?;
+            input.parse::<Token![=]>()?;
+            let value: LitBool = input.parse()?;
+            match key.to_string().as_str() {
+                "sliced" => sliced = Some(value.value),
+                other => {
+                    return Err(syn::Error::new_spanned(
+                        key,
+                        format!("unknown #[state] argument `{other}`"),
+                    ));
+                }
+            }
+
+            if input.peek(Token![,]) {
+                let _ = input.parse::<Token![,]>()?;
+            }
+        }
+
+        Ok(Self {
+            sliced: sliced.unwrap_or(false),
+        })
+    }
+}
 
 fn ensure_required_derives(attrs: &mut Vec<Attribute>) {
     // These are the baseline derives Oxide expects for state and actions.
@@ -106,8 +144,132 @@ fn ensure_serde_crate_attr(attrs: &mut Vec<Attribute>) {
     attrs.push(syn::parse_quote!(#[serde(crate = "oxide_core::serde")]));
 }
 
-pub(crate) fn expand_state_struct(mut item: ItemStruct) -> proc_macro2::TokenStream {
-    // Capture high-level information for metadata while we still have the original item.
+fn slice_variant_ident(field: &Ident) -> Ident {
+    let raw = field.to_string();
+    let raw = raw.trim_start_matches('_');
+    let mut out = String::new();
+    for part in raw.split('_') {
+        if part.is_empty() {
+            continue;
+        }
+        let mut chars = part.chars();
+        let Some(first) = chars.next() else {
+            continue;
+        };
+        out.push_str(&first.to_uppercase().to_string());
+        out.push_str(chars.as_str());
+    }
+    if out.is_empty() {
+        out = raw.to_string();
+    }
+    quote::format_ident!("{out}")
+}
+
+pub(crate) fn expand_state_struct(
+    args: StateArgs,
+    mut item: ItemStruct,
+) -> proc_macro2::TokenStream {
+    if args.sliced {
+        let Fields::Named(named) = &item.fields else {
+            return syn::Error::new_spanned(
+                &item,
+                "#[state(sliced = true)] is only supported on structs with named fields",
+            )
+            .to_compile_error();
+        };
+
+        // Why: The previously-generated enum name was always `StateSlice`, which
+        // collides when multiple sliced state structs exist in the same module.
+        //
+        // How: Make the generated enum name state-specific, e.g. `MyStateSlice`.
+        let slice_enum_ident = quote::format_ident!("{}Slice", item.ident);
+
+        let slice_variants: Vec<Ident> = named
+            .named
+            .iter()
+            .filter_map(|f| f.ident.as_ref())
+            .map(slice_variant_ident)
+            .collect();
+
+        let slice_checks: Vec<proc_macro2::TokenStream> = named
+            .named
+            .iter()
+            .filter_map(|f| f.ident.as_ref())
+            .map(|field_ident| {
+                let variant = slice_variant_ident(field_ident);
+                quote! {
+                    if before.#field_ident != after.#field_ident {
+                        slices.push(#slice_enum_ident::#variant);
+                    }
+                }
+            })
+            .collect();
+
+        let name = item.ident.to_string();
+        let ident = item.ident.clone();
+        ensure_required_derives(&mut item.attrs);
+        if cfg!(feature = "state-persistence") {
+            ensure_serde_crate_attr(&mut item.attrs);
+        }
+        let docs = collect_doc_lines(&item.attrs);
+        let fields = struct_fields(&item);
+        item.attrs.push(syn::parse_quote!(#[doc = "oxide:state"]));
+        push_meta_doc(
+            &mut item.attrs,
+            &StateMeta {
+                kind: "state",
+                name,
+                docs,
+                fields: Some(fields),
+                variants: None,
+            },
+        );
+        let persistence_bounds = if cfg!(feature = "state-persistence") {
+            quote!(+ ::oxide_core::serde::Serialize + for<'de> ::oxide_core::serde::Deserialize<'de>)
+        } else {
+            quote!()
+        };
+
+        return quote!(
+            #item
+
+            /// Slice identifiers for top-level segments of this state.
+            ///
+            /// This enum is generated when `#[state(sliced = true)]` is enabled.
+            #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+            pub enum #slice_enum_ident {
+                #( #slice_variants, )*
+            }
+
+            impl #ident {
+                pub fn infer_slices_impl(before: &Self, after: &Self) -> Vec<#slice_enum_ident> {
+                    let mut slices: Vec<#slice_enum_ident> = Vec::new();
+                    #(#slice_checks)*
+                    slices
+                }
+            }
+
+            impl ::oxide_core::SlicedState for #ident {
+                type StateSlice = #slice_enum_ident;
+
+                fn infer_slices(before: &Self, after: &Self) -> Vec<Self::StateSlice> {
+                    let mut slices: Vec<Self::StateSlice> = Vec::new();
+                    #(#slice_checks)*
+                    slices
+                }
+            }
+
+            const _: () = {
+                fn _oxide_require_state_traits<T>()
+                where
+                    T: ::core::fmt::Debug + Clone + PartialEq + Eq #persistence_bounds,
+                {
+                }
+                let _ = _oxide_require_state_traits::<#ident>;
+            };
+        );
+    }
+
     let name = item.ident.to_string();
     let ident = item.ident.clone();
     ensure_required_derives(&mut item.attrs);
@@ -116,7 +278,6 @@ pub(crate) fn expand_state_struct(mut item: ItemStruct) -> proc_macro2::TokenStr
     }
     let docs = collect_doc_lines(&item.attrs);
     let fields = struct_fields(&item);
-    // Marker docs are easy to grep for, even without parsing the JSON meta payload.
     item.attrs.push(syn::parse_quote!(#[doc = "oxide:state"]));
     push_meta_doc(
         &mut item.attrs,
@@ -137,8 +298,6 @@ pub(crate) fn expand_state_struct(mut item: ItemStruct) -> proc_macro2::TokenStr
     quote!(
         #item
         const _: () = {
-            // Emit a small monomorphized function that forces the required bounds at compile time,
-            // producing friendly errors if the user's type violates expectations.
             fn _oxide_require_state_traits<T>()
             where
                 T: ::core::fmt::Debug + Clone + PartialEq + Eq #persistence_bounds,
@@ -149,7 +308,15 @@ pub(crate) fn expand_state_struct(mut item: ItemStruct) -> proc_macro2::TokenStr
     )
 }
 
-pub(crate) fn expand_state_enum(mut item: ItemEnum) -> proc_macro2::TokenStream {
+pub(crate) fn expand_state_enum(args: StateArgs, mut item: ItemEnum) -> proc_macro2::TokenStream {
+    if args.sliced {
+        return syn::Error::new_spanned(
+            &item,
+            "enum slicing is not supported; model sliceable state as a struct with top-level fields and use #[state(sliced = true)]",
+        )
+        .to_compile_error();
+    }
+
     let name = item.ident.to_string();
     let ident = item.ident.clone();
     ensure_required_derives(&mut item.attrs);

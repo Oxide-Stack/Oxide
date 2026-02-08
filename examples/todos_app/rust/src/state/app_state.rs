@@ -12,7 +12,7 @@ pub struct TodoItem {
 }
 
 /// State for the todos example.
-#[state]
+#[state(sliced = true)]
 pub struct AppState {
     /// Current list of todos.
     pub todos: Vec<TodoItem>,

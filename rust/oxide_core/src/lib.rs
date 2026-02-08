@@ -21,7 +21,9 @@ pub mod runtime;
 pub mod persistence;
 
 pub use engine::InitContext;
-pub use engine::{CoreResult, OxideError, Reducer, ReducerEngine, StateChange, StateSnapshot};
+pub use engine::{
+    CoreResult, OxideError, Reducer, ReducerEngine, SlicedState, StateChange, StateSnapshot,
+};
 pub use ffi::watch_receiver_to_stream;
 pub use tokio;
 

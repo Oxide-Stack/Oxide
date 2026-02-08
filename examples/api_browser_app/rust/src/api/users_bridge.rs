@@ -56,7 +56,7 @@ impl oxide_core::Reducer for UsersReducer {
             }
             UsersAction::SelectUser { user_id } => {
                 state.selected_user_id = Some(user_id);
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
         }
     }
@@ -71,7 +71,7 @@ impl oxide_core::Reducer for UsersReducer {
                 state.phase = LoadPhase::Loading;
 
                 let Some(tx) = self.sideeffect_tx.clone() else {
-                    return Ok(StateChange::FullUpdate);
+                    return Ok(StateChange::Full);
                 };
 
                 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
@@ -98,7 +98,7 @@ impl oxide_core::Reducer for UsersReducer {
                     }
                 });
 
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             UsersSideEffect::Loaded { users } => {
                 state.users = users;
@@ -106,11 +106,11 @@ impl oxide_core::Reducer for UsersReducer {
                 if state.selected_user_id.is_none() {
                     state.selected_user_id = state.users.first().map(|u| u.id);
                 }
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             UsersSideEffect::Failed { message } => {
                 state.phase = LoadPhase::Error { message };
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
         }
     }

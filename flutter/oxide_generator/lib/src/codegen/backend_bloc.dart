@@ -5,6 +5,13 @@ import 'model.dart';
 // Why: BLoC-style apps integrate naturally with a Cubit that owns the Oxide core
 // and emits a derived `OxideView` state for widgets.
 String buildBlocBackend(OxideCodegenConfig c, String coreInstantiation) {
+  final snapshotsStream = (c.slices == null || c.slices!.isEmpty)
+      ? '_core.snapshots'
+      : 'filterSnapshotsBySlices<${c.snapshotType}, ${c.sliceType!}>('
+          '_core.snapshots, '
+          'const [${c.slices!.join(', ')}], '
+          '(snap) => snap.slices'
+          ')';
   return '''
 class ${c.prefix}Cubit extends Cubit<OxideView<${c.stateType}, ${c.prefix}Actions>> {
   ${c.prefix}Cubit()
@@ -16,7 +23,7 @@ class ${c.prefix}Cubit extends Cubit<OxideView<${c.stateType}, ${c.prefix}Action
           error: null,
         )) {
     actions._bind(_dispatch);
-    _subscription = _core.snapshots.listen((_) => _emit());
+    _subscription = $snapshotsStream.listen((_) => _emit());
     unawaited(_initialize());
   }
 

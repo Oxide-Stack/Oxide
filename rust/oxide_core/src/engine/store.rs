@@ -29,11 +29,21 @@ pub struct InitContext<SideEffect> {
 
 /// Indicates whether applying an action/effect produced a new state snapshot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum StateChange {
+pub enum StateChange<StateSlice: 'static = ()> {
     /// No externally-visible change; no new snapshot should be emitted.
     None,
     /// State changed and a new snapshot should be emitted.
-    FullUpdate,
+    Full,
+    /// State changed and the engine should infer which slices changed.
+    ///
+    /// Slice inference is only supported when sliced updates are enabled on the
+    /// state type (via `#[state(sliced = true)]`).
+    Infer,
+    /// State changed and the reducer explicitly declares which slices changed.
+    ///
+    /// This bypasses inference and is intended for performance-critical large
+    /// states.
+    Slices(&'static [StateSlice]),
 }
 
 /// A reducer defines how actions mutate state and how side-effects are applied.
@@ -58,7 +68,10 @@ pub enum StateChange {
 /// Reducers are used by [`ReducerEngine`](crate::ReducerEngine). Actions are
 /// dispatched serially; you do not need to make your reducer internally
 /// thread-safe beyond the trait bounds.
-pub trait Reducer: Send + Sync + 'static {
+pub trait Reducer<StateSlice = ()>: Send + Sync + 'static
+where
+    StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
+{
     /// The store state type.
     type State: Clone + Send + Sync + 'static;
     /// The action type consumed by [`Reducer::reduce`].
@@ -77,9 +90,13 @@ pub trait Reducer: Send + Sync + 'static {
 
     /// Applies an action to the provided `state`.
     ///
-    /// Returning [`StateChange::FullUpdate`] indicates that a new snapshot should
-    /// be emitted to subscribers.
-    fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange>;
+    /// Returning [`StateChange::Full`] indicates that a new snapshot should be
+    /// emitted to subscribers.
+    fn reduce(
+        &mut self,
+        state: &mut Self::State,
+        action: Self::Action,
+    ) -> CoreResult<StateChange<StateSlice>>;
 
     /// Applies a previously-enqueued side-effect to the provided `state`.
     ///
@@ -90,5 +107,26 @@ pub trait Reducer: Send + Sync + 'static {
         &mut self,
         state: &mut Self::State,
         effect: Self::SideEffect,
-    ) -> CoreResult<StateChange>;
+    ) -> CoreResult<StateChange<StateSlice>>;
+
+    /// Infers which slices changed between `before` and `after`.
+    ///
+    /// This is only used when reducers return [`StateChange::Infer`]. Reducers
+    /// that do not opt into sliced updates can rely on the default empty
+    /// implementation.
+    fn infer_slices(&self, _before: &Self::State, _after: &Self::State) -> Vec<StateSlice> {
+        Vec::new()
+    }
+}
+
+/// Marker trait implemented by state types that opt into sliced updates.
+///
+/// State types typically implement this trait via `#[state(sliced = true)]` from
+/// `oxide_generator_rs`.
+pub trait SlicedState: Clone + PartialEq + Eq + Send + Sync + 'static {
+    /// Slice enum representing the top-level segments of this state.
+    type StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static;
+
+    /// Infers which top-level slices changed between `before` and `after`.
+    fn infer_slices(before: &Self, after: &Self) -> Vec<Self::StateSlice>;
 }

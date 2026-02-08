@@ -1,0 +1,7 @@
+error: enum slicing is not supported; model sliceable state as a struct with top-level fields and use #[state(sliced = true)]
+ --> tests/ui/fail_state_sliced_enum.rs:4:1
+  |
+4 | / pub enum MyState {
+5 | |     A,
+6 | | }
+  | |_^

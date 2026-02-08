@@ -3,35 +3,46 @@ Usage:
   .\tools\scripts\qa.ps1
 Runs tests for Rust, Flutter packages, and example apps.
 #>
+param(
+  [switch] $SkipIntegration
+)
+
 $ErrorActionPreference = "Stop"
+
+function Run([string] $exe, [string[]] $commandArgs) {
+  & $exe @commandArgs
+  if ($LASTEXITCODE -ne 0) {
+    throw "Command failed ($LASTEXITCODE): $exe $($commandArgs -join ' ')"
+  }
+}
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rootDir = Resolve-Path (Join-Path $scriptDir "..\..")
 
 Push-Location (Join-Path $rootDir "rust")
 try {
-  cargo test --workspace
+  Run "cargo" @("test", "--workspace")
 } finally {
   Pop-Location
 }
 
 Push-Location (Join-Path $rootDir "flutter\oxide_runtime")
 try {
-  flutter test
+  Run "flutter" @("test")
 } finally {
   Pop-Location
 }
 
 Push-Location (Join-Path $rootDir "flutter\oxide_generator")
 try {
-  dart test
+  Run "dart" @("test")
 } finally {
   Pop-Location
 }
 
 Push-Location (Join-Path $rootDir "flutter\oxide_annotations")
 try {
-  dart analyze
+  Run "dart" @("analyze")
 } finally {
   Pop-Location
 }
@@ -44,8 +55,18 @@ $exampleDirs = @(
   "examples\api_browser_app"
 )
 
-$skipIntegration = $env:QA_SKIP_INTEGRATION_TESTS -eq "1"
+$skipIntegration = $SkipIntegration -or ($env:QA_SKIP_INTEGRATION_TESTS -eq "1")
 $integrationDeviceId = if ($env:QA_INTEGRATION_DEVICE_ID) { $env:QA_INTEGRATION_DEVICE_ID } else { "windows" }
+$integrationTimeout = if ($env:QA_INTEGRATION_TIMEOUT) { $env:QA_INTEGRATION_TIMEOUT } else { "30m" }
+
+function Run-IntegrationTest([string] $testPath) {
+  try {
+    Run "flutter" @("test", $testPath, "-d", $integrationDeviceId, "--timeout", $integrationTimeout)
+  } catch {
+    Run "flutter" @("clean")
+    Run "flutter" @("test", $testPath, "-d", $integrationDeviceId, "--timeout", $integrationTimeout)
+  }
+}
 
 foreach ($dir in $exampleDirs) {
   Push-Location (Join-Path $rootDir $dir)
@@ -54,7 +75,7 @@ foreach ($dir in $exampleDirs) {
     if (Test-Path (Join-Path $exampleRustDir "Cargo.toml")) {
       Push-Location $exampleRustDir
       try {
-        cargo test
+        Run "cargo" @("test")
       } finally {
         Pop-Location
       }
@@ -68,15 +89,15 @@ foreach ($dir in $exampleDirs) {
         Write-Host "Skipping build cleanup in $dir ($($_.Exception.Message))"
       }
     }
-    flutter pub get
-    dart run build_runner build -d
-    flutter test
+    Run "flutter" @("pub", "get")
+    Run "dart" @("run", "build_runner", "build", "-d")
+    Run "flutter" @("test")
 
     $integrationTestDir = Join-Path (Get-Location) "integration_test"
     if (-not $skipIntegration -and (Test-Path $integrationTestDir)) {
       $tests = Get-ChildItem -Path $integrationTestDir -Filter "*_test.dart" -File
       foreach ($test in $tests) {
-        flutter test $test.FullName -d $integrationDeviceId
+        Run-IntegrationTest $test.FullName
       }
     }
   } finally {

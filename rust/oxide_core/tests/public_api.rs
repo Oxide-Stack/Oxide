@@ -26,7 +26,7 @@ impl Reducer for ReducerImpl {
         match action {
             Action::Increment => {
                 state.value = state.value.saturating_add(1);
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             Action::Fail => Err(OxideError::Internal {
                 message: "expected failure".to_string(),

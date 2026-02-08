@@ -37,7 +37,7 @@ impl oxide_core::Reducer for SieveRootReducer {
             state.checksum = fnv1a_mix_u64(state.checksum, SIEVE_LIMIT as u64);
         }
 
-        Ok(oxide_core::StateChange::FullUpdate)
+        Ok(oxide_core::StateChange::Full)
     }
 
     fn effect(

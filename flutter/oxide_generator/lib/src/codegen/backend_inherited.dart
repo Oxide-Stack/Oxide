@@ -5,12 +5,19 @@ import 'model.dart';
 // Why: this backend provides a dependency-free integration for Flutter apps
 // that don't want an additional state management dependency.
 String buildInheritedBackend(OxideCodegenConfig c, String coreInstantiation) {
+  final snapshotsStream = (c.slices == null || c.slices!.isEmpty)
+      ? '_core.snapshots'
+      : 'filterSnapshotsBySlices<${c.snapshotType}, ${c.sliceType!}>('
+          '_core.snapshots, '
+          'const [${c.slices!.join(', ')}], '
+          '(snap) => snap.slices'
+          ')';
   return '''
 class ${c.prefix}Controller extends ChangeNotifier {
   ${c.prefix}Controller() {
     actions = ${c.prefix}Actions._(_dispatch);
     actions._bind(_dispatch);
-    _subscription = _core.snapshots.listen((_) => _notify());
+    _subscription = $snapshotsStream.listen((_) => _notify());
     unawaited(_initialize());
   }
 

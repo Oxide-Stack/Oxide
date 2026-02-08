@@ -77,6 +77,74 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
     final encodeStateFn = annotation.peek('encodeState')?.stringValue;
     final decodeStateFn = annotation.peek('decodeState')?.stringValue;
 
+    String? sliceType;
+    List<String>? slices;
+    final slicesReader = annotation.peek('slices');
+    if (slicesReader != null && !slicesReader.isNull) {
+      final values = slicesReader.listValue;
+      if (values.isNotEmpty) {
+        slices = <String>[];
+        for (final obj in values) {
+          final objType = obj.type;
+          final objElement = objType?.element;
+          if (objType == null || objElement is! EnumElement) {
+            throw InvalidGenerationSourceError('@OxideStore.slices must contain enum values.', element: element);
+          }
+
+          final enumIndex = obj.getField('index')?.toIntValue();
+          if (enumIndex == null) {
+            throw InvalidGenerationSourceError('@OxideStore.slices must contain enum values.', element: element);
+          }
+
+          final constants = (() {
+            final dynamic dyn = objElement;
+            try {
+              final value = dyn.constants;
+              if (value is List) return value;
+            } catch (_) {}
+            return null;
+          })();
+
+          String? constantName;
+          if (constants != null) {
+            if (enumIndex >= 0 && enumIndex < constants.length) {
+              final dynamic dynConstant = constants[enumIndex];
+              final name = dynConstant.name;
+              if (name is String && name.isNotEmpty) constantName = name;
+            }
+          } else {
+            final fields = objElement.fields.where((f) => f.isEnumConstant).toList(growable: false);
+            if (enumIndex >= 0 && enumIndex < fields.length) constantName = fields[enumIndex].name;
+          }
+
+          if (constantName == null || constantName.isEmpty) {
+            throw InvalidGenerationSourceError('@OxideStore.slices contains an unknown enum value.', element: element);
+          }
+
+          final enumTypeName = _typeName(objType);
+          sliceType ??= enumTypeName;
+          if (sliceType != enumTypeName) {
+            throw InvalidGenerationSourceError('@OxideStore.slices must contain values from a single enum type.', element: element);
+          }
+          slices.add('$enumTypeName.$constantName');
+        }
+      }
+
+      final snapElement = snapshotType.element;
+      if (slices != null && slices.isNotEmpty) {
+        if (snapElement is! ClassElement) {
+          throw InvalidGenerationSourceError('@OxideStore.snapshot must be a class type when using slices.', element: element);
+        }
+        final hasSlicesGetter = snapElement.getGetter('slices') != null || snapElement.fields.any((f) => f.name == 'slices');
+        if (!hasSlicesGetter) {
+          throw InvalidGenerationSourceError(
+            '@OxideStore.slices requires snapshot to expose a `slices` field/getter generated from Rust sliced updates.',
+            element: element,
+          );
+        }
+      }
+    }
+
     final actionsElement = actionsType.element;
     final actionsIsEnum = actionsElement is EnumElement;
     if (actionsElement is! ClassElement && actionsElement is! EnumElement) {
@@ -151,6 +219,8 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
         actionsType: actionsTypeName,
         actionsIsEnum: actionsIsEnum,
         engineType: engineTypeName,
+        sliceType: sliceType,
+        slices: slices,
         backend: backend,
         keepAlive: keepAlive,
         createEngine: createEngine,

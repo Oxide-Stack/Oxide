@@ -14,6 +14,13 @@ final class OxideCodegenConfig {
     required this.actionsType,
     required this.actionsIsEnum,
     required this.engineType,
+    // Why: Most stores do not opt into sliced updates, and the generator should
+    // not force tests/callers to provide slice metadata when unused.
+    //
+    // How: Keep these optional; `OxideStoreGenerator` only populates them when
+    // `@OxideStore(slices: [...])` is present.
+    this.sliceType,
+    this.slices,
     required this.backend,
     required this.keepAlive,
     required this.createEngine,
@@ -34,6 +41,10 @@ final class OxideCodegenConfig {
   final String actionsType;
   final bool actionsIsEnum;
   final String engineType;
+
+  final String? sliceType;
+  final List<String>? slices;
+
   final String backend;
   final bool keepAlive;
 

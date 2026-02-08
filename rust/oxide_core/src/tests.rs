@@ -37,7 +37,7 @@ impl Reducer for TestReducer {
         match action {
             TestAction::Increment => {
                 state.value = state.value.saturating_add(1);
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             TestAction::Noop => Ok(StateChange::None),
             TestAction::MutateThenFail => {

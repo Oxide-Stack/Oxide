@@ -6,6 +6,13 @@ import 'model.dart';
 // Why: Riverpod is a common app-layer integration; this template wires the core
 // store into a NotifierProvider while keeping the engine lifecycle consistent.
 String buildRiverpodBackend(OxideCodegenConfig c, String coreInstantiation) {
+  final snapshotsStream = (c.slices == null || c.slices!.isEmpty)
+      ? '_core.snapshots'
+      : 'filterSnapshotsBySlices<${c.snapshotType}, ${c.sliceType!}>('
+          '_core.snapshots, '
+          'const [${c.slices!.join(', ')}], '
+          '(snap) => snap.slices'
+          ')';
   return '''
 final ${lowerFirst(c.prefix)}Provider = ${c.keepAlive ? 'NotifierProvider' : 'NotifierProvider.autoDispose'}<
     ${c.prefix}Notifier,
@@ -41,7 +48,7 @@ $coreInstantiation
 
   Future<void> _initialize() async {
     await _core.initialize();
-    _subscription = _core.snapshots.listen((_) => state = _view());
+    _subscription = $snapshotsStream.listen((_) => state = _view());
     state = _view();
   }
 

@@ -39,7 +39,7 @@ impl oxide_core::Reducer for JsonRootReducer {
             run_json_once(state, json)?;
         }
 
-        Ok(oxide_core::StateChange::FullUpdate)
+        Ok(oxide_core::StateChange::Full)
     }
 
     fn effect(

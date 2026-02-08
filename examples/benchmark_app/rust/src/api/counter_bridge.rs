@@ -33,7 +33,7 @@ impl oxide_core::Reducer for CounterRootReducer {
             state.checksum = fnv1a_mix_u64(state.checksum, state.counter);
         }
 
-        Ok(oxide_core::StateChange::FullUpdate)
+        Ok(oxide_core::StateChange::Full)
     }
 
     fn effect(

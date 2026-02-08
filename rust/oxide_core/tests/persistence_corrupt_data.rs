@@ -28,7 +28,11 @@ impl Reducer for ReducerImpl {
 
     async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 
-    fn reduce(&mut self, _state: &mut Self::State, _action: Self::Action) -> CoreResult<StateChange> {
+    fn reduce(
+        &mut self,
+        _state: &mut Self::State,
+        _action: Self::Action,
+    ) -> CoreResult<StateChange> {
         Ok(StateChange::None)
     }
 

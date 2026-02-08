@@ -25,7 +25,7 @@ impl Reducer for BenchReducer {
         match action {
             BenchAction::Increment => {
                 *state = state.saturating_add(1);
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
         }
     }

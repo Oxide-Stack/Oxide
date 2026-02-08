@@ -13,7 +13,7 @@ keywords = ["oxide", "proc-macro", "state-management", "redux", "flutter"]
 categories = ["development-tools::procedural-macro-helpers"]
 
 [dependencies]
-syn = { version = "2.0", features = ["full"] }        # parse Rust code
+syn = { version = "2.0", features = ["full", "visit"] }        # parse Rust code
 quote = "1.0"      # generate Rust code
 proc-macro2 = "1.0"
 serde = { version = "1", features = ["derive"] }

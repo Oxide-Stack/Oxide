@@ -19,4 +19,4 @@ mod store;
 pub use error::{CoreResult, OxideError};
 pub use reducer_engine::ReducerEngine;
 pub use snapshot::StateSnapshot;
-pub use store::{InitContext, Reducer, StateChange};
+pub use store::{InitContext, Reducer, SlicedState, StateChange};

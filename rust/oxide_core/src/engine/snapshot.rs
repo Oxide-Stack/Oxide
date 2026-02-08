@@ -5,7 +5,7 @@
 /// Versioned snapshot of store state.
 ///
 /// A snapshot is broadcast to subscribers when the engine commits a new state
-/// (i.e. when a reducer returns [`crate::StateChange::FullUpdate`]).
+/// (i.e. when a reducer returns [`crate::StateChange::Full`]).
 ///
 /// Revisions start at `0` and increment by 1 for each committed update.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,9 +13,14 @@
     feature = "state-persistence",
     derive(serde::Serialize, serde::Deserialize)
 )]
-pub struct StateSnapshot<T> {
+pub struct StateSnapshot<T, StateSlice = ()> {
     /// Monotonically increasing revision number, starting at `0`.
     pub revision: u64,
     /// The state value for the given revision.
     pub state: T,
+    /// Slice metadata describing which top-level segments of state changed.
+    ///
+    /// This is only populated when sliced updates are enabled and reducers opt
+    /// into emitting slice metadata.
+    pub slices: Vec<StateSlice>,
 }

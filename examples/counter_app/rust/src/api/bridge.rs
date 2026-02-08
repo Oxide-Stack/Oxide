@@ -46,7 +46,7 @@ impl oxide_core::Reducer for AppRootReducer {
                     return Ok(oxide_core::StateChange::None);
                 }
                 state.counter = next;
-                Ok(oxide_core::StateChange::FullUpdate)
+                Ok(oxide_core::StateChange::Full)
             }
             AppAction::Decrement => {
                 let next = state.counter.saturating_sub(1);
@@ -54,14 +54,14 @@ impl oxide_core::Reducer for AppRootReducer {
                     return Ok(oxide_core::StateChange::None);
                 }
                 state.counter = next;
-                Ok(oxide_core::StateChange::FullUpdate)
+                Ok(oxide_core::StateChange::Full)
             }
             AppAction::Reset => {
                 if state.counter == 0 {
                     return Ok(oxide_core::StateChange::None);
                 }
                 state.counter = 0;
-                Ok(oxide_core::StateChange::FullUpdate)
+                Ok(oxide_core::StateChange::Full)
             }
         }
     }

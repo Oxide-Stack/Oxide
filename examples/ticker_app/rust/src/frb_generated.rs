@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -557562661;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1723205751;
 
 // Section: executor
 
@@ -73,6 +73,41 @@ fn wire__crate__api__bridge__create_engine_impl(
                 transform_result_sse::<_, OxideError>(
                     (move || async move {
                         let output_ok = crate::api::bridge::create_engine().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__bridge__create_shared_engine_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "create_shared_engine",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, OxideError>(
+                    (move || async move {
+                        let output_ok = crate::api::bridge::create_shared_engine().await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -501,15 +536,24 @@ impl SseDecode for crate::state::app_action::AppAction {
 impl SseDecode for crate::state::app_state::AppState {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_ticks = <u64>::sse_decode(deserializer);
-        let mut var_isRunning = <bool>::sse_decode(deserializer);
-        let mut var_intervalMs = <u64>::sse_decode(deserializer);
-        let mut var_lastTickSource = <String>::sse_decode(deserializer);
+        let mut var_control =
+            <crate::state::app_state::TickerControlState>::sse_decode(deserializer);
+        let mut var_tick = <crate::state::app_state::TickState>::sse_decode(deserializer);
         return crate::state::app_state::AppState {
-            ticks: var_ticks,
-            is_running: var_isRunning,
-            interval_ms: var_intervalMs,
-            last_tick_source: var_lastTickSource,
+            control: var_control,
+            tick: var_tick,
+        };
+    }
+}
+
+impl SseDecode for crate::state::app_state::AppStateSlice {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::state::app_state::AppStateSlice::Control,
+            1 => crate::state::app_state::AppStateSlice::Tick,
+            _ => unreachable!("Invalid variant for AppStateSlice: {}", inner),
         };
     }
 }
@@ -519,9 +563,12 @@ impl SseDecode for crate::api::bridge::AppStateSnapshot {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_revision = <u64>::sse_decode(deserializer);
         let mut var_state = <crate::state::app_state::AppState>::sse_decode(deserializer);
+        let mut var_slices =
+            <Vec<crate::state::app_state::AppStateSlice>>::sse_decode(deserializer);
         return crate::api::bridge::AppStateSnapshot {
             revision: var_revision,
             state: var_state,
+            slices: var_slices,
         };
     }
 }
@@ -530,6 +577,27 @@ impl SseDecode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u8().unwrap() != 0
+    }
+}
+
+impl SseDecode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for Vec<crate::state::app_state::AppStateSlice> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::state::app_state::AppStateSlice>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
     }
 }
 
@@ -542,6 +610,30 @@ impl SseDecode for Vec<u8> {
             ans_.push(<u8>::sse_decode(deserializer));
         }
         return ans_;
+    }
+}
+
+impl SseDecode for crate::state::app_state::TickState {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_ticks = <u64>::sse_decode(deserializer);
+        let mut var_lastTickSource = <String>::sse_decode(deserializer);
+        return crate::state::app_state::TickState {
+            ticks: var_ticks,
+            last_tick_source: var_lastTickSource,
+        };
+    }
+}
+
+impl SseDecode for crate::state::app_state::TickerControlState {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_isRunning = <bool>::sse_decode(deserializer);
+        let mut var_intervalMs = <u64>::sse_decode(deserializer);
+        return crate::state::app_state::TickerControlState {
+            is_running: var_isRunning,
+            interval_ms: var_intervalMs,
+        };
     }
 }
 
@@ -571,13 +663,6 @@ impl SseDecode for usize {
     }
 }
 
-impl SseDecode for i32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
-    }
-}
-
 fn pde_ffi_dispatcher_primary_impl(
     func_id: i32,
     port: flutter_rust_bridge::for_generated::MessagePort,
@@ -588,12 +673,13 @@ fn pde_ffi_dispatcher_primary_impl(
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
         1 => wire__crate__api__bridge__create_engine_impl(port, ptr, rust_vec_len, data_len),
-        2 => wire__crate__api__bridge__current_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__bridge__dispatch_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__bridge__dispose_engine_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__bridge__init_app_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__bridge__init_oxide_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__bridge__state_stream_impl(port, ptr, rust_vec_len, data_len),
+        2 => wire__crate__api__bridge__create_shared_engine_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__bridge__current_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__bridge__dispatch_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__bridge__dispose_engine_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__bridge__init_app_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__bridge__init_oxide_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__bridge__state_stream_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -675,10 +761,8 @@ impl flutter_rust_bridge::IntoIntoDart<crate::state::app_action::AppAction>
 impl flutter_rust_bridge::IntoDart for crate::state::app_state::AppState {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.ticks.into_into_dart().into_dart(),
-            self.is_running.into_into_dart().into_dart(),
-            self.interval_ms.into_into_dart().into_dart(),
-            self.last_tick_source.into_into_dart().into_dart(),
+            self.control.into_into_dart().into_dart(),
+            self.tick.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -695,11 +779,33 @@ impl flutter_rust_bridge::IntoIntoDart<crate::state::app_state::AppState>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::state::app_state::AppStateSlice {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Control => 0.into_dart(),
+            Self::Tick => 1.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::state::app_state::AppStateSlice
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::state::app_state::AppStateSlice>
+    for crate::state::app_state::AppStateSlice
+{
+    fn into_into_dart(self) -> crate::state::app_state::AppStateSlice {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::bridge::AppStateSnapshot {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.revision.into_into_dart().into_dart(),
             self.state.into_into_dart().into_dart(),
+            self.slices.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -712,6 +818,48 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::bridge::AppStateSnapshot>
     for crate::api::bridge::AppStateSnapshot
 {
     fn into_into_dart(self) -> crate::api::bridge::AppStateSnapshot {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::state::app_state::TickState {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.ticks.into_into_dart().into_dart(),
+            self.last_tick_source.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::state::app_state::TickState
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::state::app_state::TickState>
+    for crate::state::app_state::TickState
+{
+    fn into_into_dart(self) -> crate::state::app_state::TickState {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::state::app_state::TickerControlState {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.is_running.into_into_dart().into_dart(),
+            self.interval_ms.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::state::app_state::TickerControlState
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::state::app_state::TickerControlState>
+    for crate::state::app_state::TickerControlState
+{
+    fn into_into_dart(self) -> crate::state::app_state::TickerControlState {
         self
     }
 }
@@ -811,10 +959,24 @@ impl SseEncode for crate::state::app_action::AppAction {
 impl SseEncode for crate::state::app_state::AppState {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.ticks, serializer);
-        <bool>::sse_encode(self.is_running, serializer);
-        <u64>::sse_encode(self.interval_ms, serializer);
-        <String>::sse_encode(self.last_tick_source, serializer);
+        <crate::state::app_state::TickerControlState>::sse_encode(self.control, serializer);
+        <crate::state::app_state::TickState>::sse_encode(self.tick, serializer);
+    }
+}
+
+impl SseEncode for crate::state::app_state::AppStateSlice {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::state::app_state::AppStateSlice::Control => 0,
+                crate::state::app_state::AppStateSlice::Tick => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 
@@ -823,6 +985,7 @@ impl SseEncode for crate::api::bridge::AppStateSnapshot {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.revision, serializer);
         <crate::state::app_state::AppState>::sse_encode(self.state, serializer);
+        <Vec<crate::state::app_state::AppStateSlice>>::sse_encode(self.slices, serializer);
     }
 }
 
@@ -833,6 +996,23 @@ impl SseEncode for bool {
     }
 }
 
+impl SseEncode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for Vec<crate::state::app_state::AppStateSlice> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::state::app_state::AppStateSlice>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<u8> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -840,6 +1020,22 @@ impl SseEncode for Vec<u8> {
         for item in self {
             <u8>::sse_encode(item, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::state::app_state::TickState {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u64>::sse_encode(self.ticks, serializer);
+        <String>::sse_encode(self.last_tick_source, serializer);
+    }
+}
+
+impl SseEncode for crate::state::app_state::TickerControlState {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_running, serializer);
+        <u64>::sse_encode(self.interval_ms, serializer);
     }
 }
 
@@ -869,13 +1065,6 @@ impl SseEncode for usize {
             .cursor
             .write_u64::<NativeEndian>(self as _)
             .unwrap();
-    }
-}
-
-impl SseEncode for i32 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
     }
 }
 

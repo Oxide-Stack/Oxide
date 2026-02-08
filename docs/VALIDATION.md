@@ -1,5 +1,68 @@
 # Validation Report
 
+## 2026-02-08 (Windows + Web/WASM)
+
+### Summary
+
+- Ran Windows tests and builds across the Rust workspace, Flutter packages, and all example apps.
+- Verified `oxide_core` compiles for `wasm32-unknown-unknown` and `wasm32-wasip1`, including WASM compatibility test compilation.
+- Verified Flutter Web WASM builds for all example apps via FRB `build-web` + wasm-pack.
+- Hardened repo scripts so build/test failures fail fast and are less flaky on Windows.
+
+### Commands Executed
+
+- Windows tests (repo script):
+  - `pwsh -File .\tools\scripts\qa.ps1 -SkipIntegration`
+- Windows builds (repo script):
+  - `pwsh -File .\tools\scripts\build.ps1 -Platform windows`
+- Rust WASM compilation checks:
+  - From `rust/`:
+    - `cargo check -p oxide_core --target wasm32-unknown-unknown --all-features`
+    - `cargo check -p oxide_core --target wasm32-wasip1 --all-features`
+    - `cargo test -p oxide_core --target wasm32-unknown-unknown --all-features --no-run --test wasm_web_compat`
+    - `cargo test -p oxide_core --target wasm32-wasip1 --all-features --no-run --test wasm_wasi_compat`
+- Flutter Web WASM builds (FRB build-web + wasm-pack):
+  - `pwsh -File .\tools\scripts\web_wasm.ps1 -Action build -Path .\examples\counter_app`
+  - `pwsh -File .\tools\scripts\web_wasm.ps1 -Action build -Path .\examples\todos_app`
+  - `pwsh -File .\tools\scripts\web_wasm.ps1 -Action build -Path .\examples\ticker_app`
+  - `pwsh -File .\tools\scripts\web_wasm.ps1 -Action build -Path .\examples\benchmark_app`
+  - `pwsh -File .\tools\scripts\web_wasm.ps1 -Action build -Path .\examples\api_browser_app`
+
+### Issues Found
+
+#### Windows integration tests exceeded default timeouts
+
+- Symptom: `examples/todos_app/integration_test/persistence_test.dart` could time out during the Windows integration test build/run phase.
+- Fix applied:
+  - Increased the test timeout to 30 minutes.
+
+#### ticker_app Web WASM build failed with non-Send future
+
+- Symptom: `examples/ticker_app` Rust failed to compile for web WASM due to a non-`Send` future passed to `oxide_core::runtime::spawn`.
+- Fix applied:
+  - Use `oxide_core::runtime::safe_spawn` on `wasm32-unknown-unknown` (spawn_local) and keep `spawn` only on native targets.
+
+#### oxide_core WASM compilation failures (thread pool + WASI vs web)
+
+- Symptom: `oxide_core` failed to compile for WASM targets due to thread pool trait bounds and web-specific spawn implementation being compiled for WASI.
+- Fix applied:
+  - Split web-specific spawning (`spawn_local`) to `wasm32-unknown-unknown` only.
+  - Adjusted `spawn_blocking` to pass the thread pool in the form expected by FRB for WASM.
+
+#### Repo scripts did not fail fast on command errors
+
+- Symptom: PowerShell scripts could continue after external commands failed, making validation unreliable.
+- Fix applied:
+  - Added a checked command runner to `qa.ps1` and `build.ps1` so non-zero exit codes stop the script.
+  - Updated `build.ps1` to match QA semantics for Flutter packages (runtime: `flutter test`, generator: `dart test`, annotations: `dart analyze`).
+
+### Notes / Warnings
+
+- Rust warnings:
+  - `async_fn_in_trait` warning in `oxide_core` (lint-level warning, not a test/build failure).
+- wasm-pack warnings:
+  - Some runs logged Windows `Access is denied (os error 5)` while finalizing incremental compilation directories; builds still completed successfully.
+
 ## 2026-02-05 (Windows)
 
 ### Summary

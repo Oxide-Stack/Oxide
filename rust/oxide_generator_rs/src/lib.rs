@@ -30,11 +30,11 @@ mod reducer;
 /// # Errors
 /// Emits a compile error if applied to any other item.
 pub fn state(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let _ = parse_macro_input!(attr as syn::parse::Nothing);
+    let args = parse_macro_input!(attr as derive::StateArgs);
     let input = parse_macro_input!(item as Item);
     match input {
-        Item::Struct(item_struct) => derive::expand_state_struct(item_struct).into(),
-        Item::Enum(item_enum) => derive::expand_state_enum(item_enum).into(),
+        Item::Struct(item_struct) => derive::expand_state_struct(args, item_struct).into(),
+        Item::Enum(item_enum) => derive::expand_state_enum(args, item_enum).into(),
         other => syn::Error::new_spanned(other, "#[state] can only be applied to a struct or enum")
             .to_compile_error()
             .into(),

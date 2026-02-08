@@ -30,7 +30,7 @@ impl Reducer for ReducerImpl {
         match action {
             Action::Inc => {
                 state.counter = state.counter.saturating_add(1);
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
             Action::Fail => Err(OxideError::Internal {
                 message: "expected failure".to_string(),
@@ -75,7 +75,16 @@ async fn persistence_restores_state_across_engines() {
         let _ = engine.dispatch(Action::Fail).await.unwrap_err();
     }
 
-    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(2);
+    loop {
+        if tokio::time::Instant::now() >= deadline {
+            break;
+        }
+        if std::fs::metadata(&path).map(|m| m.len() > 0).unwrap_or(false) {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
 
     let engine = ReducerEngine::<ReducerImpl>::new_persistent(
         ReducerImpl::default(),
