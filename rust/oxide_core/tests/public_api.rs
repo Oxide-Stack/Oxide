@@ -22,8 +22,12 @@ impl Reducer for ReducerImpl {
 
     async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 
-    fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
-        match action {
+    fn reduce(
+        &mut self,
+        state: &mut Self::State,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+    ) -> CoreResult<StateChange> {
+        match ctx.input {
             Action::Increment => {
                 state.value = state.value.saturating_add(1);
                 Ok(StateChange::Full)
@@ -37,7 +41,7 @@ impl Reducer for ReducerImpl {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> CoreResult<StateChange> {
         Ok(StateChange::None)
     }

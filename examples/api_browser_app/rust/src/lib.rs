@@ -9,3 +9,9 @@ mod util;
 mod frb_generated;
 
 pub use oxide_core::OxideError;
+
+#[cfg(feature = "navigation-binding")]
+#[oxide_generator_rs::routes]
+pub mod routes {
+    include!("routes/mod.rs");
+}

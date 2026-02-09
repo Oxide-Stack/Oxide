@@ -15,8 +15,12 @@ pub use oxide_core::OxideError;
 use oxide_core::StateChange;
 use oxide_core::tokio;
 use std::sync::Arc;
+use std::sync::OnceLock;
+use std::time::Duration;
 
 use crate::state::{AppAction, AppState, AppStateSlice, TodoItem};
+
+static NAV_BOOTSTRAP: OnceLock<()> = OnceLock::new();
 
 #[flutter_rust_bridge::frb(init)]
 /// Initializes Flutter Rust Bridge for this library.
@@ -73,14 +77,41 @@ impl oxide_core::Reducer for AppRootReducer {
     type Action = AppAction;
     type SideEffect = ();
 
-    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
+    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {
+        #[cfg(feature = "navigation-binding")]
+        NAV_BOOTSTRAP.get_or_init(|| {
+            let _ = oxide_core::init_navigation();
+            let runtime = oxide_core::navigation_runtime().ok();
+            tokio::spawn(async move {
+                if let Some(runtime) = runtime {
+                    runtime.set_current_route(Some(oxide_core::navigation::NavRoute {
+                        kind: "Splash".into(),
+                        payload: serde_json::to_value(crate::routes::SplashRoute {})
+                            .unwrap_or(serde_json::Value::Null),
+                        extras: None,
+                    }));
+                }
+
+                tokio::time::sleep(Duration::from_millis(450)).await;
+
+                if let Some(runtime) = runtime {
+                    runtime.reset(vec![oxide_core::navigation::NavRoute {
+                        kind: "Home".into(),
+                        payload: serde_json::to_value(crate::routes::HomeRoute {})
+                            .unwrap_or(serde_json::Value::Null),
+                        extras: None,
+                    }]);
+                }
+            });
+        });
+    }
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, AppStateSlice>,
     ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
-        match action {
+        match ctx.input {
             AppAction::AddTodo { title } => {
                 let trimmed = title.trim();
                 if trimmed.is_empty() {
@@ -98,11 +129,11 @@ impl oxide_core::Reducer for AppRootReducer {
                 Ok(StateChange::Infer)
             }
             AppAction::ToggleTodo { id } => {
-                Self::toggle_todo(state, &id)?;
+                Self::toggle_todo(state, id.as_str())?;
                 Ok(StateChange::Infer)
             }
             AppAction::DeleteTodo { id } => {
-                Self::delete_todo(state, &id)?;
+                Self::delete_todo(state, id.as_str())?;
                 Ok(StateChange::Infer)
             }
         }
@@ -111,7 +142,7 @@ impl oxide_core::Reducer for AppRootReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, AppStateSlice>,
     ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
         Ok(StateChange::None)
     }

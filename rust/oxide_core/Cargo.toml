@@ -40,6 +40,7 @@ default = ["frb-spawn"]
 frb-spawn = ["dep:flutter_rust_bridge"]
 state-persistence = ["dep:serde", "dep:bincode"]
 persistence-json = ["state-persistence", "dep:serde_json"]
+navigation-binding = ["dep:serde", "dep:serde_json"]
 full = ["state-persistence", "persistence-json", "frb-spawn"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]

@@ -42,13 +42,13 @@ impl oxide_core::Reducer for CommentsReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match action {
+        match ctx.input {
             CommentsAction::LoadForPost { post_id } => {
-                state.selected_post_id = Some(post_id);
+                state.selected_post_id = Some(*post_id);
                 if let Some(tx) = self.sideeffect_tx.as_ref() {
-                    let _ = tx.send(CommentsSideEffect::Fetch { post_id });
+                    let _ = tx.send(CommentsSideEffect::Fetch { post_id: *post_id });
                 }
                 Ok(StateChange::Full)
             }
@@ -64,9 +64,9 @@ impl oxide_core::Reducer for CommentsReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        effect: Self::SideEffect,
+        ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match effect {
+        match ctx.input {
             CommentsSideEffect::Fetch { post_id } => {
                 state.phase = LoadPhase::Loading;
                 state.comments.clear();
@@ -74,6 +74,7 @@ impl oxide_core::Reducer for CommentsReducer {
                 let Some(tx) = self.sideeffect_tx.clone() else {
                     return Ok(StateChange::Full);
                 };
+                let post_id = *post_id;
 
                 oxide_core::runtime::safe_spawn(async move {
                     let path = format!("comments?postId={post_id}");
@@ -92,18 +93,17 @@ impl oxide_core::Reducer for CommentsReducer {
                 Ok(StateChange::Full)
             }
             CommentsSideEffect::Loaded { post_id, comments } => {
-                if state.selected_post_id != Some(post_id) {
+                if state.selected_post_id != Some(*post_id) {
                     return Ok(StateChange::None);
                 }
-                state.comments = comments;
+                state.comments = comments.clone();
                 state.phase = LoadPhase::Ready;
                 Ok(StateChange::Full)
             }
             CommentsSideEffect::Failed { message } => {
-                state.phase = LoadPhase::Error { message };
+                state.phase = LoadPhase::Error { message: message.clone() };
                 Ok(StateChange::Full)
             }
         }
     }
 }
-

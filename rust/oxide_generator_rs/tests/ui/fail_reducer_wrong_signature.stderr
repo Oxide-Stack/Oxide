@@ -1,5 +1,5 @@
-error: `reduce` must return `oxide_core::CoreResult<oxide_core::StateChange<...>>`
-  --> tests/ui/fail_reducer_wrong_signature.rs:20:7
+error: `reduce` third argument must be `oxide_core::Context<...>`
+  --> tests/ui/fail_reducer_wrong_signature.rs:19:18
    |
-20 |     ) -> oxide_core::CoreResult<()> {
-   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+19 |         _action: Self::Action,
+   |                  ^^^^^^^^^^^^

@@ -31,7 +31,7 @@ impl Reducer for ReducerImpl {
     fn reduce(
         &mut self,
         _state: &mut Self::State,
-        _action: Self::Action,
+        _ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
     ) -> CoreResult<StateChange> {
         Ok(StateChange::None)
     }
@@ -39,7 +39,7 @@ impl Reducer for ReducerImpl {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> CoreResult<StateChange> {
         Ok(StateChange::None)
     }

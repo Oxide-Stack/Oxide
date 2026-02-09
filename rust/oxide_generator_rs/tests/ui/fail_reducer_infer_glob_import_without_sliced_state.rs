@@ -26,13 +26,18 @@ impl oxide_core::Reducer for MyReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<
+            '_,
+            Self::Action,
+            Self::State,
+            <Self::State as oxide_core::SlicedState>::StateSlice,
+        >,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         // Why: This mirrors real usage where people import variants.
         // How: Even with `Ok(Infer)`, the macro should enforce that the state
         // opted into slicing (via `#[state(sliced = true)]`).
         use oxide_core::StateChange::*;
-        match action {
+        match ctx.input {
             MyAction::IncA => {
                 state.a = state.a.saturating_add(1);
                 Ok(Infer)
@@ -43,11 +48,15 @@ impl oxide_core::Reducer for MyReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<
+            '_,
+            Self::SideEffect,
+            Self::State,
+            <Self::State as oxide_core::SlicedState>::StateSlice,
+        >,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)
     }
 }
 
 fn main() {}
-

@@ -140,7 +140,7 @@ pub(crate) fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) ->
         return Err(syn::Error::new_spanned(
             &item_fn.sig.inputs,
             format!(
-                "`{name}` must take exactly 3 arguments: `&mut self`, `&mut State`, and the input value"
+                "`{name}` must take exactly 3 arguments: `&mut self`, `&mut State`, and `oxide_core::Context<...>`"
             ),
         ));
     }
@@ -179,11 +179,31 @@ pub(crate) fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) ->
     }
 
     match third {
-        syn::FnArg::Typed(_) => {}
+        syn::FnArg::Typed(pat_ty) => match &*pat_ty.ty {
+            syn::Type::Path(p) => {
+                let ok = p
+                    .path
+                    .segments
+                    .last()
+                    .is_some_and(|seg| seg.ident == "Context");
+                if !ok {
+                    return Err(syn::Error::new_spanned(
+                        p,
+                        format!("`{name}` third argument must be `oxide_core::Context<...>`"),
+                    ));
+                }
+            }
+            other => {
+                return Err(syn::Error::new_spanned(
+                    other,
+                    format!("`{name}` third argument must be `oxide_core::Context<...>`"),
+                ));
+            }
+        },
         other => {
             return Err(syn::Error::new_spanned(
                 other,
-                format!("`{name}` third argument must be the input value (not `self`)"),
+                format!("`{name}` third argument must be `oxide_core::Context<...>` (not `self`)"),
             ));
         }
     }

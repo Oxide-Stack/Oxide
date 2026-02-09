@@ -5,8 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:oxide_runtime/oxide_runtime.dart';
 
+import '../../oxide_generated/navigation/navigation_runtime.g.dart';
+import '../../oxide_generated/routes/route_kind.g.dart';
 import '../oxide.dart';
+import '../rust/api/bridge.dart' show openCharts;
 import 'bench_charts.dart';
 import 'bench_models.dart';
 import 'workloads.dart';
@@ -88,12 +92,66 @@ class BenchDartCubit extends Cubit<BenchDartState> {
   }
 }
 
-final class BenchApp extends StatelessWidget {
+final class _BenchChartsArgs {
+  const _BenchChartsArgs({required this.samplesByVariant, required this.iterations, required this.samples, required this.warmup});
+
+  final Map<BenchVariant, List<Duration>> samplesByVariant;
+  final int iterations;
+  final int samples;
+  final int warmup;
+}
+
+_BenchChartsArgs? _benchChartsArgs;
+
+@OxideApp(navigation: OxideNavigation.navigator())
+final class BenchApp extends StatefulWidget {
   const BenchApp({super.key});
 
   @override
+  State<BenchApp> createState() => _BenchAppState();
+}
+
+final class _BenchAppState extends State<BenchApp> {
+  @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: _BenchScreen());
+    return OxideNavigationHost(
+      child: MaterialApp(navigatorKey: oxideNavigatorKey, home: const BenchSplashScreen()),
+    );
+  }
+}
+
+@OxideRoutePage(RouteKind.splash)
+final class BenchSplashScreen extends ConsumerWidget {
+  const BenchSplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(benchCounterRiverpodOxideProvider);
+    return const Scaffold(body: Center(child: Text('Loading…')));
+  }
+}
+
+@OxideRoutePage(RouteKind.home)
+final class BenchHomeScreen extends StatelessWidget {
+  const BenchHomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _BenchScreen();
+  }
+}
+
+@OxideRoutePage(RouteKind.charts)
+final class BenchChartsScreen extends StatelessWidget {
+  const BenchChartsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final args = _benchChartsArgs;
+    if (args == null) {
+      return const Scaffold(body: Center(child: Text('Missing chart args')));
+    }
+    return _ChartsView(samplesByVariant: args.samplesByVariant, iterations: args.iterations, samples: args.samples, warmup: args.warmup);
   }
 }
 
@@ -357,11 +415,8 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
             alignment: Alignment.centerLeft,
             child: FilledButton.tonal(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => _ChartsView(samplesByVariant: _samplesByVariant, iterations: _iterations, samples: _samples, warmup: _warmup),
-                  ),
-                );
+                _benchChartsArgs = _BenchChartsArgs(samplesByVariant: _samplesByVariant, iterations: _iterations, samples: _samples, warmup: _warmup);
+                unawaited(openCharts());
               },
               child: const Text('View Charts'),
             ),

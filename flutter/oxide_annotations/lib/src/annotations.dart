@@ -148,3 +148,84 @@ final class OxideStore {
   /// Optional prefix override used for generated type names.
   final String? name;
 }
+
+/// Navigation integration configuration used by `@OxideApp`.
+///
+/// This is a build-time contract consumed by `oxide_generator`. The generator emits the
+/// corresponding navigation runtime glue and handler wiring.
+///
+/// ## Example (Navigator 1.0)
+/// ```dart
+/// @OxideApp(navigation: OxideNavigation.navigator())
+/// class MyApp extends StatelessWidget { ... }
+/// ```
+///
+/// ## Example (GoRouter)
+/// ```dart
+/// @OxideApp(navigation: OxideNavigation.goRouter())
+/// class MyApp extends StatelessWidget { ... }
+/// ```
+final class OxideNavigation {
+  /// Use a Navigator 1.0 based handler (generated).
+  const OxideNavigation.navigator() : kind = OxideNavigationKind.navigator, customHandler = null;
+
+  /// Use a GoRouter based handler (generated).
+  const OxideNavigation.goRouter() : kind = OxideNavigationKind.goRouter, customHandler = null;
+
+  /// Use a custom navigation handler type.
+  ///
+  /// The generator will reference this type in generated wiring, but the type itself is
+  /// implemented by the application.
+  const OxideNavigation.custom(this.customHandler) : kind = OxideNavigationKind.custom;
+
+  /// Which built-in navigation strategy is selected.
+  final OxideNavigationKind kind;
+
+  /// Custom handler type when [kind] is [OxideNavigationKind.custom].
+  final Type? customHandler;
+}
+
+/// Navigation strategy selector for [`OxideNavigation`].
+enum OxideNavigationKind {
+  /// Use a Navigator 1.0 based handler.
+  navigator,
+
+  /// Use a GoRouter based handler.
+  goRouter,
+
+  /// Use an application-provided handler implementation.
+  custom,
+}
+
+/// Annotation applied to the top-level app widget to enable Oxide navigation codegen.
+///
+/// The generator uses this annotation to emit handler wiring, navigator/router configuration
+/// stubs, and the generated route builder map.
+///
+/// ## Example
+/// ```dart
+/// @OxideApp(navigation: OxideNavigation.navigator())
+/// class MyApp extends StatelessWidget { ... }
+/// ```
+final class OxideApp {
+  const OxideApp({required this.navigation});
+
+  /// Navigation configuration used by generated code.
+  final OxideNavigation navigation;
+}
+
+/// Annotation applied to a widget class to bind it to a generated `RouteKind`.
+///
+/// The `kind` must be one of the generated `RouteKind` enum values.
+///
+/// ## Example
+/// ```dart
+/// @OxideRoutePage(RouteKind.splash)
+/// class SplashScreen extends StatelessWidget { ... }
+/// ```
+final class OxideRoutePage {
+  const OxideRoutePage(this.kind);
+
+  /// The generated RouteKind enum value for this page.
+  final Object kind;
+}

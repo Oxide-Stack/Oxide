@@ -33,8 +33,12 @@ impl Reducer for TestReducer {
 
     async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 
-    fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
-        match action {
+    fn reduce(
+        &mut self,
+        state: &mut Self::State,
+        ctx: crate::Context<'_, Self::Action, Self::State, ()>,
+    ) -> CoreResult<StateChange> {
+        match ctx.input {
             TestAction::Increment => {
                 state.value = state.value.saturating_add(1);
                 Ok(StateChange::Full)
@@ -52,10 +56,13 @@ impl Reducer for TestReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        effect: Self::SideEffect,
+        ctx: crate::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> CoreResult<StateChange> {
-        match effect {
-            TestSideEffect::Increment => self.reduce(state, TestAction::Increment),
+        match ctx.input {
+            TestSideEffect::Increment => {
+                state.value = state.value.saturating_add(1);
+                Ok(StateChange::Full)
+            }
             TestSideEffect::Noop => Ok(StateChange::None),
         }
     }

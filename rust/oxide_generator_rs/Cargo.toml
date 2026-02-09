@@ -26,6 +26,7 @@ proc-macro = true
 default = ["frb"]
 frb = []
 state-persistence = []
+navigation-binding = []
 full = ["frb", "state-persistence"]
 
 [dev-dependencies]

@@ -11,6 +11,7 @@ use syn::parse_macro_input;
 mod derive;
 mod meta;
 mod reducer;
+mod routes;
 
 #[proc_macro_attribute]
 /// Marks a struct or enum as an Oxide state type.
@@ -83,5 +84,27 @@ pub fn reducer(attr: TokenStream, item: TokenStream) -> TokenStream {
         )
         .to_compile_error()
         .into(),
+    }
+}
+
+#[proc_macro_attribute]
+/// Generates navigation artifacts for an application routes module.
+///
+/// Apply this macro to an inline `routes` module. The macro discovers `Route`
+/// implementations, emits route metadata, and generates navigation bridge glue.
+///
+/// # Errors
+/// Emits a compile error if route files cannot be scanned or metadata cannot be emitted.
+pub fn routes(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let _ = parse_macro_input!(attr as syn::parse::Nothing);
+    let input = parse_macro_input!(item as Item);
+    match input {
+        Item::Mod(item_mod) => match routes::expand_routes_module(item_mod) {
+            Ok(ts) => ts.into(),
+            Err(e) => e.to_compile_error().into(),
+        },
+        other => syn::Error::new_spanned(other, "#[routes] can only be applied to a module")
+            .to_compile_error()
+            .into(),
     }
 }

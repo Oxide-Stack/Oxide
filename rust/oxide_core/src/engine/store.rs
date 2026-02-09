@@ -95,7 +95,7 @@ where
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: crate::Context<'_, Self::Action, Self::State, StateSlice>,
     ) -> CoreResult<StateChange<StateSlice>>;
 
     /// Applies a previously-enqueued side-effect to the provided `state`.
@@ -106,7 +106,7 @@ where
     fn effect(
         &mut self,
         state: &mut Self::State,
-        effect: Self::SideEffect,
+        ctx: crate::Context<'_, Self::SideEffect, Self::State, StateSlice>,
     ) -> CoreResult<StateChange<StateSlice>>;
 
     /// Infers which slices changed between `before` and `after`.

@@ -27,9 +27,9 @@ impl oxide_core::Reducer for MyReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, MyStateSlice>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match action {
+        match ctx.input {
             MyAction::IncA => {
                 state.a = state.a.saturating_add(1);
                 Ok(oxide_core::StateChange::Infer)
@@ -40,7 +40,7 @@ impl oxide_core::Reducer for MyReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, MyStateSlice>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)
     }

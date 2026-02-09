@@ -1,11 +1,15 @@
 use oxide_generator_rs::reducer;
 
 use oxide_core::StateChange;
+use std::sync::OnceLock;
+use std::time::Duration;
 
 use crate::util;
 use crate::state::common::LoadPhase;
 use crate::state::users_action::UsersAction;
 use crate::state::users_state::{User, UsersState};
+
+static NAV_BOOTSTRAP: OnceLock<()> = OnceLock::new();
 
 #[derive(Debug)]
 #[flutter_rust_bridge::frb(ignore)]
@@ -40,14 +44,41 @@ impl oxide_core::Reducer for UsersReducer {
         if let Some(tx) = self.sideeffect_tx.as_ref() {
             let _ = tx.send(UsersSideEffect::Fetch);
         }
+
+        #[cfg(feature = "navigation-binding")]
+        NAV_BOOTSTRAP.get_or_init(|| {
+            let _ = oxide_core::init_navigation();
+            let runtime = oxide_core::navigation_runtime().ok();
+            oxide_core::tokio::spawn(async move {
+                if let Some(runtime) = runtime {
+                    runtime.set_current_route(Some(oxide_core::navigation::NavRoute {
+                        kind: "Splash".into(),
+                        payload: serde_json::to_value(crate::routes::SplashRoute {})
+                            .unwrap_or(serde_json::Value::Null),
+                        extras: None,
+                    }));
+                }
+
+                oxide_core::tokio::time::sleep(Duration::from_millis(450)).await;
+
+                if let Some(runtime) = runtime {
+                    runtime.reset(vec![oxide_core::navigation::NavRoute {
+                        kind: "Home".into(),
+                        payload: serde_json::to_value(crate::routes::HomeRoute {})
+                            .unwrap_or(serde_json::Value::Null),
+                        extras: None,
+                    }]);
+                }
+            });
+        });
     }
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match action {
+        match ctx.input {
             UsersAction::Refresh => {
                 if let Some(tx) = self.sideeffect_tx.as_ref() {
                     let _ = tx.send(UsersSideEffect::Fetch);
@@ -55,7 +86,7 @@ impl oxide_core::Reducer for UsersReducer {
                 Ok(StateChange::None)
             }
             UsersAction::SelectUser { user_id } => {
-                state.selected_user_id = Some(user_id);
+                state.selected_user_id = Some(*user_id);
                 Ok(StateChange::Full)
             }
         }
@@ -64,9 +95,9 @@ impl oxide_core::Reducer for UsersReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        effect: Self::SideEffect,
+        ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match effect {
+        match ctx.input {
             UsersSideEffect::Fetch => {
                 state.phase = LoadPhase::Loading;
 
@@ -101,7 +132,7 @@ impl oxide_core::Reducer for UsersReducer {
                 Ok(StateChange::Full)
             }
             UsersSideEffect::Loaded { users } => {
-                state.users = users;
+                state.users = users.clone();
                 state.phase = LoadPhase::Ready;
                 if state.selected_user_id.is_none() {
                     state.selected_user_id = state.users.first().map(|u| u.id);
@@ -109,10 +140,9 @@ impl oxide_core::Reducer for UsersReducer {
                 Ok(StateChange::Full)
             }
             UsersSideEffect::Failed { message } => {
-                state.phase = LoadPhase::Error { message };
+                state.phase = LoadPhase::Error { message: message.clone() };
                 Ok(StateChange::Full)
             }
         }
     }
 }
-

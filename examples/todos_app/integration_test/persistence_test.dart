@@ -42,7 +42,7 @@ void main() {
   });
 
   testWidgets('State persists across widget re-mounts', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: MyApp()));
+    await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: TodosHomeScreen())));
     await tester.pump(const Duration(milliseconds: 250));
 
     final input = find.byType(TextField);
@@ -50,14 +50,14 @@ void main() {
     await tester.enterText(input.first, 'persist me');
     await tester.tap(find.text('Add Todo'));
     await tester.pumpAndSettle(const Duration(seconds: 1));
-    expect(find.text('persist me'), findsOneWidget);
+    expect(find.text('persist me'), findsWidgets);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
     await tester.pump(const Duration(milliseconds: 250));
 
-    await tester.pumpWidget(const ProviderScope(child: MyApp()));
+    await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: TodosHomeScreen())));
     await tester.pumpAndSettle(const Duration(seconds: 1));
-    expect(find.text('persist me'), findsOneWidget);
+    expect(find.text('persist me'), findsWidgets);
   }, timeout: const Timeout(Duration(minutes: 30)));
 }

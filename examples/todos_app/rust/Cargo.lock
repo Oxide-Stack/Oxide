@@ -547,6 +547,7 @@ dependencies = [
  "gloo-timers",
  "js-sys",
  "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "tokio-stream",
@@ -669,6 +670,8 @@ dependencies = [
  "flutter_rust_bridge",
  "oxide_core",
  "oxide_generator_rs",
+ "serde",
+ "serde_json",
  "tokio",
  "tokio-stream",
 ]

@@ -1,3 +1,6 @@
+## Unreleased
+- Add feature-gated Rust-driven navigation (`navigation-binding`) with route metadata emission and Flutter codegen/runtime glue
+
 ## 0.1.1
 - Upgrade flutter_riverpod to ^3.2.0 across all examples and runtime
 - Update analyzer, build, source_gen, and lints to latest versions in oxide_generator

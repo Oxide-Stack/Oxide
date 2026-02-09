@@ -23,14 +23,14 @@ impl oxide_core::Reducer for SieveRootReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        let SieveAction::Run { iterations } = action;
-        if iterations == 0 {
+        let SieveAction::Run { iterations } = ctx.input;
+        if *iterations == 0 {
             return Ok(oxide_core::StateChange::None);
         }
 
-        for _ in 0..iterations {
+        for _ in 0..*iterations {
             let primes = run_sieve(SIEVE_LIMIT);
             state.counter = state.counter.saturating_add(1);
             state.checksum = fnv1a_mix_u64(state.checksum, primes);
@@ -43,7 +43,7 @@ impl oxide_core::Reducer for SieveRootReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)
     }

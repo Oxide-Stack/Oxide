@@ -828,6 +828,8 @@ dependencies = [
  "futures",
  "gloo-timers",
  "js-sys",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "tokio-stream",

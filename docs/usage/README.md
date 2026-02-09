@@ -33,4 +33,4 @@ FRB docs: https://fzyzcjy.github.io/flutter_rust_bridge/
 - Declare a store (`@OxideStore`): [declare-store.md](./declare-store.md)
 - Use the generated adapter in UI: [ui-backends.md](./ui-backends.md)
 - Persistence (optional): [persistence.md](./persistence.md)
-
+- Navigation (Rust-driven): [navigation.md](./navigation.md)

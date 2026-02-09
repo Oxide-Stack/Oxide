@@ -5,6 +5,7 @@
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
+import 'src/oxide_navigation_builder.dart';
 import 'src/oxide_store_generator.dart';
 
 /// Creates the Oxide code generator builder.
@@ -16,4 +17,15 @@ import 'src/oxide_store_generator.dart';
 /// A [Builder] suitable for use in `build.yaml`.
 Builder oxideBuilder(BuilderOptions options) {
   return PartBuilder([OxideStoreGenerator()], '.oxide.g.dart');
+}
+
+/// Creates the Oxide navigation generator builder.
+///
+/// This builder reads Rust-emitted route metadata and generates navigation glue under
+/// `lib/oxide_generated/`.
+///
+/// # Returns
+/// A [Builder] suitable for use in `build.yaml`.
+Builder oxideNavigationBuilder(BuilderOptions options) {
+  return OxideNavigationBuilder();
 }

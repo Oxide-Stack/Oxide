@@ -20,9 +20,9 @@ impl Reducer for BenchReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
     ) -> oxide_core::CoreResult<StateChange> {
-        match action {
+        match ctx.input {
             BenchAction::Increment => {
                 *state = state.saturating_add(1);
                 Ok(StateChange::Full)
@@ -33,7 +33,7 @@ impl Reducer for BenchReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> oxide_core::CoreResult<StateChange> {
         Ok(StateChange::None)
     }

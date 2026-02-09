@@ -35,9 +35,9 @@ impl Reducer<SlicedStateSlice> for SlicedReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, SlicedStateSlice>,
     ) -> CoreResult<StateChange<SlicedStateSlice>> {
-        match action {
+        match ctx.input {
             SlicedAction::IncA => {
                 state.a = state.a.saturating_add(1);
                 Ok(StateChange::Infer)
@@ -60,7 +60,7 @@ impl Reducer<SlicedStateSlice> for SlicedReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, SlicedStateSlice>,
     ) -> CoreResult<StateChange<SlicedStateSlice>> {
         Ok(StateChange::None)
     }
