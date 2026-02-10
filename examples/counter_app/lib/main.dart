@@ -15,23 +15,17 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
   await initOxide();
+  oxideNavStart();
   runApp(const ProviderScope(child: MyApp()));
 }
 
 @OxideApp(navigation: OxideNavigation.navigator())
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-final class _MyAppState extends State<MyApp> {
-  @override
   Widget build(BuildContext context) {
-    return OxideNavigationHost(
-      child: MaterialApp(navigatorKey: oxideNavigatorKey, home: const CounterSplashScreen()),
-    );
+    return MaterialApp(navigatorKey: oxideNavigatorKey, home: const CounterSplashScreen());
   }
 }
 

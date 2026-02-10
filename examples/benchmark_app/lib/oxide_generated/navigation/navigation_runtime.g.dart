@@ -98,32 +98,11 @@ final OxideNavigationRuntime<OxideRoute, RouteKind> oxideNavigationRuntime =
   emitResult: (ticket, result) =>
       rust.oxideNavEmitResult(ticket: ticket, resultJson: jsonEncode(result)),
   setCurrentRoute: (route) =>
-      rust.oxideNavSetCurrentRoute(kind: route.kind.name, payloadJson: jsonEncode(route.toJson())),
+      rust.oxideNavSetCurrentRoute(kind: route.kind.asStr, payloadJson: jsonEncode(route.toJson())),
 );
 
-final class OxideNavigationHost extends StatefulWidget {
-  const OxideNavigationHost({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  State<OxideNavigationHost> createState() => _OxideNavigationHostState();
+void oxideNavStart() {
+  oxideNavigationRuntime.start();
 }
 
-final class _OxideNavigationHostState extends State<OxideNavigationHost> {
-  @override
-  void initState() {
-    super.initState();
-    unawaited(rust.initNavigation());
-    oxideNavigationRuntime.start();
-  }
-
-  @override
-  void dispose() {
-    unawaited(oxideNavigationRuntime.stop());
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
-}
+Future<void> oxideNavStop() => oxideNavigationRuntime.stop();

@@ -1,7 +1,7 @@
 use tokio::sync::{broadcast, watch};
 
 use crate::engine::navigation_ticket_registry::TicketRegistry;
-use crate::navigation::{NavCommand, NavRoute, RouteContext};
+use crate::navigation::{NavCommand, NavRoute, OxideRoute, OxideRouteKind, OxideRoutePayload, RouteContext};
 
 /// Rust-side navigation runtime.
 ///
@@ -50,19 +50,22 @@ impl NavigationRuntime {
     }
 
     /// Emits a push command without expecting a result.
-    pub fn push(&self, route: NavRoute) {
-        let _ = self.command_tx.send(NavCommand::Push { route, ticket: None });
+    pub fn push<R: OxideRoute>(&self, route: R) {
+        let _ = self.command_tx.send(NavCommand::Push {
+            route: nav_route_from_oxide_route(route),
+            ticket: None,
+        });
     }
 
     /// Emits a push command that expects a result and returns the ticket id.
-    pub async fn push_with_ticket(
+    pub async fn push_with_ticket<R: OxideRoute>(
         &self,
-        route: NavRoute,
+        route: R,
     ) -> (String, tokio::sync::oneshot::Receiver<serde_json::Value>) {
         let (ticket, rx) = self.tickets.create_ticket().await;
         let _ = self
             .command_tx
-            .send(NavCommand::Push { route, ticket: Some(ticket.clone()) });
+            .send(NavCommand::Push { route: nav_route_from_oxide_route(route), ticket: Some(ticket.clone()) });
         (ticket, rx)
     }
 
@@ -77,17 +80,54 @@ impl NavigationRuntime {
     }
 
     /// Pops routes until a route with the given kind becomes active.
-    pub fn pop_until_kind(&self, kind: String) {
-        let _ = self.command_tx.send(NavCommand::PopUntil { kind });
+    pub fn pop_until<K: OxideRouteKind>(&self, kind: K) {
+        let _ = self.command_tx.send(NavCommand::PopUntil {
+            kind: kind.as_str().to_string(),
+        });
     }
 
     /// Resets the navigation stack to the provided routes.
-    pub fn reset(&self, routes: Vec<NavRoute>) {
+    pub fn reset<P: OxideRoutePayload>(&self, routes: Vec<P>) {
+        let routes = routes
+            .into_iter()
+            .map(nav_route_from_oxide_payload)
+            .collect::<Vec<_>>();
         let _ = self.command_tx.send(NavCommand::Reset { routes });
     }
 
     /// Resolves a pending result ticket with the provided JSON result.
     pub async fn emit_result(&self, ticket: &str, result: serde_json::Value) -> bool {
         self.tickets.resolve(ticket, result).await
+    }
+}
+
+fn nav_route_from_oxide_route<R: OxideRoute>(route: R) -> NavRoute {
+    let kind = route
+        .clone()
+        .into_payload()
+        .kind()
+        .as_str()
+        .to_string();
+    let payload = serde_json::to_value(&route).unwrap_or(serde_json::Value::Null);
+    let extras = route
+        .extras()
+        .map(|e| serde_json::to_value(e).unwrap_or(serde_json::Value::Null));
+
+    NavRoute { kind, payload, extras }
+}
+
+fn nav_route_from_oxide_payload<P: OxideRoutePayload>(payload: P) -> NavRoute {
+    let kind = payload.kind().as_str().to_string();
+    let payload = match serde_json::to_value(payload).unwrap_or(serde_json::Value::Null) {
+        serde_json::Value::Object(mut obj) => match obj.remove("payload") {
+            Some(v) => v,
+            None => serde_json::Value::Null,
+        },
+        _ => serde_json::Value::Null,
+    };
+    NavRoute {
+        kind,
+        payload,
+        extras: None,
     }
 }

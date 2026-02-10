@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'oxide_generated/navigation/navigation_runtime.g.dart';
 import 'src/bench/bench_screen.dart';
 import 'src/oxide.dart';
 import 'src/rust/api/bridge.dart' show initOxide;
@@ -10,6 +11,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
   await initOxide();
+  oxideNavStart();
   runApp(
     const ProviderScope(
       child: BenchCounterHooksOxideScope(

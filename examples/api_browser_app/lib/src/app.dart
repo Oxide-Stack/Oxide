@@ -8,23 +8,16 @@ import 'home.dart';
 import 'oxide.dart';
 
 @OxideApp(navigation: OxideNavigation.navigator())
-class ApiBrowserApp extends StatefulWidget {
+class ApiBrowserApp extends StatelessWidget {
   const ApiBrowserApp({super.key});
 
   @override
-  State<ApiBrowserApp> createState() => _ApiBrowserAppState();
-}
-
-final class _ApiBrowserAppState extends State<ApiBrowserApp> {
-  @override
   Widget build(BuildContext context) {
-    return OxideNavigationHost(
-      child: MaterialApp(
-        navigatorKey: oxideNavigatorKey,
-        title: 'Oxide API Browser',
-        theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
-        home: const ApiBrowserSplashScreen(),
-      ),
+    return MaterialApp(
+      navigatorKey: oxideNavigatorKey,
+      title: 'Oxide API Browser',
+      theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
+      home: const ApiBrowserSplashScreen(),
     );
   }
 }

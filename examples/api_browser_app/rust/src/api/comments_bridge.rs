@@ -42,7 +42,7 @@ impl oxide_core::Reducer for CommentsReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         match ctx.input {
             CommentsAction::LoadForPost { post_id } => {
@@ -64,7 +64,7 @@ impl oxide_core::Reducer for CommentsReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
+        ctx: oxide_core::Context<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         match ctx.input {
             CommentsSideEffect::Fetch { post_id } => {

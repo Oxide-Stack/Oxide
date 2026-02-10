@@ -7,7 +7,7 @@ enum RouteKind {
 }
 
 extension RouteKindX on RouteKind {
-  String get name => switch (this) {
+  String get asStr => switch (this) {
         RouteKind.charts => 'Charts',
         RouteKind.home => 'Home',
         RouteKind.splash => 'Splash',

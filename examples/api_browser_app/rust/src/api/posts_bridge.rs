@@ -43,7 +43,7 @@ impl oxide_core::Reducer for PostsReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         match ctx.input {
             PostsAction::LoadForUser { user_id } => {
@@ -70,7 +70,7 @@ impl oxide_core::Reducer for PostsReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
+        ctx: oxide_core::Context<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         match ctx.input {
             PostsSideEffect::Fetch { user_id } => {

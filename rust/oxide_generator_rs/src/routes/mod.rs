@@ -96,7 +96,6 @@ pub fn expand_routes_module(item_mod: ItemMod) -> syn::Result<TokenStream2> {
 
 fn generate_navigation_module() -> syn::Result<TokenStream2> {
     Ok(quote! {
-        #[cfg(feature = "navigation-binding")]
         pub mod navigation {
             pub mod runtime {
                 /// Initializes the Oxide navigation runtime.
@@ -357,6 +356,12 @@ fn generate_route_kind_enum(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
                 }
             }
         }
+
+        impl ::oxide_core::navigation::OxideRouteKind for RouteKind {
+            fn as_str(&self) -> &'static str {
+                self.as_str()
+            }
+        }
     })
 }
 
@@ -400,6 +405,22 @@ fn generate_payload_helpers(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
 
         #( impl From<#tys> for RoutePayload {
             fn from(v: #tys) -> Self { Self::#variants(v) }
+        } )*
+
+        impl ::oxide_core::navigation::OxideRoutePayload for RoutePayload {
+            type Kind = RouteKind;
+
+            fn kind(&self) -> Self::Kind {
+                self.kind()
+            }
+        }
+
+        #( impl ::oxide_core::navigation::OxideRoute for #tys {
+            type Payload = RoutePayload;
+
+            fn into_payload(self) -> Self::Payload {
+                RoutePayload::from(self)
+            }
         } )*
     })
 }

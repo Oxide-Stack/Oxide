@@ -158,7 +158,7 @@ String generateRouteKindSource(RustRouteMetadata metadata) {
       ..writeln('}')
       ..writeln()
       ..writeln('extension RouteKindX on RouteKind {')
-      ..writeln("  String get name => switch (this) {")
+      ..writeln("  String get asStr => switch (this) {")
       ..writeln("    RouteKind.unknown => 'Unknown',")
       ..writeln('  };')
       ..writeln('}');
@@ -179,7 +179,7 @@ String generateRouteKindSource(RustRouteMetadata metadata) {
     ..writeln('}')
     ..writeln()
     ..writeln('extension RouteKindX on RouteKind {')
-    ..writeln("  String get name => switch (this) {");
+    ..writeln("  String get asStr => switch (this) {");
 
   for (final r in metadata.routes) {
     final v = _lowerCamel(r.kind);
@@ -410,36 +410,15 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     )
     ..writeln(
       '  setCurrentRoute: (route) => rust.oxideNavSetCurrentRoute('
-      'kind: route.kind.name, payloadJson: jsonEncode(route.toJson())),',
+      'kind: route.kind.asStr, payloadJson: jsonEncode(route.toJson())),',
     )
     ..writeln(');')
     ..writeln()
-    ..writeln('final class OxideNavigationHost extends StatefulWidget {')
-    ..writeln('  const OxideNavigationHost({super.key, required this.child});')
-    ..writeln()
-    ..writeln('  final Widget child;')
-    ..writeln()
-    ..writeln('  @override')
-    ..writeln('  State<OxideNavigationHost> createState() => _OxideNavigationHostState();')
+    ..writeln('void oxideNavStart() {')
+    ..writeln('  oxideNavigationRuntime.start();')
     ..writeln('}')
     ..writeln()
-    ..writeln('final class _OxideNavigationHostState extends State<OxideNavigationHost> {')
-    ..writeln('  @override')
-    ..writeln('  void initState() {')
-    ..writeln('    super.initState();')
-    ..writeln('    unawaited(rust.initNavigation());')
-    ..writeln('    oxideNavigationRuntime.start();')
-    ..writeln('  }')
-    ..writeln()
-    ..writeln('  @override')
-    ..writeln('  void dispose() {')
-    ..writeln('    unawaited(oxideNavigationRuntime.stop());')
-    ..writeln('    super.dispose();')
-    ..writeln('  }')
-    ..writeln()
-    ..writeln('  @override')
-    ..writeln('  Widget build(BuildContext context) => widget.child;')
-    ..writeln('}');
+    ..writeln('Future<void> oxideNavStop() => oxideNavigationRuntime.stop();');
 
   return _formatter.format(buf.toString());
 }

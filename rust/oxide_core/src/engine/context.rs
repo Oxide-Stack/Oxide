@@ -7,7 +7,7 @@ use crate::engine::StateSnapshot;
 ///
 /// How: the engine constructs this context for each invocation and passes it into reducer
 /// calls as an immutable view of the invocation environment.
-pub struct Context<'a, Input, State, StateSlice>
+pub struct Context<'a, Input, State, StateSlice = ()>
 where
     StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
 {

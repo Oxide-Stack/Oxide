@@ -104,19 +104,12 @@ final class _BenchChartsArgs {
 _BenchChartsArgs? _benchChartsArgs;
 
 @OxideApp(navigation: OxideNavigation.navigator())
-final class BenchApp extends StatefulWidget {
+final class BenchApp extends StatelessWidget {
   const BenchApp({super.key});
 
   @override
-  State<BenchApp> createState() => _BenchAppState();
-}
-
-final class _BenchAppState extends State<BenchApp> {
-  @override
   Widget build(BuildContext context) {
-    return OxideNavigationHost(
-      child: MaterialApp(navigatorKey: oxideNavigatorKey, home: const BenchSplashScreen()),
-    );
+    return MaterialApp(navigatorKey: oxideNavigatorKey, home: const BenchSplashScreen());
   }
 }
 

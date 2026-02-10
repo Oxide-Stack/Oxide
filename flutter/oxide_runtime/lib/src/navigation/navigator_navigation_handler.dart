@@ -23,12 +23,17 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
   final KindT Function(RouteT route) kindOf;
   final Map<KindT, Widget Function(BuildContext context, RouteT route)> routeBuilders;
 
+  Future<NavigatorState> _waitForNavigator() async {
+    while (true) {
+      final navigator = navigatorKey.currentState;
+      if (navigator != null) return navigator;
+      await WidgetsBinding.instance.endOfFrame;
+    }
+  }
+
   @override
   Future<Object?> push(RouteT route, {String? ticket}) async {
-    final navigator = navigatorKey.currentState;
-    if (navigator == null) {
-      throw StateError('Navigator is not ready. Ensure MaterialApp/WidgetsApp is built.');
-    }
+    final navigator = await _waitForNavigator();
 
     final kind = kindOf(route);
     final builder = routeBuilders[kind];
@@ -47,28 +52,50 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
   @override
   void pop([Object? result]) {
     final navigator = navigatorKey.currentState;
-    if (navigator == null) return;
-    navigator.pop<Object?>(result);
+    if (navigator != null) {
+      navigator.pop<Object?>(result);
+      return;
+    }
+    unawaited(() async {
+      final navigator = await _waitForNavigator();
+      navigator.pop<Object?>(result);
+    }());
   }
 
   @override
   void popUntil(KindT kind) {
     final navigator = navigatorKey.currentState;
-    if (navigator == null) return;
-    final targetName = kind.toString();
-    navigator.popUntil((route) => route.settings.name == targetName || route.isFirst);
+    if (navigator != null) {
+      final targetName = kind.toString();
+      navigator.popUntil((route) => route.settings.name == targetName || route.isFirst);
+      return;
+    }
+    unawaited(() async {
+      final navigator = await _waitForNavigator();
+      final targetName = kind.toString();
+      navigator.popUntil((route) => route.settings.name == targetName || route.isFirst);
+    }());
   }
 
   @override
   void reset(List<RouteT> routes) {
     final navigator = navigatorKey.currentState;
-    if (navigator == null) return;
-    if (routes.isEmpty) {
-      navigator.popUntil((r) => r.isFirst);
+    if (navigator != null) {
+      if (routes.isEmpty) {
+        navigator.popUntil((r) => r.isFirst);
+        return;
+      }
+      unawaited(_resetAsync(navigator, routes));
       return;
     }
-
-    unawaited(_resetAsync(navigator, routes));
+    unawaited(() async {
+      final navigator = await _waitForNavigator();
+      if (routes.isEmpty) {
+        navigator.popUntil((r) => r.isFirst);
+        return;
+      }
+      await _resetAsync(navigator, routes);
+    }());
   }
 
   @override

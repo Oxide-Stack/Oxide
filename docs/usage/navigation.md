@@ -95,13 +95,12 @@ final runtime = OxideNavigationRuntime<OxideRoute, RouteKind>(
   handler: handler,
   emitResult: (ticket, result) => rust.oxideNavEmitResult(ticket: ticket, resultJson: jsonEncode(result)),
   setCurrentRoute: (route) => rust.oxideNavSetCurrentRoute(
-    kind: route.kind.name,
+    kind: route.kind.asStr,
     payloadJson: jsonEncode(route.toJson()),
   ),
 );
 
-rust.initNavigation();
-runtime.start();
+oxideNavStart();
 ```
 
 ## Notes

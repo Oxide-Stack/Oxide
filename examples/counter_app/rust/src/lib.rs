@@ -12,7 +12,6 @@ mod frb_generated;
 /// Error type exposed across the FFI boundary.
 pub use oxide_core::OxideError;
 
-#[cfg(feature = "navigation-binding")]
 #[oxide_generator_rs::routes]
 pub mod routes {
     include!("routes/mod.rs");

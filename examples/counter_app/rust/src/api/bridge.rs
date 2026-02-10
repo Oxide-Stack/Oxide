@@ -1,14 +1,10 @@
 use oxide_generator_rs::reducer;
-use std::sync::OnceLock;
-use std::time::Duration;
 
 /// Error type exposed across the FFI boundary.
 pub use oxide_core::OxideError;
 
 use crate::state::app_action::AppAction;
 use crate::state::app_state::AppState;
-
-static NAV_BOOTSTRAP: OnceLock<()> = OnceLock::new();
 
 #[flutter_rust_bridge::frb(init)]
 /// Initializes Flutter Rust Bridge for this library.
@@ -23,6 +19,7 @@ pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
     }
 
     let _ = oxide_core::runtime::init(thread_pool);
+    crate::navigation::runtime::init()?;
     Ok(())
 }
 
@@ -37,38 +34,15 @@ impl oxide_core::Reducer for AppRootReducer {
     type SideEffect = AppSideEffect;
 
     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {
-        #[cfg(feature = "navigation-binding")]
-        NAV_BOOTSTRAP.get_or_init(|| {
-            let _ = oxide_core::init_navigation();
-            let runtime = oxide_core::navigation_runtime().ok();
-            oxide_core::tokio::spawn(async move {
-                if let Some(runtime) = runtime {
-                    runtime.set_current_route(Some(oxide_core::navigation::NavRoute {
-                        kind: "Splash".into(),
-                        payload: serde_json::to_value(crate::routes::SplashRoute {})
-                            .unwrap_or(serde_json::Value::Null),
-                        extras: None,
-                    }));
-                }
-
-                oxide_core::tokio::time::sleep(Duration::from_millis(450)).await;
-
-                if let Some(runtime) = runtime {
-                    runtime.reset(vec![oxide_core::navigation::NavRoute {
-                        kind: "Home".into(),
-                        payload: serde_json::to_value(crate::routes::HomeRoute {})
-                            .unwrap_or(serde_json::Value::Null),
-                        extras: None,
-                    }]);
-                }
-            });
-        });
+        if let Ok(runtime) = oxide_core::navigation_runtime() {
+            runtime.push(crate::routes::HomeRoute {});
+        }
     }
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         match ctx.input {
             AppAction::Increment => {
@@ -100,7 +74,7 @@ impl oxide_core::Reducer for AppRootReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)
     }

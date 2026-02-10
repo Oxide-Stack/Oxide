@@ -28,6 +28,7 @@ pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
     }
 
     let _ = oxide_core::runtime::init(thread_pool);
+    crate::navigation::runtime::init()?;
     Ok(())
 }
 
