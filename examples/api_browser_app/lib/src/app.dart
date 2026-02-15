@@ -2,25 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import '../oxide_generated/navigation/navigation_runtime.g.dart';
 import '../oxide_generated/routes/route_kind.g.dart';
 import 'home.dart';
 import 'oxide.dart';
-
-@OxideApp(navigation: OxideNavigation.navigator())
-class ApiBrowserApp extends StatelessWidget {
-  const ApiBrowserApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: oxideNavigatorKey,
-      title: 'Oxide API Browser',
-      theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
-      home: const ApiBrowserSplashScreen(),
-    );
-  }
-}
 
 @OxideRoutePage(RouteKind.splash)
 final class ApiBrowserSplashScreen extends ConsumerWidget {

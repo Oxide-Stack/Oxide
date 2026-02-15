@@ -7,6 +7,30 @@ abstract interface class OxideRoute {
   Map<String, dynamic> toJson();
 }
 
+final class BenchDetailRoute implements OxideRoute {
+  const BenchDetailRoute({
+    required this.id,
+  });
+
+  final Object id;
+
+  @override
+  RouteKind get kind => RouteKind.benchDetail;
+
+  factory BenchDetailRoute.fromJson(Map<String, dynamic> json) {
+    return BenchDetailRoute(
+      id: json['id'] as Object,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+    };
+  }
+}
+
 final class ChartsRoute implements OxideRoute {
   const ChartsRoute();
 
@@ -31,6 +55,22 @@ final class HomeRoute implements OxideRoute {
 
   factory HomeRoute.fromJson(Map<String, dynamic> json) {
     return const HomeRoute();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return const <String, dynamic>{};
+  }
+}
+
+final class RoutingBenchRoute implements OxideRoute {
+  const RoutingBenchRoute();
+
+  @override
+  RouteKind get kind => RouteKind.routingBench;
+
+  factory RoutingBenchRoute.fromJson(Map<String, dynamic> json) {
+    return const RoutingBenchRoute();
   }
 
   @override

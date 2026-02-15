@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import '../../oxide_generated/navigation/navigation_runtime.g.dart';
 import '../../oxide_generated/routes/route_kind.g.dart';
 import '../oxide.dart';
 import '../rust/api/bridge.dart' show openCharts;
@@ -103,16 +103,6 @@ final class _BenchChartsArgs {
 
 _BenchChartsArgs? _benchChartsArgs;
 
-@OxideApp(navigation: OxideNavigation.navigator())
-final class BenchApp extends StatelessWidget {
-  const BenchApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(navigatorKey: oxideNavigatorKey, home: const BenchSplashScreen());
-  }
-}
-
 @OxideRoutePage(RouteKind.splash)
 final class BenchSplashScreen extends ConsumerWidget {
   const BenchSplashScreen({super.key});
@@ -181,7 +171,15 @@ final class _BenchScreenState extends State<_BenchScreen> {
         BlocProvider.value(value: _rustSieveBloc),
       ],
       child: Scaffold(
-        appBar: AppBar(title: const Text('Benchmark Dashboard')),
+        appBar: AppBar(
+          title: const Text('Benchmark Dashboard'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.route),
+              onPressed: () => context.go('/routing'),
+            ),
+          ],
+        ),
         body: FutureBuilder(
           future: _inputs,
           builder: (context, snap) {

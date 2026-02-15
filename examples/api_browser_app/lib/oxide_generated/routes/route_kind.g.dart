@@ -3,11 +3,13 @@
 enum RouteKind {
   home,
   splash,
+  userDetail,
 }
 
 extension RouteKindX on RouteKind {
   String get asStr => switch (this) {
         RouteKind.home => 'Home',
         RouteKind.splash => 'Splash',
+        RouteKind.userDetail => 'UserDetail',
       };
 }

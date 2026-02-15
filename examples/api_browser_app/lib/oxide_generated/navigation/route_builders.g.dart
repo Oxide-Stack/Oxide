@@ -11,4 +11,6 @@ final Map<RouteKind, OxideRouteBuilder> oxideRouteBuilders = <RouteKind, OxideRo
       throw UnimplementedError('Missing @OxideRoutePage mapping for RouteKind.home'),
   RouteKind.splash: (context, route) =>
       throw UnimplementedError('Missing @OxideRoutePage mapping for RouteKind.splash'),
+  RouteKind.userDetail: (context, route) =>
+      throw UnimplementedError('Missing @OxideRoutePage mapping for RouteKind.userDetail'),
 };

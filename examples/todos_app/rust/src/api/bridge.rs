@@ -83,7 +83,7 @@ impl oxide_core::Reducer for AppRootReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        ctx: oxide_core::Context<'_, Self::Action, Self::State, AppStateSlice>,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State, AppStateSlice>,
     ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
         match ctx.input {
             AppAction::AddTodo { title } => {
@@ -116,7 +116,7 @@ impl oxide_core::Reducer for AppRootReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, AppStateSlice>,
+        _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State, AppStateSlice>,
     ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
         Ok(StateChange::None)
     }

@@ -48,7 +48,7 @@ impl oxide_core::Reducer for UsersReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        ctx: oxide_core::Context<'_, Self::Action, Self::State>,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         match ctx.input {
             UsersAction::Refresh => {
@@ -67,7 +67,7 @@ impl oxide_core::Reducer for UsersReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        ctx: oxide_core::Context<'_, Self::SideEffect, Self::State>,
+        ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         match ctx.input {
             UsersSideEffect::Fetch => {

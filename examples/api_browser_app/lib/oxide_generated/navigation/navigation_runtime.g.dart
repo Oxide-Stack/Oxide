@@ -40,6 +40,7 @@ OxideNavigationCommand<OxideRoute, RouteKind>? _decodeOxideNavCommand(String jso
       final route = switch (kind) {
         'Home' => HomeRoute.fromJson(routePayload),
         'Splash' => SplashRoute.fromJson(routePayload),
+        'UserDetail' => UserDetailRoute.fromJson(routePayload),
         _ => null,
       };
       if (route == null) return null;
@@ -56,6 +57,7 @@ OxideNavigationCommand<OxideRoute, RouteKind>? _decodeOxideNavCommand(String jso
       final routeKind = switch (kind) {
         'Home' => RouteKind.home,
         'Splash' => RouteKind.splash,
+        'UserDetail' => RouteKind.userDetail,
         _ => null,
       };
       if (routeKind == null) return null;
@@ -74,6 +76,7 @@ OxideNavigationCommand<OxideRoute, RouteKind>? _decodeOxideNavCommand(String jso
         final route = switch (kind) {
           'Home' => HomeRoute.fromJson(routePayload),
           'Splash' => SplashRoute.fromJson(routePayload),
+          'UserDetail' => UserDetailRoute.fromJson(routePayload),
           _ => null,
         };
         if (route != null) decoded.add(route);

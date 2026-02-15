@@ -7,10 +7,14 @@ import '../routes/route_models.g.dart';
 typedef OxideRouteBuilder = Widget Function(BuildContext context, OxideRoute route);
 
 final Map<RouteKind, OxideRouteBuilder> oxideRouteBuilders = <RouteKind, OxideRouteBuilder>{
+  RouteKind.benchDetail: (context, route) =>
+      throw UnimplementedError('Missing @OxideRoutePage mapping for RouteKind.benchDetail'),
   RouteKind.charts: (context, route) =>
       throw UnimplementedError('Missing @OxideRoutePage mapping for RouteKind.charts'),
   RouteKind.home: (context, route) =>
       throw UnimplementedError('Missing @OxideRoutePage mapping for RouteKind.home'),
+  RouteKind.routingBench: (context, route) =>
+      throw UnimplementedError('Missing @OxideRoutePage mapping for RouteKind.routingBench'),
   RouteKind.splash: (context, route) =>
       throw UnimplementedError('Missing @OxideRoutePage mapping for RouteKind.splash'),
 };

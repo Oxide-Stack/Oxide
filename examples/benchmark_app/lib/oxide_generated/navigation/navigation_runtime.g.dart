@@ -38,8 +38,10 @@ OxideNavigationCommand<OxideRoute, RouteKind>? _decodeOxideNavCommand(String jso
       final ticket = payload['ticket'] as String?;
 
       final route = switch (kind) {
+        'BenchDetail' => BenchDetailRoute.fromJson(routePayload),
         'Charts' => ChartsRoute.fromJson(routePayload),
         'Home' => HomeRoute.fromJson(routePayload),
+        'RoutingBench' => RoutingBenchRoute.fromJson(routePayload),
         'Splash' => SplashRoute.fromJson(routePayload),
         _ => null,
       };
@@ -55,8 +57,10 @@ OxideNavigationCommand<OxideRoute, RouteKind>? _decodeOxideNavCommand(String jso
       final kind = payload['kind'];
       if (kind is! String) return null;
       final routeKind = switch (kind) {
+        'BenchDetail' => RouteKind.benchDetail,
         'Charts' => RouteKind.charts,
         'Home' => RouteKind.home,
+        'RoutingBench' => RouteKind.routingBench,
         'Splash' => RouteKind.splash,
         _ => null,
       };
@@ -74,8 +78,10 @@ OxideNavigationCommand<OxideRoute, RouteKind>? _decodeOxideNavCommand(String jso
         final routePayload = r['payload'];
         if (kind is! String || routePayload is! Map<String, dynamic>) continue;
         final route = switch (kind) {
+          'BenchDetail' => BenchDetailRoute.fromJson(routePayload),
           'Charts' => ChartsRoute.fromJson(routePayload),
           'Home' => HomeRoute.fromJson(routePayload),
+          'RoutingBench' => RoutingBenchRoute.fromJson(routePayload),
           'Splash' => SplashRoute.fromJson(routePayload),
           _ => null,
         };

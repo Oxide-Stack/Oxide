@@ -23,7 +23,7 @@ impl oxide_core::Reducer for SieveRootReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        ctx: oxide_core::Context<'_, Self::Action, Self::State>,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         let SieveAction::Run { iterations } = ctx.input;
         if *iterations == 0 {
@@ -43,7 +43,7 @@ impl oxide_core::Reducer for SieveRootReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State>,
+        _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)
     }

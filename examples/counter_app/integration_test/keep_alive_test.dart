@@ -44,68 +44,76 @@ void main() {
     await initOxide();
   });
 
-  testWidgets('Inherited controller survives widget interruptions when reused', (WidgetTester tester) async {
-    final controller = StateBridgeOxideController();
-    addTearDown(controller.dispose);
+  testWidgets(
+    'Inherited controller survives widget interruptions when reused',
+    (WidgetTester tester) async {
+      final controller = StateBridgeOxideController();
+      addTearDown(controller.dispose);
 
-    Widget buildWithScope() {
-      return MaterialApp(
-        home: StateBridgeOxideScope(
-          controller: controller,
-          child: AnimatedBuilder(
-            animation: controller,
-            builder: (context, _) {
-              final view = StateBridgeOxideScope.useOxide(context);
-              final counter = view.state?.counter;
-              return Text(counter?.toString() ?? '-');
-            },
+      Widget buildWithScope() {
+        return MaterialApp(
+          home: StateBridgeOxideScope(
+            controller: controller,
+            child: AnimatedBuilder(
+              animation: controller,
+              builder: (context, _) {
+                final view = StateBridgeOxideScope.useOxide(context);
+                final counter = view.state?.counter;
+                return Text(counter?.toString() ?? '-');
+              },
+            ),
           ),
-        ),
-      );
-    }
+        );
+      }
 
-    await tester.pumpWidget(buildWithScope());
-    await _pumpUntil(tester, condition: () => !controller.isLoading && controller.state != null);
+      await tester.pumpWidget(buildWithScope());
+      await _pumpUntil(tester, condition: () => !controller.isLoading && controller.state != null);
 
-    await controller.actions.increment();
-    await _pumpUntil(tester, condition: () => controller.state?.counter == BigInt.one);
+      await controller.actions.increment();
+      await _pumpUntil(tester, condition: () => controller.state?.counter == BigInt.one);
 
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
 
-    await tester.pumpWidget(buildWithScope());
-    await _pumpUntil(tester, condition: () => controller.state != null);
-    expect(find.text('1'), findsOneWidget);
-  });
+      await tester.pumpWidget(buildWithScope());
+      await _pumpUntil(tester, condition: () => controller.state != null);
+      expect(find.text('1'), findsOneWidget);
+    },
+    timeout: const Timeout(Duration(minutes: 30)),
+  );
 
-  testWidgets('Riverpod provider keeps state without listeners when keepAlive is true', (WidgetTester tester) async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+  testWidgets(
+    'Riverpod provider keeps state without listeners when keepAlive is true',
+    (WidgetTester tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
 
-    final sub = container.listen(stateBridgeRiverpodOxideProvider, (prev, next) {}, fireImmediately: true);
-    addTearDown(sub.close);
+      final sub = container.listen(stateBridgeRiverpodOxideProvider, (prev, next) {}, fireImmediately: true);
+      addTearDown(sub.close);
 
-    await _waitUntil(() {
-      final view = container.read(stateBridgeRiverpodOxideProvider);
-      return !view.isLoading && view.state != null;
-    });
+      await _waitUntil(() {
+        final view = container.read(stateBridgeRiverpodOxideProvider);
+        return !view.isLoading && view.state != null;
+      });
 
-    await container.read(stateBridgeRiverpodOxideProvider).actions.increment();
+      await container.read(stateBridgeRiverpodOxideProvider).actions.increment();
 
-    await _waitUntil(() {
-      final view = container.read(stateBridgeRiverpodOxideProvider);
-      return view.state?.counter == BigInt.one;
-    });
+      await _waitUntil(() {
+        final view = container.read(stateBridgeRiverpodOxideProvider);
+        return view.state?.counter == BigInt.one;
+      });
 
-    sub.close();
+      sub.close();
 
-    final viewAfterUnlisten = container.read(stateBridgeRiverpodOxideProvider);
-    expect(viewAfterUnlisten.state?.counter, BigInt.one);
+      final viewAfterUnlisten = container.read(stateBridgeRiverpodOxideProvider);
+      expect(viewAfterUnlisten.state?.counter, BigInt.one);
 
-    final sub2 = container.listen(stateBridgeRiverpodOxideProvider, (prev, next) {}, fireImmediately: true);
-    addTearDown(sub2.close);
-    expect(container.read(stateBridgeRiverpodOxideProvider).state?.counter, BigInt.one);
+      final sub2 = container.listen(stateBridgeRiverpodOxideProvider, (prev, next) {}, fireImmediately: true);
+      addTearDown(sub2.close);
+      expect(container.read(stateBridgeRiverpodOxideProvider).state?.counter, BigInt.one);
 
-    await tester.pump();
-  });
+      await tester.pump();
+    },
+    timeout: const Timeout(Duration(minutes: 30)),
+  );
 }

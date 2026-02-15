@@ -45,6 +45,7 @@ dependencies:
   flutter_bloc: ^9.0.0
   fl_chart: ^0.69.0
   freezed_annotation: ^3.0.0
+  go_router: ^14.6.1
 
 dev_dependencies:
   flutter_test:

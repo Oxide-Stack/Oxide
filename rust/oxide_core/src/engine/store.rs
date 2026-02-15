@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use tokio::sync::mpsc;
 
 use crate::engine::CoreResult;
@@ -86,7 +88,7 @@ where
     ///
     /// Implementations typically clone `ctx.sideeffect_tx` and move it into any
     /// background tasks the reducer spawns.
-    async fn init(&mut self, ctx: InitContext<Self::SideEffect>);
+    fn init(&mut self, ctx: InitContext<Self::SideEffect>) -> impl Future<Output = ()> + Send;
 
     /// Applies an action to the provided `state`.
     ///

@@ -29,6 +29,8 @@ pub use engine::{
     CoreResult, OxideError, Reducer, ReducerEngine, SlicedState, StateChange, StateSnapshot,
 };
 pub use engine::Context;
+pub type ReducerCtx<'a, Input, State, StateSlice = ()> =
+    engine::Context<'a, Input, State, StateSlice>;
 
 #[cfg(feature = "navigation-binding")]
 pub use engine::{

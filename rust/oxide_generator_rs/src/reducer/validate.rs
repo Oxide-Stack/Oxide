@@ -185,7 +185,7 @@ pub(crate) fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) ->
                     .path
                     .segments
                     .last()
-                    .is_some_and(|seg| seg.ident == "Context");
+                    .is_some_and(|seg| seg.ident == "Context" || seg.ident == "ReducerCtx");
                 if !ok {
                     return Err(syn::Error::new_spanned(
                         p,

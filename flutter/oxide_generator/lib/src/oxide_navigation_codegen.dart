@@ -425,13 +425,30 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
 
 String _lowerCamel(String s) {
   if (s.isEmpty) return s;
-  return s[0].toLowerCase() + s.substring(1);
+  final parts = s.split(RegExp(r'[_\-\s]+')).where((p) => p.isNotEmpty).toList(growable: false);
+  if (parts.isEmpty) return s;
+
+  final first = parts.first;
+  final firstLower = first[0].toLowerCase() + first.substring(1);
+  if (parts.length == 1) return firstLower;
+
+  final rest = parts
+      .skip(1)
+      .map((p) => p.isEmpty ? p : (p[0].toUpperCase() + p.substring(1)))
+      .join();
+  return '$firstLower$rest';
 }
 
 String? _enumValueExpression(DartObject obj) {
   final objType = obj.type;
   final objElement = objType?.element;
   if (objType == null || objElement is! EnumElement) return null;
+
+  final nameValue = obj.getField('name')?.toStringValue();
+  if (nameValue != null && nameValue.isNotEmpty) {
+    final enumTypeName = objType.getDisplayString(withNullability: false);
+    return '$enumTypeName.$nameValue';
+  }
 
   final enumIndex = obj.getField('index')?.toIntValue();
   if (enumIndex == null) return null;

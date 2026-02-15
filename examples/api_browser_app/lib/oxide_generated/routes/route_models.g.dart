@@ -38,3 +38,27 @@ final class SplashRoute implements OxideRoute {
     return const <String, dynamic>{};
   }
 }
+
+final class UserDetailRoute implements OxideRoute {
+  const UserDetailRoute({
+    required this.userId,
+  });
+
+  final Object userId;
+
+  @override
+  RouteKind get kind => RouteKind.userDetail;
+
+  factory UserDetailRoute.fromJson(Map<String, dynamic> json) {
+    return UserDetailRoute(
+      userId: json['userId'] as Object,
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'userId': userId,
+    };
+  }
+}
