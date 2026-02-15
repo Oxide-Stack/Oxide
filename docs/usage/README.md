@@ -12,6 +12,7 @@ For fully working code, follow the examples and mirror their structure:
 - [todos_app](../../examples/todos_app)
 - [ticker_app](../../examples/ticker_app)
 - [benchmark_app](../../examples/benchmark_app)
+- [api_browser_app](../../examples/api_browser_app)
 - Benchmarks write-up: [BENCHMARKS.md](../BENCHMARKS.md)
 
 ## Prerequisites
@@ -24,6 +25,8 @@ Start from an FRB-integrated Flutter app/template (or copy one of this repo’s 
 
 FRB docs: https://fzyzcjy.github.io/flutter_rust_bridge/
 
+Before creating any Oxide engine, call `initOxide()` after `RustLib.init()` (see [init-oxide.md](./init-oxide.md)).
+
 ## Topics
 
 - Reducer pattern (Rust state/actions/reducer): [reducer-pattern.md](./reducer-pattern.md)
@@ -33,4 +36,3 @@ FRB docs: https://fzyzcjy.github.io/flutter_rust_bridge/
 - Declare a store (`@OxideStore`): [declare-store.md](./declare-store.md)
 - Use the generated adapter in UI: [ui-backends.md](./ui-backends.md)
 - Persistence (optional): [persistence.md](./persistence.md)
-
