@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/bridge.dart';
 import 'api/counter_bridge.dart';
 import 'api/json_bridge.dart';
 import 'api/sieve_bridge.dart';
@@ -74,7 +75,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 810599169;
+  int get rustContentHash => -400645258;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -85,8 +86,6 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<CounterRootReducer> crateApiCounterBridgeCounterRootReducerDefault();
-
   Future<ArcCounterEngine> crateApiCounterBridgeCreateEngine();
 
   Future<ArcJsonEngine> crateApiJsonBridgeCreateEngine();
@@ -132,9 +131,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiBridgeInitApp();
 
-  Future<JsonRootReducer> crateApiJsonBridgeJsonRootReducerDefault();
-
-  Future<SieveRootReducer> crateApiSieveBridgeSieveRootReducerDefault();
+  Future<void> crateApiBridgeInitOxide();
 
   Stream<CounterStateSnapshot> crateApiCounterBridgeStateStream({
     required ArcCounterEngine engine,
@@ -193,7 +190,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<CounterRootReducer> crateApiCounterBridgeCounterRootReducerDefault() {
+  Future<ArcCounterEngine> crateApiCounterBridgeCreateEngine() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -206,39 +203,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_counter_root_reducer,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiCounterBridgeCounterRootReducerDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiCounterBridgeCounterRootReducerDefaultConstMeta =>
-      const TaskConstMeta(
-        debugName: "counter_root_reducer_default",
-        argNames: [],
-      );
-
-  @override
-  Future<ArcCounterEngine> crateApiCounterBridgeCreateEngine() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 2,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
           decodeSuccessData:
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcCounterEngine,
-          decodeErrorData: null,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
         constMeta: kCrateApiCounterBridgeCreateEngineConstMeta,
         argValues: [],
@@ -259,14 +227,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 2,
             port: port_,
           );
         },
         codec: SseCodec(
           decodeSuccessData:
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcJsonEngine,
-          decodeErrorData: null,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
         constMeta: kCrateApiJsonBridgeCreateEngineConstMeta,
         argValues: [],
@@ -287,14 +256,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 3,
             port: port_,
           );
         },
         codec: SseCodec(
           decodeSuccessData:
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSieveEngine,
-          decodeErrorData: null,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
         constMeta: kCrateApiSieveBridgeCreateEngineConstMeta,
         argValues: [],
@@ -321,7 +291,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 4,
             port: port_,
           );
         },
@@ -354,7 +324,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 5,
             port: port_,
           );
         },
@@ -387,7 +357,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 6,
             port: port_,
           );
         },
@@ -422,7 +392,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 7,
             port: port_,
           );
         },
@@ -461,7 +431,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 8,
             port: port_,
           );
         },
@@ -499,7 +469,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 9,
             port: port_,
           );
         },
@@ -536,7 +506,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 10,
             port: port_,
           );
         },
@@ -569,7 +539,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 11,
             port: port_,
           );
         },
@@ -602,7 +572,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 12,
             port: port_,
           );
         },
@@ -629,7 +599,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 13,
             port: port_,
           );
         },
@@ -648,7 +618,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
-  Future<JsonRootReducer> crateApiJsonBridgeJsonRootReducerDefault() {
+  Future<void> crateApiBridgeInitOxide() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -656,53 +626,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 14,
             port: port_,
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_json_root_reducer,
-          decodeErrorData: null,
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
-        constMeta: kCrateApiJsonBridgeJsonRootReducerDefaultConstMeta,
+        constMeta: kCrateApiBridgeInitOxideConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiJsonBridgeJsonRootReducerDefaultConstMeta =>
-      const TaskConstMeta(debugName: "json_root_reducer_default", argNames: []);
-
-  @override
-  Future<SieveRootReducer> crateApiSieveBridgeSieveRootReducerDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 16,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_sieve_root_reducer,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiSieveBridgeSieveRootReducerDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiSieveBridgeSieveRootReducerDefaultConstMeta =>
-      const TaskConstMeta(
-        debugName: "sieve_root_reducer_default",
-        argNames: [],
-      );
+  TaskConstMeta get kCrateApiBridgeInitOxideConstMeta =>
+      const TaskConstMeta(debugName: "init_oxide", argNames: []);
 
   @override
   Stream<CounterStateSnapshot> crateApiCounterBridgeStateStream({
@@ -722,7 +663,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 17,
+              funcId: 15,
               port: port_,
             );
           },
@@ -763,7 +704,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 18,
+              funcId: 16,
               port: port_,
             );
           },
@@ -804,7 +745,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 19,
+              funcId: 17,
               port: port_,
             );
           },
@@ -1021,15 +962,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CounterRootReducer dco_decode_counter_root_reducer(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.isNotEmpty)
-      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
-    return CounterRootReducer();
-  }
-
-  @protected
   CounterState dco_decode_counter_state(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1064,15 +996,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
-  }
-
-  @protected
-  JsonRootReducer dco_decode_json_root_reducer(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.isNotEmpty)
-      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
-    return JsonRootReducer();
   }
 
   @protected
@@ -1114,15 +1037,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
-  }
-
-  @protected
-  SieveRootReducer dco_decode_sieve_root_reducer(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.isNotEmpty)
-      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
-    return SieveRootReducer();
   }
 
   @protected
@@ -1385,14 +1299,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CounterRootReducer sse_decode_counter_root_reducer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return CounterRootReducer();
-  }
-
-  @protected
   CounterState sse_decode_counter_state(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_counter = sse_decode_u_64(deserializer);
@@ -1425,12 +1331,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
-  }
-
-  @protected
-  JsonRootReducer sse_decode_json_root_reducer(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return JsonRootReducer();
   }
 
   @protected
@@ -1470,12 +1370,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
-  }
-
-  @protected
-  SieveRootReducer sse_decode_sieve_root_reducer(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SieveRootReducer();
   }
 
   @protected
@@ -1784,14 +1678,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_counter_root_reducer(
-    CounterRootReducer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-  }
-
-  @protected
   void sse_encode_counter_state(CounterState self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.counter, serializer);
@@ -1819,14 +1705,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(1, serializer);
         sse_encode_u_32(iterations, serializer);
     }
-  }
-
-  @protected
-  void sse_encode_json_root_reducer(
-    JsonRootReducer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected
@@ -1864,14 +1742,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(0, serializer);
         sse_encode_u_32(iterations, serializer);
     }
-  }
-
-  @protected
-  void sse_encode_sieve_root_reducer(
-    SieveRootReducer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected

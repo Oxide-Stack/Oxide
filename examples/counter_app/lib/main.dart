@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
 import 'src/oxide.dart';
+import 'src/rust/api/bridge.dart' show initOxide;
 import 'src/rust/frb_generated.dart';
 import 'src/rust/state/app_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
+  await initOxide();
   runApp(const ProviderScope(child: MyApp()));
 }
 

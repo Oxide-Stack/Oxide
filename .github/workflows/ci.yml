@@ -24,6 +24,22 @@ jobs:
       - name: Test (Rust workspace)
         working-directory: rust
         run: cargo test --workspace
+      - name: Check (WASM targets)
+        working-directory: rust
+        run: |
+          rustup target add wasm32-unknown-unknown wasm32-wasip1
+          cargo check -p oxide_core --target wasm32-unknown-unknown --all-features
+          cargo check -p oxide_core --target wasm32-wasip1 --all-features
+          cargo test -p oxide_core --target wasm32-unknown-unknown --all-features --no-run --test wasm_web_compat
+          cargo test -p oxide_core --target wasm32-wasip1 --all-features --no-run --test wasm_wasi_compat
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      - name: Coverage (Rust workspace)
+        working-directory: rust
+        run: |
+          rustup component add llvm-tools-preview
+          cargo llvm-cov --workspace --all-features --fail-under-lines 70 --fail-under-regions 75 --summary-only
       - name: Test (Example Rust crates)
         shell: bash
         run: |
@@ -33,6 +49,7 @@ jobs:
             "examples/todos_app/rust"
             "examples/ticker_app/rust"
             "examples/benchmark_app/rust"
+            "examples/api_browser_app/rust"
           )
           for dir in "${examples[@]}"; do
             (cd "$dir" && cargo test)
@@ -69,6 +86,7 @@ jobs:
             "examples/todos_app"
             "examples/ticker_app"
             "examples/benchmark_app"
+            "examples/api_browser_app"
           )
           for dir in "${examples[@]}"; do
             (
@@ -117,7 +135,8 @@ jobs:
             "examples\counter_app",
             "examples\todos_app",
             "examples\ticker_app",
-            "examples\benchmark_app"
+            "examples\benchmark_app",
+            "examples\api_browser_app"
           )
           foreach ($dir in $exampleDirs) {
             Push-Location $dir

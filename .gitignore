@@ -1,5 +1,6 @@
 target/
 instructions/
+misc/
 .trae/
 rust/target/
 flutter/target/

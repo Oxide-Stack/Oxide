@@ -25,6 +25,7 @@
 
 // Section: imports
 
+use crate::api::bridge::*;
 use crate::api::counter_bridge::*;
 use crate::api::json_bridge::*;
 use crate::api::sieve_bridge::*;
@@ -40,7 +41,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 810599169;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -400645258;
 
 // Section: executor
 
@@ -48,47 +49,13 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
-fn wire__crate__api__counter_bridge__counter_root_reducer_default_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "counter_root_reducer_default",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(
-                        crate::api::counter_bridge::CounterRootReducer::default(),
-                    )?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
 fn wire__crate__api__counter_bridge__create_engine_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "create_engine",
             port: Some(port_),
@@ -105,12 +72,14 @@ fn wire__crate__api__counter_bridge__create_engine_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok =
-                        Result::<_, ()>::Ok(crate::api::counter_bridge::create_engine())?;
-                    Ok(output_ok)
-                })())
+            move |context| async move {
+                transform_result_sse::<_, OxideError>(
+                    (move || async move {
+                        let output_ok = crate::api::counter_bridge::create_engine().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
             }
         },
     )
@@ -121,7 +90,7 @@ fn wire__crate__api__json_bridge__create_engine_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "create_engine",
             port: Some(port_),
@@ -138,11 +107,14 @@ fn wire__crate__api__json_bridge__create_engine_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(crate::api::json_bridge::create_engine())?;
-                    Ok(output_ok)
-                })())
+            move |context| async move {
+                transform_result_sse::<_, OxideError>(
+                    (move || async move {
+                        let output_ok = crate::api::json_bridge::create_engine().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
             }
         },
     )
@@ -153,7 +125,7 @@ fn wire__crate__api__sieve_bridge__create_engine_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "create_engine",
             port: Some(port_),
@@ -170,11 +142,14 @@ fn wire__crate__api__sieve_bridge__create_engine_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(crate::api::sieve_bridge::create_engine())?;
-                    Ok(output_ok)
-                })())
+            move |context| async move {
+                transform_result_sse::<_, OxideError>(
+                    (move || async move {
+                        let output_ok = crate::api::sieve_bridge::create_engine().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
             }
         },
     )
@@ -731,15 +706,15 @@ fn wire__crate__api__bridge__init_app_impl(
         },
     )
 }
-fn wire__crate__api__json_bridge__json_root_reducer_default_impl(
+fn wire__crate__api__bridge__init_oxide_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "json_root_reducer_default",
+            debug_name: "init_oxide",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -754,45 +729,14 @@ fn wire__crate__api__json_bridge__json_root_reducer_default_impl(
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok =
-                        Result::<_, ()>::Ok(crate::api::json_bridge::JsonRootReducer::default())?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__api__sieve_bridge__sieve_root_reducer_default_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "sieve_root_reducer_default",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
+            move |context| async move {
+                transform_result_sse::<_, OxideError>(
+                    (move || async move {
+                        let output_ok = crate::api::bridge::init_oxide().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
                 )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok =
-                        Result::<_, ()>::Ok(crate::api::sieve_bridge::SieveRootReducer::default())?;
-                    Ok(output_ok)
-                })())
             }
         },
     )
@@ -1160,13 +1104,6 @@ impl SseDecode for crate::state::counter_action::CounterAction {
     }
 }
 
-impl SseDecode for crate::api::counter_bridge::CounterRootReducer {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        return crate::api::counter_bridge::CounterRootReducer {};
-    }
-}
-
 impl SseDecode for crate::state::counter_state::CounterState {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1212,13 +1149,6 @@ impl SseDecode for crate::state::json_action::JsonAction {
                 unimplemented!("");
             }
         }
-    }
-}
-
-impl SseDecode for crate::api::json_bridge::JsonRootReducer {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        return crate::api::json_bridge::JsonRootReducer {};
     }
 }
 
@@ -1273,13 +1203,6 @@ impl SseDecode for crate::state::sieve_action::SieveAction {
                 unimplemented!("");
             }
         }
-    }
-}
-
-impl SseDecode for crate::api::sieve_bridge::SieveRootReducer {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        return crate::api::sieve_bridge::SieveRootReducer {};
     }
 }
 
@@ -1363,48 +1286,31 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        1 => wire__crate__api__counter_bridge__counter_root_reducer_default_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        2 => {
+        1 => {
             wire__crate__api__counter_bridge__create_engine_impl(port, ptr, rust_vec_len, data_len)
         }
-        3 => wire__crate__api__json_bridge__create_engine_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__sieve_bridge__create_engine_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__counter_bridge__current_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__json_bridge__current_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__sieve_bridge__current_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__counter_bridge__dispatch_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__json_bridge__dispatch_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__sieve_bridge__dispatch_impl(port, ptr, rust_vec_len, data_len),
-        11 => {
+        2 => wire__crate__api__json_bridge__create_engine_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__sieve_bridge__create_engine_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__counter_bridge__current_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__json_bridge__current_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__sieve_bridge__current_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__counter_bridge__dispatch_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__json_bridge__dispatch_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__sieve_bridge__dispatch_impl(port, ptr, rust_vec_len, data_len),
+        10 => {
             wire__crate__api__counter_bridge__dispose_engine_impl(port, ptr, rust_vec_len, data_len)
         }
-        12 => wire__crate__api__json_bridge__dispose_engine_impl(port, ptr, rust_vec_len, data_len),
-        13 => {
+        11 => wire__crate__api__json_bridge__dispose_engine_impl(port, ptr, rust_vec_len, data_len),
+        12 => {
             wire__crate__api__sieve_bridge__dispose_engine_impl(port, ptr, rust_vec_len, data_len)
         }
-        14 => wire__crate__api__bridge__init_app_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__json_bridge__json_root_reducer_default_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        16 => wire__crate__api__sieve_bridge__sieve_root_reducer_default_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        17 => {
+        13 => wire__crate__api__bridge__init_app_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__bridge__init_oxide_impl(port, ptr, rust_vec_len, data_len),
+        15 => {
             wire__crate__api__counter_bridge__state_stream_impl(port, ptr, rust_vec_len, data_len)
         }
-        18 => wire__crate__api__json_bridge__state_stream_impl(port, ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__sieve_bridge__state_stream_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__json_bridge__state_stream_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__sieve_bridge__state_stream_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1511,23 +1417,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::state::counter_action::CounterActi
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::counter_bridge::CounterRootReducer {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        Vec::<u8>::new().into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::counter_bridge::CounterRootReducer
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::counter_bridge::CounterRootReducer>
-    for crate::api::counter_bridge::CounterRootReducer
-{
-    fn into_into_dart(self) -> crate::api::counter_bridge::CounterRootReducer {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::state::counter_state::CounterState {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1597,23 +1486,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::state::json_action::JsonAction>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::json_bridge::JsonRootReducer {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        Vec::<u8>::new().into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::json_bridge::JsonRootReducer
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::json_bridge::JsonRootReducer>
-    for crate::api::json_bridge::JsonRootReducer
-{
-    fn into_into_dart(self) -> crate::api::json_bridge::JsonRootReducer {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::state::json_state::JsonState {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1676,23 +1548,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::state::sieve_action::SieveAction>
     for crate::state::sieve_action::SieveAction
 {
     fn into_into_dart(self) -> crate::state::sieve_action::SieveAction {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::sieve_bridge::SieveRootReducer {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        Vec::<u8>::new().into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::sieve_bridge::SieveRootReducer
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::sieve_bridge::SieveRootReducer>
-    for crate::api::sieve_bridge::SieveRootReducer
-{
-    fn into_into_dart(self) -> crate::api::sieve_bridge::SieveRootReducer {
         self
     }
 }
@@ -1876,11 +1731,6 @@ impl SseEncode for crate::state::counter_action::CounterAction {
     }
 }
 
-impl SseEncode for crate::api::counter_bridge::CounterRootReducer {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
-}
-
 impl SseEncode for crate::state::counter_state::CounterState {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1914,11 +1764,6 @@ impl SseEncode for crate::state::json_action::JsonAction {
             }
         }
     }
-}
-
-impl SseEncode for crate::api::json_bridge::JsonRootReducer {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
 impl SseEncode for crate::state::json_state::JsonState {
@@ -1960,11 +1805,6 @@ impl SseEncode for crate::state::sieve_action::SieveAction {
             }
         }
     }
-}
-
-impl SseEncode for crate::api::sieve_bridge::SieveRootReducer {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
 impl SseEncode for crate::state::sieve_state::SieveState {
@@ -2041,6 +1881,7 @@ mod io {
     // Section: imports
 
     use super::*;
+    use crate::api::bridge::*;
     use crate::api::counter_bridge::*;
     use crate::api::json_bridge::*;
     use crate::api::sieve_bridge::*;
@@ -2122,6 +1963,7 @@ mod web {
     // Section: imports
 
     use super::*;
+    use crate::api::bridge::*;
     use crate::api::counter_bridge::*;
     use crate::api::json_bridge::*;
     use crate::api::sieve_bridge::*;

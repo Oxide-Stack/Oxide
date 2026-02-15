@@ -10,7 +10,8 @@ const EXPECTED_JSON_HEAVY_CHECKSUM_AFTER_1: u64 = 0xb067dca7d88da466;
 
 #[tokio::test]
 async fn counter_dispatch_updates_state_and_revision() {
-    let engine = counter_bridge::create_engine();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = counter_bridge::create_engine().await.unwrap();
     let before = counter_bridge::current(&engine).await;
     assert_eq!(before.state.counter, 0);
     assert_eq!(before.revision, 0);
@@ -25,7 +26,8 @@ async fn counter_dispatch_updates_state_and_revision() {
 
 #[tokio::test]
 async fn json_dispatch_updates_state_and_revision() {
-    let engine = json_bridge::create_engine();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = json_bridge::create_engine().await.unwrap();
     let before = json_bridge::current(&engine).await;
     assert_eq!(before.state.counter, 0);
     assert_eq!(before.revision, 0);
@@ -37,7 +39,7 @@ async fn json_dispatch_updates_state_and_revision() {
     assert_eq!(after.revision, 1);
     assert_eq!(after.state.checksum, EXPECTED_JSON_LIGHT_CHECKSUM_AFTER_1);
 
-    let heavy_engine = json_bridge::create_engine();
+    let heavy_engine = json_bridge::create_engine().await.unwrap();
     let after_heavy = json_bridge::dispatch(&heavy_engine, JsonAction::RunHeavy { iterations: 1 })
         .await
         .expect("dispatch heavy");
@@ -48,7 +50,8 @@ async fn json_dispatch_updates_state_and_revision() {
 
 #[tokio::test]
 async fn sieve_dispatch_updates_state_and_revision() {
-    let engine = sieve_bridge::create_engine();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = sieve_bridge::create_engine().await.unwrap();
     let before = sieve_bridge::current(&engine).await;
     assert_eq!(before.state.counter, 0);
     assert_eq!(before.revision, 0);

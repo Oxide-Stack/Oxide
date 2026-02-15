@@ -30,6 +30,11 @@ class AppState {
           nextId == other.nextId;
 }
 
+/// Slice identifiers for top-level segments of this state.
+///
+/// This enum is generated when `#[state(sliced = true)]` is enabled.
+enum AppStateSlice { todos, nextId }
+
 /// Single todo item stored in [`AppState`].
 ///oxide:state
 ///oxide:meta:{"kind":"state","name":"TodoItem","docs":["Single todo item stored in [`AppState`]."],"fields":[{"name":"id","ty":"String"},{"name":"title","ty":"String"},{"name":"completed","ty":"bool"}],"variants":null}

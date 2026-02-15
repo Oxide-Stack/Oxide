@@ -21,11 +21,7 @@ impl oxide_core::Reducer for MyReducer {
     type Action = MyAction;
     type SideEffect = MySideEffect;
 
-    fn init(
-        &mut self,
-        _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-    }
+    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
 
     fn reduce(
         &mut self,
@@ -35,7 +31,7 @@ impl oxide_core::Reducer for MyReducer {
         match action {
             MyAction::Inc => {
                 state.count = state.count.saturating_add(1);
-                Ok(oxide_core::StateChange::FullUpdate)
+                Ok(oxide_core::StateChange::Full)
             }
         }
     }

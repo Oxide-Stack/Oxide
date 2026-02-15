@@ -1,6 +1,5 @@
 use oxide_generator_rs::state;
 
-#[flutter_rust_bridge::frb(non_opaque)]
 #[state]
 pub struct JsonState {
     pub counter: u64,

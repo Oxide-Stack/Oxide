@@ -1,3 +1,8 @@
+## 0.2.0
+- Split runtime core into SRP-focused files while keeping exports stable
+- Implement filterSnapshotsBySlices in Dart runtime for efficient partial rebuilds
+- Support slice filtering in all Flutter backends (InheritedWidget, Riverpod, BLoC)
+
 ## 0.1.1
 - Upgrade flutter_riverpod to ^3.2.0 across all examples and runtime
 - Update analyzer, build, source_gen, and lints to latest versions in oxide_generator

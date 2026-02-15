@@ -13,7 +13,6 @@ keywords = ["oxide", "state-management", "redux", "async", "ffi"]
 categories = ["asynchronous", "concurrency", "api-bindings"]
 
 [dependencies]
-tokio = { version = "1.34.0", features = ["full"] }     
 futures = "0.3"                                   
 thiserror = "2"
 tokio-stream = { version = "0.1", features = ["sync"] }
@@ -22,16 +21,32 @@ serde = { version = "1", features = ["derive"], optional = true }
 bincode = { version = "1.3", optional = true }
 serde_json = { version = "1", optional = true }
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.34.0", features = ["full"] }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+tokio = { version = "1.34.0", features = ["sync", "rt"] }
+base64 = "0.22"
+gloo-timers = { version = "0.3", features = ["futures"] }
+js-sys = "0.3"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["Storage", "Window"] }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "wasi"))'.dependencies]
+tokio = { version = "1.34.0", features = ["sync", "rt", "time"] }
+
 [features]
-default = ["frb-spawn", "internal-runtime"]
+default = ["frb-spawn"]
 frb-spawn = ["dep:flutter_rust_bridge"]
-internal-runtime = []
 state-persistence = ["dep:serde", "dep:bincode"]
 persistence-json = ["state-persistence", "dep:serde_json"]
-full = ["state-persistence", "persistence-json", "internal-runtime","frb-spawn"]
+full = ["state-persistence", "persistence-json", "frb-spawn"]
 
-[dev-dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 criterion = "0.5"
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dev-dependencies]
+wasm-bindgen-test = "0.3"
 
 [[bench]]
 name = "store_dispatch"

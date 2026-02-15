@@ -3,7 +3,8 @@ use crate::state::app_action::AppAction;
 
 #[tokio::test]
 async fn dispatch_updates_counter_and_revision() {
-    let engine = create_engine();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = create_engine().await.unwrap();
     let before = current(&engine).await;
     assert_eq!(before.state.counter, 0);
     assert_eq!(before.revision, 0);
@@ -15,7 +16,8 @@ async fn dispatch_updates_counter_and_revision() {
 
 #[tokio::test]
 async fn reset_sets_counter_to_zero() {
-    let engine = create_engine();
+    crate::api::bridge::init_oxide().await.unwrap();
+    let engine = create_engine().await.unwrap();
     let _ = dispatch(&engine, AppAction::Increment).await.expect("dispatch");
     let after = dispatch(&engine, AppAction::Reset).await.expect("dispatch");
     assert_eq!(after.state.counter, 0);

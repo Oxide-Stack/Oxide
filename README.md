@@ -12,6 +12,8 @@ Oxide is a Rust ↔ Flutter workflow for building apps where:
 
 This repository is structured so **package code stays usage-agnostic**, and complete runnable usage lives under [examples/](./examples).
 
+Architecture overview: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+
 ## Acknowledgements
 
 Oxide is powered by [Flutter Rust Bridge (FRB)](https://github.com/fzyzcjy/flutter_rust_bridge). Huge thanks to the FRB maintainers and contributors for making Rust ↔ Dart interoperability approachable and productive.
@@ -38,8 +40,18 @@ Snapshots are revisioned:
 pub struct StateSnapshot<T> {
   pub revision: u64,
   pub state: T,
+  pub slices: Vec<StateSlice>,
 }
 ```
+
+## 🧩 Sliced Updates (Optional)
+
+Sliced updates let Flutter stores rebuild only when specific *top-level* parts of state changed.
+
+- **Rust**: opt in on your state with `#[state(sliced = true)]`. This generates a slice enum named `<StateName>Slice` (for example, `AppStateSlice`).
+- **Rust reducer**: return `StateChange::Infer` (engine infers slices by comparing top-level fields) or `StateChange::Slices(&[...])` (explicit slices).
+- **Snapshots**: `snapshot.slices` is empty for full updates (`StateChange::Full` / legacy `FullUpdate`). Non-empty slices indicate which segments changed.
+- **Flutter**: use `@OxideStore(slices: [...])` to filter snapshots before they hit your chosen backend (InheritedWidget/Riverpod/BLoC).
 
 ## 📦 Packages
 
@@ -60,6 +72,7 @@ pub struct StateSnapshot<T> {
 - [todos_app](./examples/todos_app) — CRUD list state + errors + persistence
 - [ticker_app](./examples/ticker_app) — periodic tick dispatch + snapshot stream into Flutter
 - [benchmark_app](./examples/benchmark_app) — performance comparison against Dart-only approaches
+- [api_browser_app](./examples/api_browser_app) — browse a JSON API with multiple reducers
 
 ## 🎬 Example Demos
 
@@ -95,7 +108,7 @@ flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 
 ## 📚 Documentation
 
-- Usage / integration guide: [docs/USAGE.md](./docs/USAGE.md)
+- Usage / integration guide: [docs/usage/README.md](./docs/usage/README.md)
 - Contributing guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## 🛠️ Development
@@ -104,6 +117,7 @@ flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 
 - Rust crates: `cargo test` (from `./rust`)
 - Flutter runtime package: `flutter test` (from `./flutter/oxide_runtime`)
+- Web/WASM compatibility (Rust): see `rust/oxide_core` for target builds and test compilation instructions
 
 ### Repo Scripts
 
@@ -112,6 +126,7 @@ The repo keeps a single `VERSION` file and syncs versions via scripts under [too
 - Version sync: `tools/scripts/version_sync.ps1` / `tools/scripts/version_sync.sh`
 - Tests: `tools/scripts/qa.ps1` / `tools/scripts/qa.sh`
 - Builds (platform required): `tools/scripts/build.ps1 -Platform windows` / `tools/scripts/build.sh linux` (add `-NoExamples` / `--no-examples` to skip building examples)
+- Disk cleanup: `tools/scripts/clean.ps1` / `tools/scripts/clean.sh` (add `-DryRun` / `--dry-run` to preview)
 - Git flow helpers: `tools/scripts/git_flow.ps1`, `tools/scripts/git_flow.sh`
 
 ## Versioning

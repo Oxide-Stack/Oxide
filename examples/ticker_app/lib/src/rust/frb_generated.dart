@@ -68,7 +68,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1464861628;
+  int get rustContentHash => -1723205751;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -79,9 +79,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<AppReducer> crateApiBridgeAppReducerDefault();
-
   Future<ArcAppEngine> crateApiBridgeCreateEngine();
+
+  Future<ArcAppEngine> crateApiBridgeCreateSharedEngine();
 
   Future<AppStateSnapshot> crateApiBridgeCurrent({
     required ArcAppEngine engine,
@@ -96,17 +96,11 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiBridgeInitApp();
 
+  Future<void> crateApiBridgeInitOxide();
+
   Stream<AppStateSnapshot> crateApiBridgeStateStream({
     required ArcAppEngine engine,
   });
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_AppReducer;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_AppReducer;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AppReducerPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_ArcAppEngine;
@@ -134,7 +128,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<AppReducer> crateApiBridgeAppReducerDefault() {
+  Future<ArcAppEngine> crateApiBridgeCreateEngine() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -148,21 +142,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppReducer,
-          decodeErrorData: null,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
-        constMeta: kCrateApiBridgeAppReducerDefaultConstMeta,
+        constMeta: kCrateApiBridgeCreateEngineConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBridgeAppReducerDefaultConstMeta =>
-      const TaskConstMeta(debugName: "AppReducer_default", argNames: []);
+  TaskConstMeta get kCrateApiBridgeCreateEngineConstMeta =>
+      const TaskConstMeta(debugName: "create_engine", argNames: []);
 
   @override
-  Future<ArcAppEngine> crateApiBridgeCreateEngine() {
+  Future<ArcAppEngine> crateApiBridgeCreateSharedEngine() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -177,17 +172,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: SseCodec(
           decodeSuccessData:
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine,
-          decodeErrorData: null,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
-        constMeta: kCrateApiBridgeCreateEngineConstMeta,
+        constMeta: kCrateApiBridgeCreateSharedEngineConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBridgeCreateEngineConstMeta =>
-      const TaskConstMeta(debugName: "create_engine", argNames: []);
+  TaskConstMeta get kCrateApiBridgeCreateSharedEngineConstMeta =>
+      const TaskConstMeta(debugName: "create_shared_engine", argNames: []);
 
   @override
   Future<AppStateSnapshot> crateApiBridgeCurrent({
@@ -319,6 +315,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
+  Future<void> crateApiBridgeInitOxide() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
+        ),
+        constMeta: kCrateApiBridgeInitOxideConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiBridgeInitOxideConstMeta =>
+      const TaskConstMeta(debugName: "init_oxide", argNames: []);
+
+  @override
   Stream<AppStateSnapshot> crateApiBridgeStateStream({
     required ArcAppEngine engine,
   }) {
@@ -336,7 +360,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 7,
+              funcId: 8,
               port: port_,
             );
           },
@@ -359,14 +383,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_AppReducer => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppReducer;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_AppReducer => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppReducer;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_ArcAppEngine => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine;
 
@@ -386,15 +402,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return AnyhowException(raw as String);
-  }
-
-  @protected
-  AppReducer
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppReducer(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return AppReducerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -422,15 +429,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ArcAppEngineImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  AppReducer
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppReducer(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return AppReducerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -490,25 +488,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AppState dco_decode_app_state(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return AppState(
-      ticks: dco_decode_u_64(arr[0]),
-      isRunning: dco_decode_bool(arr[1]),
-      intervalMs: dco_decode_u_64(arr[2]),
-      lastTickSource: dco_decode_String(arr[3]),
+      control: dco_decode_ticker_control_state(arr[0]),
+      tick: dco_decode_tick_state(arr[1]),
     );
+  }
+
+  @protected
+  AppStateSlice dco_decode_app_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return AppStateSlice.values[raw as int];
   }
 
   @protected
   AppStateSnapshot dco_decode_app_state_snapshot(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return AppStateSnapshot(
       revision: dco_decode_u_64(arr[0]),
       state: dco_decode_app_state(arr[1]),
+      slices: dco_decode_list_app_state_slice(arr[2]),
     );
   }
 
@@ -525,9 +528,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int dco_decode_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
+  }
+
+  @protected
+  List<AppStateSlice> dco_decode_list_app_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_app_state_slice).toList();
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  TickState dco_decode_tick_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return TickState(
+      ticks: dco_decode_u_64(arr[0]),
+      lastTickSource: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  TickerControlState dco_decode_ticker_control_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return TickerControlState(
+      isRunning: dco_decode_bool(arr[0]),
+      intervalMs: dco_decode_u_64(arr[1]),
+    );
   }
 
   @protected
@@ -562,18 +601,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AppReducer
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppReducer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return AppReducerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   ArcAppEngine
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine(
     SseDeserializer deserializer,
@@ -604,18 +631,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ArcAppEngineImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  AppReducer
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppReducer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return AppReducerImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -687,16 +702,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   AppState sse_decode_app_state(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_ticks = sse_decode_u_64(deserializer);
-    var var_isRunning = sse_decode_bool(deserializer);
-    var var_intervalMs = sse_decode_u_64(deserializer);
-    var var_lastTickSource = sse_decode_String(deserializer);
-    return AppState(
-      ticks: var_ticks,
-      isRunning: var_isRunning,
-      intervalMs: var_intervalMs,
-      lastTickSource: var_lastTickSource,
-    );
+    var var_control = sse_decode_ticker_control_state(deserializer);
+    var var_tick = sse_decode_tick_state(deserializer);
+    return AppState(control: var_control, tick: var_tick);
+  }
+
+  @protected
+  AppStateSlice sse_decode_app_state_slice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return AppStateSlice.values[inner];
   }
 
   @protected
@@ -704,7 +719,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_revision = sse_decode_u_64(deserializer);
     var var_state = sse_decode_app_state(deserializer);
-    return AppStateSnapshot(revision: var_revision, state: var_state);
+    var var_slices = sse_decode_list_app_state_slice(deserializer);
+    return AppStateSnapshot(
+      revision: var_revision,
+      state: var_state,
+      slices: var_slices,
+    );
   }
 
   @protected
@@ -720,10 +740,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
+  }
+
+  @protected
+  List<AppStateSlice> sse_decode_list_app_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <AppStateSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_app_state_slice(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  TickState sse_decode_tick_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_ticks = sse_decode_u_64(deserializer);
+    var var_lastTickSource = sse_decode_String(deserializer);
+    return TickState(ticks: var_ticks, lastTickSource: var_lastTickSource);
+  }
+
+  @protected
+  TickerControlState sse_decode_ticker_control_state(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_isRunning = sse_decode_bool(deserializer);
+    var var_intervalMs = sse_decode_u_64(deserializer);
+    return TickerControlState(
+      isRunning: var_isRunning,
+      intervalMs: var_intervalMs,
+    );
   }
 
   @protected
@@ -750,31 +811,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt32();
-  }
-
-  @protected
   void sse_encode_AnyhowException(
     AnyhowException self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.message, serializer);
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppReducer(
-    AppReducer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as AppReducerImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
   }
 
   @protected
@@ -812,19 +854,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as ArcAppEngineImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppReducer(
-    AppReducer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as AppReducerImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -901,10 +930,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_app_state(AppState self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.ticks, serializer);
-    sse_encode_bool(self.isRunning, serializer);
-    sse_encode_u_64(self.intervalMs, serializer);
-    sse_encode_String(self.lastTickSource, serializer);
+    sse_encode_ticker_control_state(self.control, serializer);
+    sse_encode_tick_state(self.tick, serializer);
+  }
+
+  @protected
+  void sse_encode_app_state_slice(
+    AppStateSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -915,6 +951,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.revision, serializer);
     sse_encode_app_state(self.state, serializer);
+    sse_encode_list_app_state_slice(self.slices, serializer);
   }
 
   @protected
@@ -933,6 +970,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_list_app_state_slice(
+    List<AppStateSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_app_state_slice(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -940,6 +995,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_tick_state(TickState self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.ticks, serializer);
+    sse_encode_String(self.lastTickSource, serializer);
+  }
+
+  @protected
+  void sse_encode_ticker_control_state(
+    TickerControlState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self.isRunning, serializer);
+    sse_encode_u_64(self.intervalMs, serializer);
   }
 
   @protected
@@ -964,32 +1036,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
   }
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt32(self);
-  }
-}
-
-@sealed
-class AppReducerImpl extends RustOpaque implements AppReducer {
-  // Not to be used by end users
-  AppReducerImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  AppReducerImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_AppReducer,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_AppReducer,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_AppReducerPtr,
-  );
 }
 
 @sealed

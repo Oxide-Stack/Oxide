@@ -7,7 +7,10 @@ void main() {
     const action = AppAction.manualTick();
     expect(action, const AppAction.manualTick());
 
-    final state = AppState(ticks: BigInt.from(0), isRunning: false, intervalMs: BigInt.from(1000), lastTickSource: 'manual');
-    expect(state.ticks, BigInt.from(0));
+    final state = AppState(
+      control: TickerControlState(isRunning: false, intervalMs: BigInt.from(1000)),
+      tick: TickState(ticks: BigInt.from(0), lastTickSource: 'manual'),
+    );
+    expect(state.tick.ticks, BigInt.from(0));
   });
 }

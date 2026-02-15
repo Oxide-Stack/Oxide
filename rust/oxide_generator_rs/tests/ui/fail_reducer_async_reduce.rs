@@ -11,11 +11,7 @@ impl oxide_core::Reducer for AsyncReducer {
     type Action = ();
     type SideEffect = AsyncSideEffect;
 
-    fn init(
-        &mut self,
-        _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-    }
+    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
 
     async fn reduce(
         &mut self,
@@ -35,4 +31,3 @@ impl oxide_core::Reducer for AsyncReducer {
 }
 
 fn main() {}
-

@@ -25,6 +25,7 @@ examples=(
   "$ROOT_DIR/examples/todos_app"
   "$ROOT_DIR/examples/ticker_app"
   "$ROOT_DIR/examples/benchmark_app"
+  "$ROOT_DIR/examples/api_browser_app"
 )
 
 device_id=""
@@ -46,6 +47,7 @@ for dir in "${examples[@]}"; do
   fi
 
   cd "$dir"
+  rm -rf build
   flutter pub get
   dart run build_runner build -d
   flutter test

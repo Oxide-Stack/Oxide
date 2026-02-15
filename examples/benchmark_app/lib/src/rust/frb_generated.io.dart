@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/bridge.dart';
 import 'api/counter_bridge.dart';
 import 'api/json_bridge.dart';
 import 'api/sieve_bridge.dart';
@@ -139,9 +140,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CounterAction dco_decode_counter_action(dynamic raw);
 
   @protected
-  CounterRootReducer dco_decode_counter_root_reducer(dynamic raw);
-
-  @protected
   CounterState dco_decode_counter_state(dynamic raw);
 
   @protected
@@ -149,9 +147,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   JsonAction dco_decode_json_action(dynamic raw);
-
-  @protected
-  JsonRootReducer dco_decode_json_root_reducer(dynamic raw);
 
   @protected
   JsonState dco_decode_json_state(dynamic raw);
@@ -164,9 +159,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SieveAction dco_decode_sieve_action(dynamic raw);
-
-  @protected
-  SieveRootReducer dco_decode_sieve_root_reducer(dynamic raw);
 
   @protected
   SieveState dco_decode_sieve_state(dynamic raw);
@@ -290,11 +282,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CounterAction sse_decode_counter_action(SseDeserializer deserializer);
 
   @protected
-  CounterRootReducer sse_decode_counter_root_reducer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   CounterState sse_decode_counter_state(SseDeserializer deserializer);
 
   @protected
@@ -304,9 +291,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   JsonAction sse_decode_json_action(SseDeserializer deserializer);
-
-  @protected
-  JsonRootReducer sse_decode_json_root_reducer(SseDeserializer deserializer);
 
   @protected
   JsonState sse_decode_json_state(SseDeserializer deserializer);
@@ -321,9 +305,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SieveAction sse_decode_sieve_action(SseDeserializer deserializer);
-
-  @protected
-  SieveRootReducer sse_decode_sieve_root_reducer(SseDeserializer deserializer);
 
   @protected
   SieveState sse_decode_sieve_state(SseDeserializer deserializer);
@@ -480,12 +461,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_counter_action(CounterAction self, SseSerializer serializer);
 
   @protected
-  void sse_encode_counter_root_reducer(
-    CounterRootReducer self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_counter_state(CounterState self, SseSerializer serializer);
 
   @protected
@@ -496,12 +471,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_json_action(JsonAction self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_json_root_reducer(
-    JsonRootReducer self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_json_state(JsonState self, SseSerializer serializer);
@@ -520,12 +489,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_sieve_action(SieveAction self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_sieve_root_reducer(
-    SieveRootReducer self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_sieve_state(SieveState self, SseSerializer serializer);

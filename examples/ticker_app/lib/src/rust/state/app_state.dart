@@ -8,41 +8,77 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// State for the ticker example.
 ///oxide:state
-///oxide:meta:{"kind":"state","name":"AppState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","State for the ticker example."],"fields":[{"name":"ticks","ty":"u64"},{"name":"is_running","ty":"bool"},{"name":"interval_ms","ty":"u64"},{"name":"last_tick_source","ty":"String"}],"variants":null}
+///oxide:meta:{"kind":"state","name":"AppState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","State for the ticker example."],"fields":[{"name":"control","ty":"TickerControlState"},{"name":"tick","ty":"TickState"}],"variants":null}
 class AppState {
-  /// Number of ticks observed so far.
-  final BigInt ticks;
+  /// Runtime control settings for the ticker.
+  final TickerControlState control;
 
-  /// Whether auto ticking is currently enabled.
-  final bool isRunning;
+  /// Tick counter and metadata updated by ticking actions.
+  final TickState tick;
 
-  /// Tick interval used by the auto ticker (milliseconds).
-  final BigInt intervalMs;
-
-  /// Most recent tick source (`auto`, `manual`, or `side_effect`).
-  final String lastTickSource;
-
-  const AppState({
-    required this.ticks,
-    required this.isRunning,
-    required this.intervalMs,
-    required this.lastTickSource,
-  });
+  const AppState({required this.control, required this.tick});
 
   @override
-  int get hashCode =>
-      ticks.hashCode ^
-      isRunning.hashCode ^
-      intervalMs.hashCode ^
-      lastTickSource.hashCode;
+  int get hashCode => control.hashCode ^ tick.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is AppState &&
           runtimeType == other.runtimeType &&
+          control == other.control &&
+          tick == other.tick;
+}
+
+/// Slice identifiers for top-level segments of this state.
+///
+/// This enum is generated when `#[state(sliced = true)]` is enabled.
+enum AppStateSlice { control, tick }
+
+/// Tick counter and metadata updated by ticking actions.
+///oxide:state
+///oxide:meta:{"kind":"state","name":"TickState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","Tick counter and metadata updated by ticking actions."],"fields":[{"name":"ticks","ty":"u64"},{"name":"last_tick_source","ty":"String"}],"variants":null}
+class TickState {
+  /// Number of ticks observed so far.
+  final BigInt ticks;
+
+  /// Most recent tick source (`auto`, `manual`, or `side_effect`).
+  final String lastTickSource;
+
+  const TickState({required this.ticks, required this.lastTickSource});
+
+  @override
+  int get hashCode => ticks.hashCode ^ lastTickSource.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TickState &&
+          runtimeType == other.runtimeType &&
           ticks == other.ticks &&
-          isRunning == other.isRunning &&
-          intervalMs == other.intervalMs &&
           lastTickSource == other.lastTickSource;
+}
+
+/// Runtime control settings for the ticker.
+///oxide:state
+///oxide:meta:{"kind":"state","name":"TickerControlState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","Runtime control settings for the ticker."],"fields":[{"name":"is_running","ty":"bool"},{"name":"interval_ms","ty":"u64"}],"variants":null}
+class TickerControlState {
+  /// Whether auto ticking is currently enabled.
+  final bool isRunning;
+
+  /// Tick interval used by the auto ticker (milliseconds).
+  final BigInt intervalMs;
+
+  const TickerControlState({required this.isRunning, required this.intervalMs});
+
+  @override
+  int get hashCode => isRunning.hashCode ^ intervalMs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TickerControlState &&
+          runtimeType == other.runtimeType &&
+          isRunning == other.isRunning &&
+          intervalMs == other.intervalMs;
 }

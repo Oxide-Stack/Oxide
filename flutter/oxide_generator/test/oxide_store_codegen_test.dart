@@ -1,3 +1,6 @@
+// Unit tests for string-based codegen output.
+//
+// Why: ensures action dispatch generation remains stable across refactors.
 import 'package:oxide_generator/src/oxide_store_codegen.dart';
 import 'package:test/test.dart';
 
