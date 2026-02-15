@@ -1,4 +1,10 @@
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:36
+   |
+24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+
+error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:5
    |
 24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
@@ -21,14 +27,14 @@ error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
  --> $WORKSPACE/oxide_core/src/engine/store.rs
   |
-  |     async fn init(&mut self, ctx: InitContext<Self::SideEffect>);
-  |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+  |     fn init(&mut self, ctx: InitContext<Self::SideEffect>) -> impl std::future::Future<Output = ()> + Send;
+  |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
  --> $WORKSPACE/oxide_core/src/engine/store.rs
   |
-  |     async fn init(&mut self, ctx: InitContext<Self::SideEffect>);
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+  |     fn init(&mut self, ctx: InitContext<Self::SideEffect>) -> impl std::future::Future<Output = ()> + Send;
+  |                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:60
@@ -47,12 +53,6 @@ error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
    |
 45 |         _state: &mut Self::State,
    |                      ^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
-
-error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:36
-   |
-24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
-   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:20:18
