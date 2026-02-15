@@ -30,4 +30,4 @@ full = ["frb", "state-persistence"]
 
 [dev-dependencies]
 trybuild = "1.0"
-oxide_core = { version = "0.1.1", path = "../oxide_core", features = ["state-persistence"] }
+oxide_core = { version = "0.2.0", path = "../oxide_core", features = ["state-persistence"] }

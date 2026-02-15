@@ -1,6 +1,6 @@
 [package]
 name = "rust_lib_counter_app"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 publish = false
 
@@ -9,8 +9,8 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.11.1"
-oxide_core = { version = "0.1.1", path = "../../../rust/oxide_core", features = ["state-persistence"] }
-oxide_generator_rs = { version = "0.1.1", path = "../../../rust/oxide_generator_rs", features = ["state-persistence"] }
+oxide_core = { version = "0.2.0", path = "../../../rust/oxide_core", features = ["state-persistence"] }
+oxide_generator_rs = { version = "0.2.0", path = "../../../rust/oxide_generator_rs", features = ["state-persistence"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
