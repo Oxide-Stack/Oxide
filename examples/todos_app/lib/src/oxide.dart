@@ -6,47 +6,105 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import 'rust/api/bridge.dart' show ArcAppEngine, AppStateSnapshot, createEngine, current, dispatch, disposeEngine, stateStream;
+import 'rust/api/bridge.dart'
+    show ArcAppEngine, AppStateSnapshot, createSharedEngine, current, dispatch, disposeEngine, stateStream;
 import 'rust/state/app_action.dart';
 import 'rust/state/app_state.dart';
 
 part 'oxide.oxide.g.dart';
 
-/// Oxide setup for this example:
-/// - Declares the Rust engine + state/actions/snapshot types.
-/// - Enables dev-only codegen (run build_runner) to generate:
-///   - a ChangeNotifier controller
-///   - an Actions facade
-///   - a widget scope with a `useOxide(context)` accessor
-@OxideStore(state: AppState, snapshot: AppStateSnapshot, actions: AppAction, engine: ArcAppEngine)
-class StateBridgeOxide {}
+@OxideStore(
+  state: AppState,
+  snapshot: AppStateSnapshot,
+  actions: AppAction,
+  engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.todos],
+  backend: OxideBackend.inherited,
+  name: 'TodosListInheritedOxide',
+)
+class TodosListInheritedOxide {}
 
 @OxideStore(
   state: AppState,
   snapshot: AppStateSnapshot,
   actions: AppAction,
   engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.nextId],
+  backend: OxideBackend.inherited,
+  name: 'TodosNextIdInheritedOxide',
+)
+class TodosNextIdInheritedOxide {}
+
+@OxideStore(
+  state: AppState,
+  snapshot: AppStateSnapshot,
+  actions: AppAction,
+  engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.todos],
   backend: OxideBackend.inheritedHooks,
-  name: 'StateBridgeHooksOxide',
+  name: 'TodosListHooksOxide',
 )
-class StateBridgeHooksOxide {}
+class TodosListHooksOxide {}
 
 @OxideStore(
   state: AppState,
   snapshot: AppStateSnapshot,
   actions: AppAction,
   engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.nextId],
+  backend: OxideBackend.inheritedHooks,
+  name: 'TodosNextIdHooksOxide',
+)
+class TodosNextIdHooksOxide {}
+
+@OxideStore(
+  state: AppState,
+  snapshot: AppStateSnapshot,
+  actions: AppAction,
+  engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.todos],
   backend: OxideBackend.riverpod,
-  name: 'StateBridgeRiverpodOxide',
+  name: 'TodosListRiverpodOxide',
 )
-class StateBridgeRiverpodOxide {}
+class TodosListRiverpodOxide {}
 
 @OxideStore(
   state: AppState,
   snapshot: AppStateSnapshot,
   actions: AppAction,
   engine: ArcAppEngine,
-  backend: OxideBackend.bloc,
-  name: 'StateBridgeBlocOxide',
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.nextId],
+  backend: OxideBackend.riverpod,
+  name: 'TodosNextIdRiverpodOxide',
 )
-class StateBridgeBlocOxide {}
+class TodosNextIdRiverpodOxide {}
+
+@OxideStore(
+  state: AppState,
+  snapshot: AppStateSnapshot,
+  actions: AppAction,
+  engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.todos],
+  backend: OxideBackend.bloc,
+  name: 'TodosListBlocOxide',
+)
+class TodosListBlocOxide {}
+
+@OxideStore(
+  state: AppState,
+  snapshot: AppStateSnapshot,
+  actions: AppAction,
+  engine: ArcAppEngine,
+  createEngine: 'createSharedEngine',
+  slices: [AppStateSlice.nextId],
+  backend: OxideBackend.bloc,
+  name: 'TodosNextIdBlocOxide',
+)
+class TodosNextIdBlocOxide {}

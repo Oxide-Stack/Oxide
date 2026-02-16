@@ -4,11 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:benchmark_app/src/bench/bench_screen.dart';
 import 'package:benchmark_app/src/oxide.dart';
+import 'package:benchmark_app/src/rust/api/bridge.dart' show initOxide;
 import 'package:benchmark_app/src/rust/frb_generated.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  setUpAll(() async => await RustLib.init());
+  setUpAll(() async {
+    await RustLib.init();
+    await initOxide();
+  });
 
   testWidgets('App boots and renders dashboard', (WidgetTester tester) async {
     await tester.pumpWidget(

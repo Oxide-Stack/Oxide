@@ -1,6 +1,10 @@
 use tokio::sync::watch;
 use tokio_stream::wrappers::WatchStream;
 
+// Stream adapter helpers for FFI.
+//
+// Why: many binding layers want a `Stream`-like API rather than a `watch::Receiver`.
+// How: `tokio_stream` provides a small wrapper that keeps semantics consistent.
 /// Converts a [`watch::Receiver`] into a [`WatchStream`].
 ///
 /// This can be useful when exposing store updates to stream-based consumers.

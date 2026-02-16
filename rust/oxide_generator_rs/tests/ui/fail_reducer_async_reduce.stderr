@@ -1,5 +1,5 @@
 error: `reduce` must not be async
-  --> tests/ui/fail_reducer_async_reduce.rs:20:11
+  --> tests/ui/fail_reducer_async_reduce.rs:16:11
    |
-20 |     async fn reduce(
+16 |     async fn reduce(
    |           ^^

@@ -1,3 +1,15 @@
+//! Metadata extraction and emission for Oxide generators.
+//!
+//! Oxide uses a deliberately simple cross-tooling interface: proc-macros emit
+//! structured JSON into doc strings (`#[doc = "oxide:meta:<json>"]`).
+//!
+//! This allows downstream tooling (including non-Rust tooling) to discover type
+//! shapes without requiring a Rust compiler plugin or full type-checking.
+//!
+//! - `#[state]` emits `StateMeta`
+//! - `#[actions]` emits `ActionsMeta`
+//! - `#[reducer(...)]` emits `ReducerMeta`
+
 use quote::quote;
 use serde::Serialize;
 use syn::{Attribute, ItemEnum, ItemStruct};
@@ -42,6 +54,8 @@ pub(crate) struct ReducerMeta {
 }
 
 pub(crate) fn collect_doc_lines(attrs: &[Attribute]) -> Vec<String> {
+    // Capture user-authored documentation while intentionally stripping the
+    // `oxide:*` marker/docs this crate injects, so metadata doesn't recurse.
     attrs
         .iter()
         .filter_map(|attr| {
@@ -65,6 +79,7 @@ pub(crate) fn collect_doc_lines(attrs: &[Attribute]) -> Vec<String> {
 }
 
 pub(crate) fn push_meta_doc(attrs: &mut Vec<Attribute>, meta: &impl Serialize) {
+    // Serialize metadata into a single doc string to keep it easy to locate and parse.
     let meta_json =
         serde_json::to_string(meta).expect("oxide_generator_rs: failed to serialize metadata");
     let meta_doc = syn::LitStr::new(
@@ -75,6 +90,7 @@ pub(crate) fn push_meta_doc(attrs: &mut Vec<Attribute>, meta: &impl Serialize) {
 }
 
 pub(crate) fn struct_fields(item: &ItemStruct) -> Vec<FieldMeta> {
+    // Represent fields in a uniform way so tooling doesn't need to handle named/tuple/unit separately.
     match &item.fields {
         syn::Fields::Named(fields) => fields
             .named
@@ -104,6 +120,8 @@ pub(crate) fn struct_fields(item: &ItemStruct) -> Vec<FieldMeta> {
 }
 
 pub(crate) fn enum_variants(item: &ItemEnum) -> Vec<VariantMeta> {
+    // Preserve per-variant docs and field shapes so downstream generators can produce
+    // ergonomic APIs in other languages.
     item.variants
         .iter()
         .map(|v| VariantMeta {

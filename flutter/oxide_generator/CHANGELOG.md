@@ -1,3 +1,7 @@
+## 0.2.0
+- Split string-based codegen into SRP-focused modules without changing output
+- Make OxideCodegenConfig slice fields optional when unused
+
 ## 0.1.1
 - Upgrade flutter_riverpod to ^3.2.0 across all examples and runtime
 - Update analyzer, build, source_gen, and lints to latest versions in oxide_generator

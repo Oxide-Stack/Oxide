@@ -1,0 +1,11 @@
+## 0.2.0
+- Reorganize internals under engine/ while preserving public API
+- Reducer init is now async fn init(&mut self, ctx: InitContext<SideEffect>)
+- Engines must be created after oxide_core::runtime::init(...) (exposed via app-level initOxide() FRB API)
+- Unified FRB-based runtime for store task spawning (native/web/WASI aware)
+- Build for wasm32-unknown-unknown and wasm32-wasip1 with all features
+- Add web persistence backend (localStorage + base64) for state persistence
+- Replace persistence OS thread with a debounced async worker
+- WASM-safe background spawning (web uses spawn_local; WASI uses a runtime handle)
+- Add StateChange::Infer and StateChange::Slices variants for partial updates
+- Extend StateSnapshot with slices field to carry slice metadata

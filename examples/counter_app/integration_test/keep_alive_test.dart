@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:counter_app/src/oxide.dart';
+import 'package:counter_app/src/rust/api/bridge.dart' show initOxide;
 import 'package:counter_app/src/rust/frb_generated.dart';
 
 Future<void> _pumpUntil(
@@ -40,6 +41,7 @@ void main() {
 
   setUpAll(() async {
     await RustLib.init();
+    await initOxide();
   });
 
   testWidgets('Inherited controller survives widget interruptions when reused', (WidgetTester tester) async {

@@ -1,3 +1,6 @@
+## 0.2.0
+- No changes in this release.
+
 ## 0.1.1
 - Upgrade flutter_riverpod to ^3.2.0 across all examples and runtime
 - Update analyzer, build, source_gen, and lints to latest versions in oxide_generator

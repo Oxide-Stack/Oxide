@@ -1,90 +1,99 @@
 use oxide_generator_rs::reducer;
 
 /// Error type exposed across the FFI boundary.
+///
+/// # Examples
+/// ```
+/// use rust_lib_ticker_app::api::bridge::OxideError;
+///
+/// let _ = OxideError::Validation {
+///     message: "example".to_string(),
+/// };
+/// ```
 pub use oxide_core::OxideError;
 
+use oxide_core::StateChange;
+use oxide_core::tokio;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::Mutex as StdMutex;
 use std::time::Duration;
 
-use crate::state::{AppAction, AppState};
+use crate::state::{AppAction, AppState, AppStateSlice};
+use crate::state::app_state::TickState;
 
 #[reducer(
     engine = AppEngine,
     snapshot = AppStateSnapshot,
     initial = AppState::new(),
-    tokio_handle = crate::runtime::handle()
 )]
-impl oxide_core::Reducer for AppReducer {
+impl oxide_core::Reducer for AppRootReducer {
     type State = AppState;
     type Action = AppAction;
     type SideEffect = AppSideEffect;
 
-    fn init(
-        &mut self,
-        sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-        self.sideeffect_tx = Some(sideeffect_tx);
+    async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>) {
+        self.sideeffect_tx = Some(ctx.sideeffect_tx);
     }
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
         action: Self::Action,
-    ) -> oxide_core::CoreResult<oxide_core::StateChange> {
+    ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
         match action {
             AppAction::StartTicker { interval_ms } => {
                 let next_interval = interval_ms.max(1);
-                if state.is_running && state.interval_ms == next_interval {
-                    return Ok(oxide_core::StateChange::None);
+                if state.control.is_running && state.control.interval_ms == next_interval {
+                    return Ok(StateChange::None);
                 }
-                state.is_running = true;
-                state.interval_ms = next_interval;
+
+                state.control.is_running = true;
+                state.control.interval_ms = next_interval;
                 self.ensure_ticker_thread(next_interval);
-                Ok(oxide_core::StateChange::FullUpdate)
+                Ok(StateChange::Infer)
             }
             AppAction::StopTicker => {
-                if !state.is_running {
-                    return Ok(oxide_core::StateChange::None);
+                if !state.control.is_running {
+                    return Ok(StateChange::None);
                 }
-                state.is_running = false;
+
+                state.control.is_running = false;
                 self.stop_ticker_thread();
-                Ok(oxide_core::StateChange::FullUpdate)
+                Ok(StateChange::Infer)
             }
             AppAction::AutoTick => {
-                if !state.is_running {
-                    return Ok(oxide_core::StateChange::None);
+                if !state.control.is_running {
+                    return Ok(StateChange::None);
                 }
-                let next = state.ticks.saturating_add(1);
-                if next == state.ticks {
-                    return Ok(oxide_core::StateChange::None);
+
+                if !increment_tick(&mut state.tick, "auto") {
+                    return Ok(StateChange::None);
                 }
-                state.ticks = next;
-                state.last_tick_source = "auto".to_string();
-                Ok(oxide_core::StateChange::FullUpdate)
+
+                Ok(StateChange::Infer)
             }
             AppAction::ManualTick => {
-                let next = state.ticks.saturating_add(1);
-                if next == state.ticks {
-                    return Ok(oxide_core::StateChange::None);
+                if !increment_tick(&mut state.tick, "manual") {
+                    return Ok(StateChange::None);
                 }
-                state.ticks = next;
-                state.last_tick_source = "manual".to_string();
-                Ok(oxide_core::StateChange::FullUpdate)
+
+                Ok(StateChange::Infer)
             }
             AppAction::EmitSideEffectTick => {
                 if let Some(tx) = self.sideeffect_tx.as_ref() {
                     let _ = tx.send(AppSideEffect::TickFromSideEffect);
                 }
-                Ok(oxide_core::StateChange::None)
+                Ok(StateChange::None)
             }
             AppAction::Reset => {
-                if state.ticks == 0 && state.last_tick_source == "manual" {
-                    return Ok(oxide_core::StateChange::None);
+                if state.tick.ticks == 0 && state.tick.last_tick_source == "manual" {
+                    return Ok(StateChange::None);
                 }
-                state.ticks = 0;
-                state.last_tick_source = "manual".to_string();
-                Ok(oxide_core::StateChange::FullUpdate)
+
+                state.tick.ticks = 0;
+                state.tick.last_tick_source = "manual".to_string();
+                Ok(StateChange::Infer)
             }
         }
     }
@@ -93,54 +102,44 @@ impl oxide_core::Reducer for AppReducer {
         &mut self,
         state: &mut Self::State,
         effect: Self::SideEffect,
-    ) -> oxide_core::CoreResult<oxide_core::StateChange> {
+    ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
         match effect {
             AppSideEffect::AutoTickFromThread => {
-                if !state.is_running {
-                    return Ok(oxide_core::StateChange::None);
+                if !state.control.is_running {
+                    return Ok(StateChange::None);
                 }
-                let next = state.ticks.saturating_add(1);
-                if next == state.ticks {
-                    return Ok(oxide_core::StateChange::None);
+
+                if !increment_tick(&mut state.tick, "auto") {
+                    return Ok(StateChange::None);
                 }
-                state.ticks = next;
-                state.last_tick_source = "auto".to_string();
-                Ok(oxide_core::StateChange::FullUpdate)
+
+                Ok(StateChange::Infer)
             }
             AppSideEffect::TickFromSideEffect => {
-                let next = state.ticks.saturating_add(1);
-                if next == state.ticks {
-                    return Ok(oxide_core::StateChange::None);
+                if !increment_tick(&mut state.tick, "side_effect") {
+                    return Ok(StateChange::None);
                 }
-                state.ticks = next;
-                state.last_tick_source = "side_effect".to_string();
-                Ok(oxide_core::StateChange::FullUpdate)
+
+                Ok(StateChange::Infer)
             }
         }
     }
 }
 
-pub enum AppSideEffect {
+#[flutter_rust_bridge::frb(ignore)]
+pub(crate) enum AppSideEffect {
     AutoTickFromThread,
     TickFromSideEffect,
 }
 
-#[flutter_rust_bridge::frb(opaque)]
-pub struct AppReducer {
-    sideeffect_tx: Option<oxide_core::tokio::sync::mpsc::UnboundedSender<AppSideEffect>>,
+#[flutter_rust_bridge::frb(ignore)]
+#[derive(Default)]
+pub(crate) struct AppRootReducer {
+    sideeffect_tx: Option<tokio::sync::mpsc::UnboundedSender<AppSideEffect>>,
     ticker: Option<_TickerTask>,
 }
 
-impl Default for AppReducer {
-    fn default() -> Self {
-        Self {
-            sideeffect_tx: None,
-            ticker: None,
-        }
-    }
-}
-
-impl AppReducer {
+impl AppRootReducer {
     fn ensure_ticker_thread(&mut self, interval_ms: u64) {
         if let Some(ticker) = self.ticker.as_ref() {
             ticker.interval_ms.store(interval_ms, Ordering::Relaxed);
@@ -155,53 +154,131 @@ impl AppReducer {
     }
 
     fn stop_ticker_thread(&mut self) {
-        if let Some(ticker) = self.ticker.take() {
-            let _ = ticker.stop_tx.send(());
-            ticker.join.abort();
-        }
+        let Some(ticker) = self.ticker.take() else {
+            return;
+        };
+
+        let _ = ticker.stop_tx.send(());
+        let _ = ticker.join.lock().expect("ticker join mutex").take();
     }
+}
+
+fn increment_tick(tick: &mut TickState, source: &str) -> bool {
+    let next = tick.ticks.saturating_add(1);
+    if next == tick.ticks {
+        return false;
+    }
+    tick.ticks = next;
+    tick.last_tick_source = source.to_string();
+    true
 }
 
 struct _TickerTask {
     interval_ms: Arc<AtomicU64>,
-    stop_tx: oxide_core::tokio::sync::oneshot::Sender<()>,
-    join: oxide_core::tokio::task::JoinHandle<()>,
+    stop_tx: tokio::sync::oneshot::Sender<()>,
+    join: StdMutex<Option<flutter_rust_bridge::JoinHandle<()>>>,
 }
 
 impl _TickerTask {
-    fn start(
-        sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<AppSideEffect>,
-        interval_ms: u64,
-    ) -> Self {
+    fn start(sideeffect_tx: tokio::sync::mpsc::UnboundedSender<AppSideEffect>, interval_ms: u64) -> Self {
         let interval_ms = Arc::new(AtomicU64::new(interval_ms.max(1)));
         let interval_clone = Arc::clone(&interval_ms);
-        let (stop_tx, mut stop_rx) = oxide_core::tokio::sync::oneshot::channel::<()>();
+        let (stop_tx, mut stop_rx) = tokio::sync::oneshot::channel::<()>();
 
-        let join = crate::runtime::handle().spawn(async move {
-            loop {
-                let ms = interval_clone.load(Ordering::Relaxed).max(1);
-                oxide_core::tokio::select! {
-                    _ = oxide_core::tokio::time::sleep(Duration::from_millis(ms)) => {
-                        let _ = sideeffect_tx.send(AppSideEffect::AutoTickFromThread);
-                    }
-                    _ = &mut stop_rx => {
-                        break;
+        #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+        {
+            oxide_core::runtime::safe_spawn(async move {
+                loop {
+                    let ms = interval_clone.load(Ordering::Relaxed).max(1);
+
+                    use futures::FutureExt as _;
+
+                    let stop_fut = (&mut stop_rx).fuse();
+                    let sleep_fut =
+                        gloo_timers::future::TimeoutFuture::new(ms.min(u64::from(u32::MAX)) as u32).fuse();
+                    futures::pin_mut!(stop_fut, sleep_fut);
+
+                    futures::select_biased! {
+                        _ = stop_fut => break,
+                        _ = sleep_fut => {
+                            let _ = sideeffect_tx.send(AppSideEffect::AutoTickFromThread);
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        Self {
-            interval_ms,
-            stop_tx,
-            join,
+            return Self {
+                interval_ms,
+                stop_tx,
+                join: StdMutex::new(None),
+            };
+        }
+
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+        {
+            let join = oxide_core::runtime::spawn(async move {
+                loop {
+                    let ms = interval_clone.load(Ordering::Relaxed).max(1);
+                    tokio::select! {
+                        _ = tokio::time::sleep(Duration::from_millis(ms)) => {
+                            let _ = sideeffect_tx.send(AppSideEffect::AutoTickFromThread);
+                        }
+                        _ = &mut stop_rx => {
+                            break;
+                        }
+                    }
+                }
+            });
+
+            return Self {
+                interval_ms,
+                stop_tx,
+                join: StdMutex::new(Some(join)),
+            };
         }
     }
 }
 
 #[flutter_rust_bridge::frb(init)]
 /// Initializes Flutter Rust Bridge for this library.
+///
+/// # Examples
+/// ```
+/// use rust_lib_ticker_app::api::bridge::init_app;
+///
+/// init_app();
+/// ```
 pub fn init_app() {
-    let _ = crate::runtime::runtime();
     flutter_rust_bridge::setup_default_user_utils();
+}
+
+#[flutter_rust_bridge::frb]
+/// Initializes the Oxide runtime for this example.
+///
+/// Call this once during app startup (after `RustLib.init()` on the Dart side)
+/// before creating any engines.
+///
+/// # Examples
+/// ```
+/// use rust_lib_ticker_app::api::bridge::init_oxide;
+///
+/// tokio::runtime::Runtime::new()
+///     .unwrap()
+///     .block_on(async { init_oxide().await.unwrap() });
+/// ```
+pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
+    fn thread_pool() -> oxide_core::runtime::ThreadPool {
+        crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
+    }
+
+    let _ = oxide_core::runtime::init(thread_pool);
+
+    Ok(())
+}
+
+#[flutter_rust_bridge::frb]
+pub async fn create_shared_engine() -> Result<Arc<AppEngine>, oxide_core::OxideError> {
+    static ENGINE: tokio::sync::OnceCell<Arc<AppEngine>> = tokio::sync::OnceCell::const_new();
+    let engine = ENGINE.get_or_try_init(|| async { create_engine().await }).await?;
+    Ok(Arc::clone(engine))
 }

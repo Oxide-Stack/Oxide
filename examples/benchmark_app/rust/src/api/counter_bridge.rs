@@ -1,6 +1,7 @@
+use flutter_rust_bridge::frb;
 use oxide_generator_rs::reducer;
 
-use crate::reducers::counter::CounterReducer;
+use crate::util::fnv1a_mix_u64;
 use crate::state::counter_action::CounterAction;
 use crate::state::counter_state::CounterState;
 pub use crate::OxideError;
@@ -9,25 +10,30 @@ pub use crate::OxideError;
     engine = CounterEngine,
     snapshot = CounterStateSnapshot,
     initial = CounterState::new(),
-    tokio_handle = crate::runtime::handle()
 )]
 impl oxide_core::Reducer for CounterRootReducer {
     type State = CounterState;
     type Action = CounterAction;
     type SideEffect = CounterSideEffect;
 
-    fn init(
-        &mut self,
-        _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-    }
+    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
         action: Self::Action,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        CounterReducer::reduce(state, action)
+        let CounterAction::Run { iterations } = action;
+        if iterations == 0 {
+            return Ok(oxide_core::StateChange::None);
+        }
+
+        for _ in 0..iterations {
+            state.counter = state.counter.saturating_add(1);
+            state.checksum = fnv1a_mix_u64(state.checksum, state.counter);
+        }
+
+        Ok(oxide_core::StateChange::Full)
     }
 
     fn effect(
@@ -38,8 +44,8 @@ impl oxide_core::Reducer for CounterRootReducer {
         Ok(oxide_core::StateChange::None)
     }
 }
-
-pub enum CounterSideEffect {}
-
+#[frb(ignore)]
+enum CounterSideEffect {}
+#[frb(ignore)]
 #[derive(Default)]
-pub struct CounterRootReducer {}
+struct CounterRootReducer {}

@@ -1,3 +1,16 @@
+## 0.2.0
+- Add sliced state updates and partial rebuild support across runtimes
+- Add architecture overview and dependency graphs for new contributors
+- Document sliced updates and snapshot slices semantics across Rust and Flutter
+- Replace Tokio runtime wiring docs with initOxide-based initialization
+- Add api_browser_app example that browses a JSON API with multiple reducers and refactor runtime initialization
+- Refactor existing examples to use the oxide_core::runtime::init pattern
+- Remove per-app Tokio runtime modules and update FFI exports accordingly
+- Update build and QA scripts to include the new example
+- Update todos_app and ticker_app examples to use sliced updates with inference
+- Improve documentation with feature-focused guides and sliced updates explanation
+- Add test coverage for slice filtering and sliced state generation
+
 ## 0.1.1
 - Upgrade flutter_riverpod to ^3.2.0 across all examples and runtime
 - Update analyzer, build, source_gen, and lints to latest versions in oxide_generator

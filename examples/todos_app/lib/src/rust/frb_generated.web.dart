@@ -75,10 +75,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AppAction dco_decode_app_action(dynamic raw);
 
   @protected
-  AppReducer dco_decode_app_reducer(dynamic raw);
+  AppState dco_decode_app_state(dynamic raw);
 
   @protected
-  AppState dco_decode_app_state(dynamic raw);
+  AppStateSlice dco_decode_app_state_slice(dynamic raw);
 
   @protected
   AppStateSnapshot dco_decode_app_state_snapshot(dynamic raw);
@@ -88,6 +88,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AppAction dco_decode_box_autoadd_app_action(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
+  List<AppStateSlice> dco_decode_list_app_state_slice(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -155,10 +161,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AppAction sse_decode_app_action(SseDeserializer deserializer);
 
   @protected
-  AppReducer sse_decode_app_reducer(SseDeserializer deserializer);
+  AppState sse_decode_app_state(SseDeserializer deserializer);
 
   @protected
-  AppState sse_decode_app_state(SseDeserializer deserializer);
+  AppStateSlice sse_decode_app_state_slice(SseDeserializer deserializer);
 
   @protected
   AppStateSnapshot sse_decode_app_state_snapshot(SseDeserializer deserializer);
@@ -168,6 +174,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AppAction sse_decode_box_autoadd_app_action(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  List<AppStateSlice> sse_decode_list_app_state_slice(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -189,9 +203,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
-
-  @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   void sse_encode_AnyhowException(
@@ -247,10 +258,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_app_action(AppAction self, SseSerializer serializer);
 
   @protected
-  void sse_encode_app_reducer(AppReducer self, SseSerializer serializer);
+  void sse_encode_app_state(AppState self, SseSerializer serializer);
 
   @protected
-  void sse_encode_app_state(AppState self, SseSerializer serializer);
+  void sse_encode_app_state_slice(AppStateSlice self, SseSerializer serializer);
 
   @protected
   void sse_encode_app_state_snapshot(
@@ -264,6 +275,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_app_action(
     AppAction self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_app_state_slice(
+    List<AppStateSlice> self,
     SseSerializer serializer,
   );
 
@@ -290,9 +310,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
 }
 
 // Section: wire_class

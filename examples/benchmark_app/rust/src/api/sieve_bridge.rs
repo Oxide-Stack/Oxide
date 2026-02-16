@@ -1,33 +1,43 @@
+use flutter_rust_bridge::frb;
 use oxide_generator_rs::reducer;
 
-use crate::reducers::sieve::SieveReducer;
+use crate::util::fnv1a_mix_u64;
 use crate::state::sieve_action::SieveAction;
 use crate::state::sieve_state::SieveState;
 pub use crate::OxideError;
+
+pub const SIEVE_LIMIT: usize = 50_000;
 
 #[reducer(
     engine = SieveEngine,
     snapshot = SieveStateSnapshot,
     initial = SieveState::new(),
-    tokio_handle = crate::runtime::handle()
 )]
 impl oxide_core::Reducer for SieveRootReducer {
     type State = SieveState;
     type Action = SieveAction;
     type SideEffect = SieveSideEffect;
 
-    fn init(
-        &mut self,
-        _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-    }
+    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
         action: Self::Action,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        SieveReducer::reduce(state, action)
+        let SieveAction::Run { iterations } = action;
+        if iterations == 0 {
+            return Ok(oxide_core::StateChange::None);
+        }
+
+        for _ in 0..iterations {
+            let primes = run_sieve(SIEVE_LIMIT);
+            state.counter = state.counter.saturating_add(1);
+            state.checksum = fnv1a_mix_u64(state.checksum, primes);
+            state.checksum = fnv1a_mix_u64(state.checksum, SIEVE_LIMIT as u64);
+        }
+
+        Ok(oxide_core::StateChange::Full)
     }
 
     fn effect(
@@ -38,8 +48,34 @@ impl oxide_core::Reducer for SieveRootReducer {
         Ok(oxide_core::StateChange::None)
     }
 }
+#[frb(ignore)]
 
-pub enum SieveSideEffect {}
+ enum SieveSideEffect {}
 
+#[frb(ignore)]
 #[derive(Default)]
-pub struct SieveRootReducer {}
+ struct SieveRootReducer {}
+
+fn run_sieve(limit: usize) -> u64 {
+    let mut is_prime = vec![true; limit.saturating_add(1)];
+    if !is_prime.is_empty() {
+        is_prime[0] = false;
+    }
+    if is_prime.len() > 1 {
+        is_prime[1] = false;
+    }
+
+    let sqrt = (limit as f64).sqrt() as usize;
+    for p in 2..=sqrt {
+        if !is_prime[p] {
+            continue;
+        }
+        let mut multiple = p.saturating_mul(p);
+        while multiple <= limit {
+            is_prime[multiple] = false;
+            multiple = multiple.saturating_add(p);
+        }
+    }
+
+    is_prime.iter().filter(|&&v| v).count() as u64
+}

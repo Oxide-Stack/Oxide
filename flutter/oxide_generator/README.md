@@ -10,12 +10,12 @@ In your Flutter app:
 
 ```yaml
 dependencies:
-  oxide_annotations: ^0.1.1
-  oxide_runtime: ^0.1.1
+  oxide_annotations: ^0.2.0
+  oxide_runtime: ^0.2.0
 
 dev_dependencies:
   build_runner: ^2.0.0
-  oxide_generator: ^0.1.1
+  oxide_generator: ^0.2.0
 ```
 
 Then fetch packages:
@@ -60,6 +60,23 @@ The generator emits backend-specific glue. Depending on `backend: OxideBackend..
 - A controller that manages engine lifecycle + snapshot stream consumption
 - An actions facade that calls into the FRB-generated `dispatch(...)`
 - A UI adapter (scope/widget/provider) that exposes an `OxideView<State, Actions>` or equivalent access pattern
+
+## Action Shapes Supported
+
+`@OxideStore.actions` supports two common FRB mapping styles:
+
+- **Enum actions**: a Dart `enum` where each enum constant is an action (no payload).
+- **Union-class actions**: a Dart class with public `factory` constructors. Each factory becomes a method on the generated `...Actions` facade, forwarding parameters into the underlying action type.
+
+## Annotation Fields (How config maps to generated code)
+
+- `state`, `snapshot`, `actions`, `engine`: typed wiring information used to parameterize `OxideStoreCore`.
+- `backend`: chooses the lifecycle adapter (Inherited / Hooks / Riverpod / BLoC).
+- `keepAlive`: keeps the generated store alive when possible (backend-dependent behavior).
+- `bindings`: optional import alias prefix used to qualify default binding function names.
+- `createEngine`, `disposeEngine`, `dispatch`, `stateStream`, `current`: binding function names (typically FRB-generated).
+- `initApp`: optional initialization hook invoked at the start of store initialization (not a substitute for FRB `RustLib.init()` + `initOxide()`).
+- `encodeCurrentState`: optional binding used by the runtime to snapshot/persist bytes.
 
 ## Lifetime / Keep-Alive
 

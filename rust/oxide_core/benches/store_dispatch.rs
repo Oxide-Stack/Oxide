@@ -1,6 +1,6 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
-use oxide_core::{Reducer, ReducerEngine, StateChange};
+use oxide_core::{InitContext, Reducer, ReducerEngine, StateChange};
 
 #[derive(Clone)]
 struct BenchReducer;
@@ -15,11 +15,7 @@ impl Reducer for BenchReducer {
     type Action = BenchAction;
     type SideEffect = ();
 
-    fn init(
-        &mut self,
-        _sideeffect_tx: oxide_core::tokio::sync::mpsc::UnboundedSender<Self::SideEffect>,
-    ) {
-    }
+    async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 
     fn reduce(
         &mut self,
@@ -29,7 +25,7 @@ impl Reducer for BenchReducer {
         match action {
             BenchAction::Increment => {
                 *state = state.saturating_add(1);
-                Ok(StateChange::FullUpdate)
+                Ok(StateChange::Full)
             }
         }
     }
@@ -49,10 +45,17 @@ fn bench_store_dispatch(c: &mut Criterion) {
         .build()
         .expect("failed to build Tokio runtime");
 
-    let engine = {
-        let _guard = runtime.enter();
+    let engine = runtime.block_on(async {
+        fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+            static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+                std::sync::OnceLock::new();
+            POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+        }
+        let _ = oxide_core::runtime::init(thread_pool);
         ReducerEngine::<BenchReducer>::new(BenchReducer, 0)
-    };
+            .await
+            .unwrap()
+    });
 
     c.bench_function("store_dispatch_increment", |b| {
         b.iter(|| {

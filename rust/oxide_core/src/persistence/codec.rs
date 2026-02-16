@@ -1,5 +1,12 @@
-use crate::core::{CoreResult, OxideError};
+use crate::engine::{CoreResult, OxideError};
 
+// Persistence encoding/decoding boundary.
+//
+// Why: persistence needs a stable, ergonomic API that can switch formats via
+// feature flags without changing call sites.
+//
+// How: `encode`/`decode` are gated on `persistence-json` to choose JSON vs bincode
+// while mapping errors into `OxideError::Persistence`.
 #[cfg(not(feature = "persistence-json"))]
 /// Serializes a value to bytes for persistence.
 ///

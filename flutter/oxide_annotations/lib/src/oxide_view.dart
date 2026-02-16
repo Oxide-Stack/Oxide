@@ -1,3 +1,7 @@
+// Generated store UI contract.
+//
+// Why: generated backends need a small, serializable view object that widgets
+// can consume without depending on the underlying engine types.
 /// Lightweight view model used by some Oxide backends.
 ///
 /// This bundles the current derived state, a set of actions, and basic
