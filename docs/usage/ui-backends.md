@@ -7,11 +7,13 @@ At app startup, initialize FRB (your `frb_generated.dart` path may differ depend
 ```dart
 import 'package:flutter/widgets.dart';
 
+import 'src/rust/api/bridge.dart' show initOxide;
 import 'src/rust/frb_generated.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
+  await initOxide();
   runApp(const MyApp());
 }
 ```
@@ -36,11 +38,13 @@ Wrap your app (or a subtree) with the generated scope:
 import 'package:flutter/widgets.dart';
 
 import 'src/oxide.dart';
+import 'src/rust/api/bridge.dart' show initOxide;
 import 'src/rust/frb_generated.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
+  await initOxide();
   runApp(
     AppOxideScope(
       child: const MyApp(),
@@ -105,4 +109,3 @@ This backend generates a `Cubit<OxideView<State, Actions>>` plus an actions faca
 - Build from emitted `OxideView` and dispatch via `cubit.actions`
 
 The recommended way to learn the exact UI wiring is to copy an example and adapt it.
-

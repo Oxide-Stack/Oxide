@@ -15,13 +15,13 @@ In your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxide_core = "0.1.1"
+oxide_core = "0.2.0"
 ```
 
 When working inside this repository, use a combined version + path dependency (Cargo prefers `path` locally, while published crates resolve by `version`):
 
 ```toml
-oxide_core = { version = "0.1.1", path = "../rust/oxide_core" }
+oxide_core = { version = "0.2.0", path = "../rust/oxide_core" }
 ```
 
 ## Core Concepts

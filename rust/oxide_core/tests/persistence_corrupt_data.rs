@@ -56,6 +56,9 @@ async fn persistence_ignores_corrupt_data_and_falls_back_to_initial_state() {
 
     let key = "oxide_core.test.persistence_corrupt_data.v1".to_string();
     let path = oxide_core::persistence::default_persistence_path(&key);
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).expect("create persistence directory");
+    }
     let _ = std::fs::remove_file(&path);
     std::fs::write(&path, [0_u8, 1, 2, 3, 4, 5]).expect("write corrupt persistence bytes");
 

@@ -1,69 +1,128 @@
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:18:1
+   |
+18 | #[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0 }, no_frb)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
+   = note: this error originates in the attribute macro `reducer` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:36
    |
 24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
-   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:5
    |
 24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
+ --> $WORKSPACE/oxide_core/src/engine/store.rs
+  |
+  |     fn init(&mut self, ctx: InitContext<Self::SideEffect>) -> impl std::future::Future<Output = ()> + Send;
+  |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+  |
+help: the trait `SlicedState` is not implemented for `MyState`
+ --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+  |
+4 | pub struct MyState {
+  | ^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
+ --> $WORKSPACE/oxide_core/src/engine/store.rs
+  |
+  |     fn init(&mut self, ctx: InitContext<Self::SideEffect>) -> impl std::future::Future<Output = ()> + Send;
+  |                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+  |
+help: the trait `SlicedState` is not implemented for `MyState`
+ --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+  |
+4 | pub struct MyState {
+  | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:18:1
    |
 18 | #[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0 }, no_frb)]
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
-   = note: this error originates in the attribute macro `reducer` (in Nightly builds, run with -Z macro-backtrace for more info)
-
-error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:18:1
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
    |
-18 | #[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0 }, no_frb)]
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
-
-error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
- --> $WORKSPACE/oxide_core/src/engine/store.rs
-  |
-  |     fn init(&mut self, ctx: InitContext<Self::SideEffect>) -> impl Future<Output = ()> + Send;
-  |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
-
-error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
- --> $WORKSPACE/oxide_core/src/engine/store.rs
-  |
-  |     fn init(&mut self, ctx: InitContext<Self::SideEffect>) -> impl Future<Output = ()> + Send;
-  |                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:60
    |
 24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
-   |                                                            ^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+   |                                                            ^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:28:21
    |
 28 |         state: &mut Self::State,
-   |                     ^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+   |                     ^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:50:22
    |
-50 |         _state: &mut Self::State,
-   |                      ^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+45 |         _state: &mut Self::State,
+   |                      ^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:20:18
    |
 20 |     type State = MyState;
-   |                  ^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+   |                  ^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
 
 error[E0599]: the function or associated item `new` exists for struct `ReducerEngine<MyReducer, _>`, but its trait bounds were not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:18:1
    |
-4  | pub struct MyState {
+ 4 | pub struct MyState {
    | ------------------ doesn't satisfy `MyState: SlicedState`
 ...
 16 | pub struct MyReducer;
@@ -85,7 +144,7 @@ note: the trait `SlicedState` must be implemented
 error[E0599]: the method `dispatch` exists for struct `ReducerEngine<MyReducer, _>`, but its trait bounds were not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:18:1
    |
-4  | pub struct MyState {
+ 4 | pub struct MyState {
    | ------------------ doesn't satisfy `MyState: SlicedState`
 ...
 16 | pub struct MyReducer;
@@ -104,10 +163,18 @@ note: the trait `SlicedState` must be implemented
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    = note: this error originates in the attribute macro `reducer` (in Nightly builds, run with -Z macro-backtrace for more info)
 
+error[E0282]: type annotations needed
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:18:1
+   |
+18 | #[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0 }, no_frb)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ cannot infer type
+   |
+   = note: this error originates in the attribute macro `reducer` (in Nightly builds, run with -Z macro-backtrace for more info)
+
 error[E0599]: the method `current` exists for struct `ReducerEngine<MyReducer, _>`, but its trait bounds were not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:18:1
    |
-4  | pub struct MyState {
+ 4 | pub struct MyState {
    | ------------------ doesn't satisfy `MyState: SlicedState`
 ...
 16 | pub struct MyReducer;
@@ -130,20 +197,37 @@ error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:28:16
    |
 28 |         state: &mut Self::State,
-   |                ^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+   |                ^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:50:17
    |
-50 |         _state: &mut Self::State,
-   |                 ^^^^^^^^^^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+45 |         _state: &mut Self::State,
+   |                 ^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:20:18
    |
 20 |     type State = MyState;
-   |                  ^^^^^^^ the trait `SlicedState` is not implemented for `MyState`
+   |                  ^^^^^^^ unsatisfied trait bound
    |
+help: the trait `SlicedState` is not implemented for `MyState`
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
+   |
+ 4 | pub struct MyState {
+   | ^^^^^^^^^^^^^^^^^^
 note: required by a bound in `_oxide_require_sliced_state`
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:18:1
    |
@@ -154,7 +238,7 @@ note: required by a bound in `_oxide_require_sliced_state`
 error[E0599]: the method `subscribe` exists for struct `ReducerEngine<MyReducer, _>`, but its trait bounds were not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:18:1
    |
-4  | pub struct MyState {
+ 4 | pub struct MyState {
    | ------------------ doesn't satisfy `MyState: SlicedState`
 ...
 18 | #[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0 }, no_frb)]

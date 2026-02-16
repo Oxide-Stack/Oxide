@@ -323,10 +323,34 @@ pub(crate) fn expand_reducer_impl(
         quote! {}
     };
 
+    let engine_new_result_ty = if cfg!(feature = "frb") && include_frb {
+        quote!(Result<Self, oxide_core::OxideError>)
+    } else {
+        quote!(oxide_core::CoreResult<Self>)
+    };
+
+    let engine_dispatch_result_ty = if cfg!(feature = "frb") && include_frb {
+        quote!(Result<#snapshot_ident, oxide_core::OxideError>)
+    } else {
+        quote!(oxide_core::CoreResult<#snapshot_ident>)
+    };
+
+    let engine_persistence_encode_result_ty = if cfg!(feature = "frb") && include_frb {
+        quote!(Result<Vec<u8>, oxide_core::OxideError>)
+    } else {
+        quote!(oxide_core::CoreResult<Vec<u8>>)
+    };
+
+    let engine_persistence_decode_result_ty = if cfg!(feature = "frb") && include_frb {
+        quote!(Result<#state_ty, oxide_core::OxideError>)
+    } else {
+        quote!(oxide_core::CoreResult<#state_ty>)
+    };
+
     let engine_persistence_tokens = if cfg!(feature = "state-persistence") {
         quote! {
             #engine_method_ignore_attr
-            pub async fn encode_current_state(&self) -> oxide_core::CoreResult<Vec<u8>>
+            pub async fn encode_current_state(&self) -> #engine_persistence_encode_result_ty
             where
                 #state_ty: oxide_core::serde::Serialize,
             {
@@ -335,7 +359,7 @@ pub(crate) fn expand_reducer_impl(
             }
 
             #engine_method_ignore_attr
-            pub fn encode_state_value(value: &#state_ty) -> oxide_core::CoreResult<Vec<u8>>
+            pub fn encode_state_value(value: &#state_ty) -> #engine_persistence_encode_result_ty
             where
                 #state_ty: oxide_core::serde::Serialize,
             {
@@ -343,7 +367,7 @@ pub(crate) fn expand_reducer_impl(
             }
 
             #engine_method_ignore_attr
-            pub fn decode_state_value(bytes: &[u8]) -> oxide_core::CoreResult<#state_ty>
+            pub fn decode_state_value(bytes: &[u8]) -> #engine_persistence_decode_result_ty
             where
                 #state_ty: oxide_core::serde::de::DeserializeOwned,
             {
@@ -419,13 +443,13 @@ pub(crate) fn expand_reducer_impl(
 
         impl #engine_ident {
             #engine_method_ignore_attr
-            pub async fn new() -> oxide_core::CoreResult<Self> {
+            pub async fn new() -> #engine_new_result_ty {
                 let inner = (#engine_init_default)?;
                 Ok(Self { inner })
             }
 
             #engine_method_ignore_attr
-            pub async fn dispatch(&self, action: #action_ty) -> oxide_core::CoreResult<#snapshot_ident> {
+            pub async fn dispatch(&self, action: #action_ty) -> #engine_dispatch_result_ty {
                 let snapshot = self.inner.dispatch(action).await?;
                 Ok(snapshot.into())
             }

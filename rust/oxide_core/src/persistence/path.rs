@@ -29,6 +29,7 @@ pub fn default_persistence_path(key: &str) -> PathBuf {
     #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
     {
         let dir = std::env::temp_dir().join("oxide");
+        let _ = std::fs::create_dir_all(&dir);
         return dir.join(file_name);
     }
 
