@@ -27,8 +27,9 @@ default = ["frb"]
 frb = []
 state-persistence = []
 navigation-binding = []
-full = ["frb", "state-persistence"]
+isolated-channels = []
+full = ["frb", "state-persistence", "isolated-channels"]
 
 [dev-dependencies]
 trybuild = "1.0"
-oxide_core = { version = "0.2.0", path = "../oxide_core", features = ["state-persistence"] }
+oxide_core = { version = "0.2.0", path = "../oxide_core", features = ["state-persistence", "isolated-channels"] }

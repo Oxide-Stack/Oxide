@@ -7,10 +7,12 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api/bridge.dart';
+import 'api/isolated_channels_bridge.dart';
 import 'api/navigation_bridge.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
+import 'isolated_channels_demo/channels.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 import 'state/app_action.dart';
 import 'state/app_state.dart';
@@ -28,6 +30,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine;
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_OxideChannelErrorPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_OxideErrorPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError;
 
@@ -37,6 +43,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ArcAppEngine
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine(
+    dynamic raw,
+  );
+
+  @protected
+  OxideChannelError
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
     dynamic raw,
   );
 
@@ -53,8 +65,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FutureOr<bool> Function(String)
+  dco_decode_DartFn_Inputs_String_Output_bool_AnyhowException(dynamic raw);
+
+  @protected
+  Object dco_decode_DartOpaque(dynamic raw);
+
+  @protected
   ArcAppEngine
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine(
+    dynamic raw,
+  );
+
+  @protected
+  OxideChannelError
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
     dynamic raw,
   );
 
@@ -73,6 +98,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<CounterDemoDialogPendingRequest>
+  dco_decode_StreamSink_counter_demo_dialog_pending_request_Sse(dynamic raw);
+
+  @protected
+  RustStreamSink<CounterDemoEvent> dco_decode_StreamSink_counter_demo_event_Sse(
+    dynamic raw,
+  );
+
+  @protected
+  RustStreamSink<CounterDemoOut> dco_decode_StreamSink_counter_demo_out_Sse(
+    dynamic raw,
+  );
+
+  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
@@ -85,10 +124,48 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AppStateSnapshot dco_decode_app_state_snapshot(dynamic raw);
 
   @protected
+  bool dco_decode_bool(dynamic raw);
+
+  @protected
+  CounterDemoDialogResponse dco_decode_box_autoadd_counter_demo_dialog_response(
+    dynamic raw,
+  );
+
+  @protected
+  CounterDemoIn dco_decode_box_autoadd_counter_demo_in(dynamic raw);
+
+  @protected
+  CounterDemoDialogPendingRequest
+  dco_decode_counter_demo_dialog_pending_request(dynamic raw);
+
+  @protected
+  CounterDemoDialogRequest dco_decode_counter_demo_dialog_request(dynamic raw);
+
+  @protected
+  CounterDemoDialogResponse dco_decode_counter_demo_dialog_response(
+    dynamic raw,
+  );
+
+  @protected
+  CounterDemoEvent dco_decode_counter_demo_event(dynamic raw);
+
+  @protected
+  CounterDemoIn dco_decode_counter_demo_in(dynamic raw);
+
+  @protected
+  CounterDemoOut dco_decode_counter_demo_out(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
 
   @protected
+  PlatformInt64 dco_decode_isize(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
 
   @protected
   BigInt dco_decode_u_64(dynamic raw);
@@ -112,6 +189,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  OxideChannelError
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   OxideError
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     SseDeserializer deserializer,
@@ -124,8 +207,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Object sse_decode_DartOpaque(SseDeserializer deserializer);
+
+  @protected
   ArcAppEngine
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  OxideChannelError
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
     SseDeserializer deserializer,
   );
 
@@ -146,6 +238,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<CounterDemoDialogPendingRequest>
+  sse_decode_StreamSink_counter_demo_dialog_pending_request_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<CounterDemoEvent> sse_decode_StreamSink_counter_demo_event_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<CounterDemoOut> sse_decode_StreamSink_counter_demo_out_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
@@ -158,10 +266,52 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AppStateSnapshot sse_decode_app_state_snapshot(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  CounterDemoDialogResponse sse_decode_box_autoadd_counter_demo_dialog_response(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CounterDemoIn sse_decode_box_autoadd_counter_demo_in(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CounterDemoDialogPendingRequest
+  sse_decode_counter_demo_dialog_pending_request(SseDeserializer deserializer);
+
+  @protected
+  CounterDemoDialogRequest sse_decode_counter_demo_dialog_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CounterDemoDialogResponse sse_decode_counter_demo_dialog_response(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CounterDemoEvent sse_decode_counter_demo_event(SseDeserializer deserializer);
+
+  @protected
+  CounterDemoIn sse_decode_counter_demo_in(SseDeserializer deserializer);
+
+  @protected
+  CounterDemoOut sse_decode_counter_demo_out(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
   BigInt sse_decode_u_64(SseDeserializer deserializer);
@@ -176,9 +326,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
-
-  @protected
   void sse_encode_AnyhowException(
     AnyhowException self,
     SseSerializer serializer,
@@ -188,6 +335,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine(
     ArcAppEngine self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    OxideChannelError self,
     SseSerializer serializer,
   );
 
@@ -206,9 +360,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_DartFn_Inputs_String_Output_bool_AnyhowException(
+    FutureOr<bool> Function(String) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_DartOpaque(Object self, SseSerializer serializer);
+
+  @protected
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine(
     ArcAppEngine self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    OxideChannelError self,
     SseSerializer serializer,
   );
 
@@ -232,6 +402,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_counter_demo_dialog_pending_request_Sse(
+    RustStreamSink<CounterDemoDialogPendingRequest> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_counter_demo_event_Sse(
+    RustStreamSink<CounterDemoEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_counter_demo_out_Sse(
+    RustStreamSink<CounterDemoOut> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
@@ -247,13 +435,67 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_counter_demo_dialog_response(
+    CounterDemoDialogResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_counter_demo_in(
+    CounterDemoIn self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_counter_demo_dialog_pending_request(
+    CounterDemoDialogPendingRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_counter_demo_dialog_request(
+    CounterDemoDialogRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_counter_demo_dialog_response(
+    CounterDemoDialogResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_counter_demo_event(
+    CounterDemoEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_counter_demo_in(CounterDemoIn self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_counter_demo_out(
+    CounterDemoOut self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_64(BigInt self, SseSerializer serializer);
@@ -266,9 +508,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -289,6 +528,22 @@ class RustLibWire implements BaseWire {
     int ptr,
   ) => wasmModule
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine(
+        ptr,
+      );
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
         ptr,
       );
 
@@ -322,6 +577,16 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine(
+    int ptr,
+  );
+
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
     int ptr,
   );
 

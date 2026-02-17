@@ -37,3 +37,4 @@ Before creating any Oxide engine, call `initOxide()` after `RustLib.init()` (see
 - Use the generated adapter in UI: [ui-backends.md](./ui-backends.md)
 - Persistence (optional): [persistence.md](./persistence.md)
 - Navigation (Rust-driven): [navigation.md](./navigation.md)
+- Isolated channels (feature-gated): [isolated-channels.md](./isolated-channels.md)

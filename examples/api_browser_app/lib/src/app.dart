@@ -4,6 +4,7 @@ import 'package:oxide_runtime/oxide_runtime.dart';
 
 import '../oxide_generated/routes/route_kind.g.dart';
 import 'home.dart';
+import 'isolated_channels_demo_page.dart';
 import 'oxide.dart';
 
 @OxideRoutePage(RouteKind.splash)
@@ -23,6 +24,22 @@ class ApiBrowserHome extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const Scaffold(body: ApiBrowserCoordinator(child: ApiBrowserView()));
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Oxide API Browser'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ApiBrowserIsolatedChannelsDemoPage()),
+              );
+            },
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: 'Isolated Channels Demo',
+          ),
+        ],
+      ),
+      body: const ApiBrowserCoordinator(child: ApiBrowserView()),
+    );
   }
 }

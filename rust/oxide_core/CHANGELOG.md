@@ -1,3 +1,6 @@
+## Unreleased
+- Add feature-gated isolated channels runtime primitives and error model
+
 ## 0.2.0
 - Reorganize internals under engine/ while preserving public API
 - Reducer init is now async fn init(&mut self, ctx: InitContext<SideEffect>)

@@ -6,6 +6,7 @@ import 'package:oxide_runtime/oxide_runtime.dart';
 
 import 'oxide_generated/navigation/navigation_runtime.g.dart';
 import 'oxide_generated/routes/route_kind.g.dart';
+import 'src/isolated_channels_demo_pane.dart';
 import 'src/oxide.dart';
 import 'src/rust/api/bridge.dart' show initOxide;
 import 'src/rust/frb_generated.dart';
@@ -47,16 +48,17 @@ final class CounterHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Counter (4 Backends)'),
+          title: const Text('Counter (+ Channels Demo)'),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Inherited'),
               Tab(text: 'Hooks'),
               Tab(text: 'Riverpod'),
               Tab(text: 'BLoC'),
+              Tab(text: 'Channels'),
             ],
           ),
         ),
@@ -66,6 +68,7 @@ final class CounterHomeScreen extends StatelessWidget {
             StateBridgeHooksOxideScope(child: _HooksPane()),
             _RiverpodPane(),
             _BlocPane(),
+            IsolatedChannelsDemoPane(),
           ],
         ),
       ),

@@ -21,4 +21,5 @@ fn ui() {
     t.compile_fail("tests/ui/fail_reducer_async_reduce.rs");
     t.compile_fail("tests/ui/fail_reducer_infer_without_sliced_state.rs");
     t.compile_fail("tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs");
+
 }

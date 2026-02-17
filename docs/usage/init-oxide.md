@@ -32,4 +32,4 @@ Future<void> main() async {
 
 - Call `initOxide()` once per app startup (calling multiple times is harmless).
 - Create engines only after `initOxide()` completes.
-
+- If you enable optional feature runtimes (for example, isolated channels or navigation), initialize them from the same Rust `init_oxide()` entrypoint.

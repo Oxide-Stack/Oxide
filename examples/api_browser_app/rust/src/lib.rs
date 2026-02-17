@@ -8,6 +8,9 @@ mod state;
 mod util;
 mod frb_generated;
 
+#[cfg(feature = "isolated-channels")]
+mod isolated_channels_demo;
+
 pub use oxide_core::OxideError;
 
 #[oxide_generator_rs::routes]

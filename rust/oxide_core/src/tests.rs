@@ -177,3 +177,72 @@ async fn engine_processes_sideeffects_and_emits_snapshots() {
     assert_eq!(second.revision, 1);
     assert_eq!(second.state, TestState { value: 1 });
 }
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn callback_runtime_resolves_pending_requests() {
+    crate::init_isolated_channels().unwrap();
+
+    let runtime = std::sync::Arc::new(crate::CallbackRuntime::<u32, u32>::new(8));
+    let runtime_responder = runtime.clone();
+
+    let responder = tokio::spawn(async move {
+        let (id, req) = runtime_responder.recv_request().await.expect("request");
+        runtime_responder
+            .respond(id, req + 1)
+            .await
+            .expect("respond");
+    });
+
+    let out = runtime.invoke(41).await.expect("invoke");
+    assert_eq!(out, 42);
+    responder.await.unwrap();
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn callback_runtime_rejects_unknown_response_ids() {
+    crate::init_isolated_channels().unwrap();
+
+    let runtime = crate::CallbackRuntime::<u32, u32>::new(8);
+    let err = runtime.respond(999, 1).await.unwrap_err();
+    assert_eq!(err, crate::OxideChannelError::UnexpectedResponse);
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn event_channel_delivers_events_to_subscribers() {
+    crate::init_isolated_channels().unwrap();
+
+    let runtime = crate::EventChannelRuntime::<u32>::new(8);
+    let mut rx = runtime.subscribe();
+    runtime.emit(7);
+
+    let next = tokio::time::timeout(std::time::Duration::from_secs(1), rx.recv())
+        .await
+        .expect("recv")
+        .expect("event");
+    assert_eq!(next, 7);
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn incoming_handler_reports_unavailable_when_missing() {
+    crate::init_isolated_channels().unwrap();
+
+    let handler = crate::IncomingHandler::<u32>::new();
+    let err = handler.handle(1).unwrap_err();
+    assert_eq!(err, crate::OxideChannelError::Unavailable);
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn incoming_handler_converts_panics_to_platform_error() {
+    crate::init_isolated_channels().unwrap();
+
+    let handler = crate::IncomingHandler::<u32>::new();
+    handler.register(|_| panic!("boom"));
+
+    let err = handler.handle(1).unwrap_err();
+    assert!(matches!(err, crate::OxideChannelError::PlatformError(_)));
+}

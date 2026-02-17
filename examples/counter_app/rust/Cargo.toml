@@ -25,8 +25,9 @@ tokio = { version = "1", features = ["sync", "rt"] }
 tokio = { version = "1", features = ["sync", "rt", "time"] }
 
 [features]
-default = ["navigation-binding"]
+default = ["navigation-binding", "isolated-channels"]
 navigation-binding = ["oxide_core/navigation-binding", "oxide_generator_rs/navigation-binding"]
+isolated-channels = ["oxide_core/isolated-channels", "oxide_generator_rs/isolated-channels"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

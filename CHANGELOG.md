@@ -1,3 +1,6 @@
+## Unreleased
+- Add feature-gated OxideIsolatedChannels (event channels, callbacking, duplex) and runtime init hooks
+
 ## 0.2.0
 - Add sliced state updates and partial rebuild support across runtimes
 - Add architecture overview and dependency graphs for new contributors

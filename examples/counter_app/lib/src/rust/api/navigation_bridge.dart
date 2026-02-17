@@ -6,12 +6,15 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+/// Initializes the Oxide navigation runtime.
 Future<void> initNavigation() =>
     RustLib.instance.api.crateApiNavigationBridgeInitNavigation();
 
+/// Streams serialized navigation commands emitted by Rust reducers/effects.
 Stream<String> oxideNavCommandsStream() =>
     RustLib.instance.api.crateApiNavigationBridgeOxideNavCommandsStream();
 
+/// Emits a JSON result for a previously issued ticket id.
 Future<void> oxideNavEmitResult({
   required String ticket,
   required String resultJson,
@@ -20,6 +23,7 @@ Future<void> oxideNavEmitResult({
   resultJson: resultJson,
 );
 
+/// Updates the current route context in the Rust navigation runtime.
 Future<void> oxideNavSetCurrentRoute({
   required String kind,
   required String payloadJson,

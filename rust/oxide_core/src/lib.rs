@@ -14,6 +14,10 @@ mod engine;
 /// Typed navigation primitives (Rust-driven, Flutter-native).
 pub mod navigation;
 
+#[cfg(feature = "isolated-channels")]
+/// Transport-only typed Rust ↔ Dart channels.
+pub mod isolated_channels;
+
 /// FFI-oriented utilities.
 pub mod ffi;
 
@@ -35,6 +39,14 @@ pub type ReducerCtx<'a, Input, State, StateSlice = ()> =
 #[cfg(feature = "navigation-binding")]
 pub use engine::{
     NavigationCtx, NavigationRuntime, init_navigation, navigation_runtime,
+};
+
+#[cfg(feature = "isolated-channels")]
+pub use isolated_channels::{
+    CallbackRuntime, EventChannelRuntime, IncomingHandler, OxideCallbacking, OxideChannelError,
+    OxideChannelResult, OxideEventChannel, OxideEventDuplexChannel, ensure_isolated_channels_initialized,
+    init_isolated_channels, isolated_channels_initialized, isolated_channels_runtime,
+    OxideIsolatedChannelsRuntime,
 };
 pub use ffi::watch_receiver_to_stream;
 pub use tokio;

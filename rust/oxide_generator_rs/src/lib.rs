@@ -12,6 +12,8 @@ mod derive;
 mod meta;
 mod reducer;
 mod routes;
+#[cfg(feature = "isolated-channels")]
+mod isolated_channels;
 
 #[proc_macro_attribute]
 /// Marks a struct or enum as an Oxide state type.
@@ -106,5 +108,55 @@ pub fn routes(attr: TokenStream, item: TokenStream) -> TokenStream {
         other => syn::Error::new_spanned(other, "#[routes] can only be applied to a module")
             .to_compile_error()
             .into(),
+    }
+}
+
+#[cfg(feature = "isolated-channels")]
+#[proc_macro_attribute]
+/// Generates glue for an Oxide isolated event channel or duplex channel.
+///
+/// This macro is applied to an `impl OxideEventChannel for <Type>` block (events)
+/// or an `impl OxideEventDuplexChannel for <Type>` block (duplex).
+///
+/// The generated code follows the locked `OxideIsolatedChannels` specification:
+/// predictable send helpers, explicit initialization boundaries, and FRB-friendly
+/// stream endpoints without string-based routing.
+pub fn oxide_event_channel(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(attr as isolated_channels::OxideEventChannelArgs);
+    let input = parse_macro_input!(item as Item);
+    match input {
+        Item::Impl(item_impl) => match isolated_channels::expand_oxide_event_channel(args, item_impl) {
+            Ok(ts) => ts.into(),
+            Err(e) => e.to_compile_error().into(),
+        },
+        other => syn::Error::new_spanned(
+            other,
+            "#[oxide_event_channel] can only be applied to an impl block",
+        )
+        .to_compile_error()
+        .into(),
+    }
+}
+
+#[cfg(feature = "isolated-channels")]
+#[proc_macro_attribute]
+/// Generates glue for an Oxide callback interface (Rust → Dart → Rust).
+///
+/// The macro enforces deterministic request/response binding by variant name:
+/// every `Request::<Variant>` must have a matching `Response::<Variant>`.
+pub fn oxide_callback(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(attr as isolated_channels::OxideCallbackArgs);
+    let input = parse_macro_input!(item as Item);
+    match input {
+        Item::Impl(item_impl) => match isolated_channels::expand_oxide_callback(args, item_impl) {
+            Ok(ts) => ts.into(),
+            Err(e) => e.to_compile_error().into(),
+        },
+        other => syn::Error::new_spanned(
+            other,
+            "#[oxide_callback] can only be applied to an impl block",
+        )
+        .to_compile_error()
+        .into(),
     }
 }
