@@ -15,8 +15,8 @@ In your Rust crate that uses Oxide, enable `isolated-channels` on both crates:
 
 ```toml
 [dependencies]
-oxide_core = { version = "0.2.0", features = ["isolated-channels"] }
-oxide_generator_rs = { version = "0.2.0", features = ["isolated-channels"] }
+oxide_core = { version = "0.3.0", features = ["isolated-channels"] }
+oxide_generator_rs = { version = "0.3.0", features = ["isolated-channels"] }
 ```
 
 Then gate your channel declarations so they do not compile unless explicitly enabled:
@@ -132,4 +132,3 @@ The Oxide runtime package includes optional helpers under:
 `package:oxide_runtime/src/isolated_channels/isolated_channels.dart`
 
 These helpers are not exported from the main `oxide_runtime` library so apps opt in explicitly.
-

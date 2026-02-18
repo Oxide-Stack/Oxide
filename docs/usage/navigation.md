@@ -1,6 +1,6 @@
 # Navigation (Rust-driven)
 
-Oxide navigation is a feature-gated, Rust-driven routing layer that integrates with Flutter-native navigation backends (Navigator 1.0 today).
+Oxide navigation is a feature-gated, Rust-driven routing layer that integrates with Flutter-native navigation backends (Navigator 1.0 and GoRouter).
 
 The goal is to let reducers/effects decide *where to go* while keeping all Flutter-specific navigation details in Dart.
 
@@ -62,6 +62,9 @@ Annotate your app widget and page widgets:
 @OxideApp(navigation: OxideNavigation.navigator())
 class MyApp extends StatefulWidget { ... }
 
+@OxideApp(navigation: OxideNavigation.goRouter())
+class MyRouterApp extends StatefulWidget { ... }
+
 @OxideRoutePage(RouteKind.splash)
 final class SplashScreen extends StatelessWidget { ... }
 
@@ -88,6 +91,32 @@ final handler = NavigatorNavigationHandler<OxideRoute, RouteKind>(
   navigatorKey: navigatorKey,
   kindOf: (r) => r.kind,
   routeBuilders: oxideRouteBuilders,
+);
+
+final runtime = OxideNavigationRuntime<OxideRoute, RouteKind>(
+  commands: rust.oxideNavCommandsStream().map(decodeNavCommand).whereType(),
+  handler: handler,
+  emitResult: (ticket, result) => rust.oxideNavEmitResult(ticket: ticket, resultJson: jsonEncode(result)),
+  setCurrentRoute: (route) => rust.oxideNavSetCurrentRoute(
+    kind: route.kind.asStr,
+    payloadJson: jsonEncode(route.toJson()),
+  ),
+);
+
+oxideNavStart();
+```
+
+Use the runtime coordinator + a handler (GoRouter):
+
+```dart
+import 'package:go_router/go_router.dart';
+import 'src/rust/api/navigation_bridge.dart' as rust;
+
+final handler = GoRouterNavigationHandler<OxideRoute, RouteKind>(
+  router: appRouter,
+  kindOf: (r) => r.kind,
+  locationOf: (r) => routeLocationOf(r),
+  locationOfKind: (kind) => kindLocationOf(kind),
 );
 
 final runtime = OxideNavigationRuntime<OxideRoute, RouteKind>(

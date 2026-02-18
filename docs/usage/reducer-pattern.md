@@ -12,15 +12,15 @@ In your Rust crate (the one FRB will bind to), add dependencies:
 
 ```toml
 [dependencies]
-oxide_core = "0.2.0"
-oxide_generator_rs = "0.2.0"
+oxide_core = "0.3.0"
+oxide_generator_rs = "0.3.0"
 ```
 
 When working inside this repository, use combined version + path dependencies (Cargo prefers `path` locally, while published crates resolve by `version`):
 
 ```toml
-oxide_core = { version = "0.2.0", path = "../rust/oxide_core" }
-oxide_generator_rs = { version = "0.2.0", path = "../rust/oxide_generator_rs" }
+oxide_core = { version = "0.3.0", path = "../rust/oxide_core" }
+oxide_generator_rs = { version = "0.3.0", path = "../rust/oxide_generator_rs" }
 ```
 
 ## Define State, Actions, Reducer

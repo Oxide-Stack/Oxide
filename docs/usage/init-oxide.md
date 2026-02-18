@@ -13,6 +13,10 @@ pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
     crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
   }
   let _ = oxide_core::runtime::init(thread_pool);
+  #[cfg(feature = "navigation-binding")]
+  oxide_core::init_navigation()?;
+  #[cfg(feature = "isolated-channels")]
+  oxide_core::init_isolated_channels()?;
   Ok(())
 }
 ```
@@ -32,4 +36,4 @@ Future<void> main() async {
 
 - Call `initOxide()` once per app startup (calling multiple times is harmless).
 - Create engines only after `initOxide()` completes.
-- If you enable optional feature runtimes (for example, isolated channels or navigation), initialize them from the same Rust `init_oxide()` entrypoint.
+- If you enable optional feature runtimes, initialize them from the same Rust `init_oxide()` entrypoint.
