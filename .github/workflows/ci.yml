@@ -145,6 +145,14 @@ jobs:
             Push-Location $dir
             try {
               Invoke-Native -Command flutter -Args @("pub", "get")
+              if (Test-Path "rust") {
+                Push-Location "rust"
+                try {
+                  Invoke-Native -Command cargo -Args @("build")
+                } finally {
+                  Pop-Location
+                }
+              }
               Invoke-Native -Command dart -Args @("run", "build_runner", "build", "-d")
               Invoke-Native -Command flutter -Args @("test")
               if (Test-Path "integration_test") {
