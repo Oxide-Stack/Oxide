@@ -22,8 +22,12 @@ impl Reducer for ReducerImpl {
 
     async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 
-    fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
-        match action {
+    fn reduce(
+        &mut self,
+        state: &mut Self::State,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+    ) -> CoreResult<StateChange> {
+        match ctx.input {
             Action::Increment => {
                 state.value = state.value.saturating_add(1);
                 Ok(StateChange::Full)
@@ -37,20 +41,28 @@ impl Reducer for ReducerImpl {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> CoreResult<StateChange> {
         Ok(StateChange::None)
     }
 }
 
-#[tokio::test]
-async fn reducer_engine_round_trip() {
+fn init_test_runtime() {
     fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
         static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
             std::sync::OnceLock::new();
         POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
     }
     let _ = oxide_core::runtime::init(thread_pool);
+    #[cfg(feature = "navigation-binding")]
+    {
+        let _ = oxide_core::init_navigation();
+    }
+}
+
+#[tokio::test]
+async fn reducer_engine_round_trip() {
+    init_test_runtime();
 
     let engine = ReducerEngine::<ReducerImpl>::new(ReducerImpl::default(), State { value: 0 })
         .await
@@ -62,12 +74,7 @@ async fn reducer_engine_round_trip() {
 
 #[tokio::test]
 async fn reducer_engine_dispatch_returns_error() {
-    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
-        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
-            std::sync::OnceLock::new();
-        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
-    }
-    let _ = oxide_core::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<ReducerImpl>::new(ReducerImpl::default(), State { value: 0 })
         .await

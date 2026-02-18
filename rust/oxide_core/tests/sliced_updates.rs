@@ -35,9 +35,9 @@ impl Reducer<SlicedStateSlice> for SlicedReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, SlicedStateSlice>,
     ) -> CoreResult<StateChange<SlicedStateSlice>> {
-        match action {
+        match ctx.input {
             SlicedAction::IncA => {
                 state.a = state.a.saturating_add(1);
                 Ok(StateChange::Infer)
@@ -60,7 +60,7 @@ impl Reducer<SlicedStateSlice> for SlicedReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, SlicedStateSlice>,
     ) -> CoreResult<StateChange<SlicedStateSlice>> {
         Ok(StateChange::None)
     }
@@ -83,9 +83,17 @@ fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
     POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
 }
 
+fn init_test_runtime() {
+    let _ = oxide_core::runtime::init(thread_pool);
+    #[cfg(feature = "navigation-binding")]
+    {
+        let _ = oxide_core::init_navigation();
+    }
+}
+
 #[tokio::test]
 async fn infer_emits_changed_slice() {
-    let _ = oxide_core::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<SlicedReducer, SlicedStateSlice>::new(
         SlicedReducer::default(),
@@ -105,7 +113,7 @@ async fn infer_emits_changed_slice() {
 
 #[tokio::test]
 async fn explicit_slices_bypass_inference() {
-    let _ = oxide_core::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<SlicedReducer, SlicedStateSlice>::new(
         SlicedReducer::default(),
@@ -121,7 +129,7 @@ async fn explicit_slices_bypass_inference() {
 
 #[tokio::test]
 async fn full_emits_empty_slices() {
-    let _ = oxide_core::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<SlicedReducer, SlicedStateSlice>::new(
         SlicedReducer::default(),

@@ -1,11 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
+import 'oxide_generated/navigation/navigation_runtime.g.dart';
+import 'oxide_generated/routes/route_kind.g.dart';
+import 'src/isolated_channels_demo_pane.dart';
 import 'src/oxide.dart';
 import 'src/rust/api/bridge.dart' show initOxide;
 import 'src/rust/frb_generated.dart';
@@ -15,37 +16,60 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
   await initOxide();
+  oxideNavStart();
   runApp(const ProviderScope(child: MyApp()));
 }
 
+@OxideApp(navigation: OxideNavigation.navigator())
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: DefaultTabController(
-        length: 4,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Counter (4 Backends)'),
-            bottom: const TabBar(
-              tabs: [
-                Tab(text: 'Inherited'),
-                Tab(text: 'Hooks'),
-                Tab(text: 'Riverpod'),
-                Tab(text: 'BLoC'),
-              ],
-            ),
-          ),
-          body: const TabBarView(
-            children: [
-              StateBridgeOxideScope(child: _InheritedPane()),
-              StateBridgeHooksOxideScope(child: _HooksPane()),
-              _RiverpodPane(),
-              _BlocPane(),
+    return MaterialApp(navigatorKey: oxideNavigatorKey, home: const CounterSplashScreen());
+  }
+}
+
+@OxideRoutePage(RouteKind.splash)
+final class CounterSplashScreen extends ConsumerWidget {
+  const CounterSplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(stateBridgeRiverpodOxideProvider);
+    return const Scaffold(body: Center(child: Text('Loading…')));
+  }
+}
+
+@OxideRoutePage(RouteKind.home)
+final class CounterHomeScreen extends StatelessWidget {
+  const CounterHomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 5,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Counter (+ Channels Demo)'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Inherited'),
+              Tab(text: 'Hooks'),
+              Tab(text: 'Riverpod'),
+              Tab(text: 'BLoC'),
+              Tab(text: 'Channels'),
             ],
           ),
+        ),
+        body: const TabBarView(
+          children: [
+            StateBridgeOxideScope(child: _InheritedPane()),
+            StateBridgeHooksOxideScope(child: _HooksPane()),
+            _RiverpodPane(),
+            _BlocPane(),
+            IsolatedChannelsDemoPane(),
+          ],
         ),
       ),
     );

@@ -51,6 +51,7 @@ pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
     }
 
     let _ = oxide_core::runtime::init(thread_pool);
+    crate::navigation::runtime::init()?;
     Ok(())
 }
 
@@ -73,14 +74,18 @@ impl oxide_core::Reducer for AppRootReducer {
     type Action = AppAction;
     type SideEffect = ();
 
-    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
+    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {
+        if let Ok(runtime) = oxide_core::navigation_runtime() {
+            runtime.push(crate::routes::HomeRoute {});
+        }
+    }
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State, AppStateSlice>,
     ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
-        match action {
+        match ctx.input {
             AppAction::AddTodo { title } => {
                 let trimmed = title.trim();
                 if trimmed.is_empty() {
@@ -98,11 +103,11 @@ impl oxide_core::Reducer for AppRootReducer {
                 Ok(StateChange::Infer)
             }
             AppAction::ToggleTodo { id } => {
-                Self::toggle_todo(state, &id)?;
+                Self::toggle_todo(state, id.as_str())?;
                 Ok(StateChange::Infer)
             }
             AppAction::DeleteTodo { id } => {
-                Self::delete_todo(state, &id)?;
+                Self::delete_todo(state, id.as_str())?;
                 Ok(StateChange::Infer)
             }
         }
@@ -111,7 +116,7 @@ impl oxide_core::Reducer for AppRootReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State, AppStateSlice>,
     ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
         Ok(StateChange::None)
     }

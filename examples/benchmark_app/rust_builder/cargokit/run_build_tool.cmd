@@ -3,21 +3,66 @@ setlocal
 
 setlocal ENABLEDELAYEDEXPANSION
 
-SET BASEDIR=%~dp0
+set "BASEDIR=%~dp0"
+
+if "%CARGOKIT_TOOL_TEMP_DIR%"=="" (
+    set "CARGOKIT_TOOL_TEMP_DIR=%TEMP%\cargokit_build_tool"
+)
+
+set "BUILD_TOOL_PKG_DIR=%BASEDIR%build_tool"
+
+set "DART="
+set "FLUTTER="
+
+if not "%FLUTTER_ROOT%"=="" (
+    if exist "%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart.exe" (
+        set "DART=%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart.exe"
+    ) else if exist "%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart" (
+        set "DART=%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart"
+    )
+)
+
+if "%DART%"=="" (
+    for /f "delims=" %%D in ('where dart 2^>nul') do (
+        set "DART=%%D"
+        goto :dart_found
+    )
+)
+:dart_found
+
+if "%DART%"=="" (
+    for /f "delims=" %%F in ('where flutter 2^>nul') do (
+        set "FLUTTER=%%F"
+        goto :flutter_found
+    )
+)
+:flutter_found
+
+if "%DART%"=="" if not "%FLUTTER%"=="" (
+    for %%I in ("%FLUTTER%") do set "FLUTTER_BIN=%%~dpI"
+    for %%I in ("%FLUTTER_BIN%..") do set "FLUTTER_ROOT=%%~fI"
+    if exist "%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart.exe" (
+        set "DART=%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart.exe"
+    ) else if exist "%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart" (
+        set "DART=%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart"
+    )
+)
+
+if "%DART%"=="" (
+    echo Could not locate Dart SDK. Set FLUTTER_ROOT or add dart.exe to PATH.
+    exit /b 1
+)
 
 if not exist "%CARGOKIT_TOOL_TEMP_DIR%" (
     mkdir "%CARGOKIT_TOOL_TEMP_DIR%"
 )
 cd /D "%CARGOKIT_TOOL_TEMP_DIR%"
 
-SET BUILD_TOOL_PKG_DIR=%BASEDIR%build_tool
-SET DART=%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart
-
 set BUILD_TOOL_PKG_DIR_POSIX=%BUILD_TOOL_PKG_DIR:\=/%
 
 (
     echo name: build_tool_runner
-    echo version: 0.2.0
+    echo version: 0.3.0
     echo publish_to: none
     echo.
     echo environment:

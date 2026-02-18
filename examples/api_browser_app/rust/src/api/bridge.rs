@@ -28,6 +28,7 @@ pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
     }
 
     let _ = oxide_core::runtime::init(thread_pool);
+    crate::navigation::runtime::init()?;
     Ok(())
 }
 
@@ -45,4 +46,3 @@ pub fn get_api_base_url() -> String {
 pub fn reset_api_base_url() {
     *base_url_lock().write().expect("api base url lock") = DEFAULT_API_BASE_URL.to_string();
 }
-

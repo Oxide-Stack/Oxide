@@ -96,9 +96,9 @@ help: the trait `SlicedState` is not implemented for `MyState`
    | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_without_sliced_state.rs:41:22
+  --> tests/ui/fail_reducer_infer_without_sliced_state.rs:46:22
    |
-41 |         _state: &mut Self::State,
+46 |         _state: &mut Self::State,
    |                      ^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`
@@ -206,9 +206,9 @@ help: the trait `SlicedState` is not implemented for `MyState`
    | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_without_sliced_state.rs:41:17
+  --> tests/ui/fail_reducer_infer_without_sliced_state.rs:46:17
    |
-41 |         _state: &mut Self::State,
+46 |         _state: &mut Self::State,
    |                 ^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`

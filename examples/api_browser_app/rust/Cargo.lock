@@ -821,13 +821,15 @@ dependencies = [
 
 [[package]]
 name = "oxide_core"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "base64",
  "flutter_rust_bridge",
  "futures",
  "gloo-timers",
  "js-sys",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "tokio-stream",
@@ -837,7 +839,7 @@ dependencies = [
 
 [[package]]
 name = "oxide_generator_rs"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1111,7 +1113,7 @@ dependencies = [
 
 [[package]]
 name = "rust_lib_api_browser_app"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "flutter_rust_bridge",
  "oxide_core",

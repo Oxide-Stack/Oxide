@@ -33,8 +33,12 @@ impl Reducer for TestReducer {
 
     async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 
-    fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
-        match action {
+    fn reduce(
+        &mut self,
+        state: &mut Self::State,
+        ctx: crate::Context<'_, Self::Action, Self::State, ()>,
+    ) -> CoreResult<StateChange> {
+        match ctx.input {
             TestAction::Increment => {
                 state.value = state.value.saturating_add(1);
                 Ok(StateChange::Full)
@@ -52,23 +56,34 @@ impl Reducer for TestReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        effect: Self::SideEffect,
+        ctx: crate::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> CoreResult<StateChange> {
-        match effect {
-            TestSideEffect::Increment => self.reduce(state, TestAction::Increment),
+        match ctx.input {
+            TestSideEffect::Increment => {
+                state.value = state.value.saturating_add(1);
+                Ok(StateChange::Full)
+            }
             TestSideEffect::Noop => Ok(StateChange::None),
         }
     }
 }
 
-#[tokio::test]
-async fn engine_emits_after_full_update_dispatch() {
+fn init_test_runtime() {
     fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
         static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
             std::sync::OnceLock::new();
         POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
     }
     let _ = crate::runtime::init(thread_pool);
+    #[cfg(feature = "navigation-binding")]
+    {
+        let _ = crate::init_navigation();
+    }
+}
+
+#[tokio::test]
+async fn engine_emits_after_full_update_dispatch() {
+    init_test_runtime();
 
     let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
         .await
@@ -91,12 +106,7 @@ async fn engine_emits_after_full_update_dispatch() {
 
 #[tokio::test]
 async fn engine_does_not_emit_or_bump_revision_on_none() {
-    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
-        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
-            std::sync::OnceLock::new();
-        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
-    }
-    let _ = crate::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
         .await
@@ -117,12 +127,7 @@ async fn engine_does_not_emit_or_bump_revision_on_none() {
 
 #[tokio::test]
 async fn engine_does_not_commit_state_on_error() {
-    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
-        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
-            std::sync::OnceLock::new();
-        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
-    }
-    let _ = crate::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
         .await
@@ -145,12 +150,7 @@ async fn engine_does_not_commit_state_on_error() {
 
 #[tokio::test]
 async fn engine_processes_sideeffects_and_emits_snapshots() {
-    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
-        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
-            std::sync::OnceLock::new();
-        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
-    }
-    let _ = crate::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
         .await
@@ -169,4 +169,100 @@ async fn engine_processes_sideeffects_and_emits_snapshots() {
         .expect("second snapshot");
     assert_eq!(second.revision, 1);
     assert_eq!(second.state, TestState { value: 1 });
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn callback_runtime_resolves_pending_requests() {
+    crate::init_isolated_channels().unwrap();
+
+    let runtime = std::sync::Arc::new(crate::CallbackRuntime::<u32, u32>::new(8));
+    let runtime_responder = runtime.clone();
+
+    let responder = tokio::spawn(async move {
+        let (id, req) = runtime_responder.recv_request().await.expect("request");
+        runtime_responder
+            .respond(id, req + 1)
+            .await
+            .expect("respond");
+    });
+
+    let out = runtime.invoke(41).await.expect("invoke");
+    assert_eq!(out, 42);
+    responder.await.unwrap();
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn callback_runtime_rejects_unknown_response_ids() {
+    crate::init_isolated_channels().unwrap();
+
+    let runtime = crate::CallbackRuntime::<u32, u32>::new(8);
+    let err = runtime.respond(999, 1).await.unwrap_err();
+    assert_eq!(err, crate::OxideChannelError::UnexpectedResponse);
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn event_channel_delivers_events_to_subscribers() {
+    crate::init_isolated_channels().unwrap();
+
+    let runtime = crate::EventChannelRuntime::<u32>::new(8);
+    let mut rx = runtime.subscribe();
+    runtime.emit(7);
+
+    let next = tokio::time::timeout(std::time::Duration::from_secs(1), rx.recv())
+        .await
+        .expect("recv")
+        .expect("event");
+    assert_eq!(next, 7);
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn incoming_handler_reports_unavailable_when_missing() {
+    crate::init_isolated_channels().unwrap();
+
+    let handler = crate::IncomingHandler::<u32>::new();
+    let err = handler.handle(1).unwrap_err();
+    assert_eq!(err, crate::OxideChannelError::Unavailable);
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn incoming_handler_converts_panics_to_platform_error() {
+    crate::init_isolated_channels().unwrap();
+
+    let handler = crate::IncomingHandler::<u32>::new();
+    handler.register(|_| panic!("boom"));
+
+    let err = handler.handle(1).unwrap_err();
+    assert!(matches!(err, crate::OxideChannelError::PlatformError(_)));
+}
+
+#[test]
+fn reducer_default_infer_slices_returns_empty() {
+    let reducer = TestReducer::default();
+    let before = TestState { value: 1 };
+    let after = TestState { value: 2 };
+    let slices = reducer.infer_slices(&before, &after);
+    assert!(slices.is_empty());
+}
+
+#[tokio::test]
+async fn watch_receiver_to_stream_emits_updates() {
+    let (tx, rx) = tokio::sync::watch::channel(1_u32);
+    let mut stream = crate::watch_receiver_to_stream(rx);
+
+    let first = stream.next().await.unwrap();
+    assert_eq!(first, 1);
+
+    tx.send(2).unwrap();
+    let second = stream.next().await.unwrap();
+    assert_eq!(second, 2);
+}
+
+#[test]
+fn test_side_effect_noop_variant_is_constructible() {
+    let _ = TestSideEffect::Noop;
 }

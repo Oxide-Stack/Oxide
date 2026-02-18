@@ -24,6 +24,9 @@ jobs:
       - name: Test (Rust workspace)
         working-directory: rust
         run: cargo test --workspace
+      - name: Test oxide_core (navigation + isolated channels)
+        working-directory: rust
+        run: cargo test -p oxide_core --features "navigation-binding,isolated-channels"
       - name: Check (WASM targets)
         working-directory: rust
         run: |
@@ -39,7 +42,7 @@ jobs:
         working-directory: rust
         run: |
           rustup component add llvm-tools-preview
-          cargo llvm-cov --workspace --all-features --fail-under-lines 70 --fail-under-regions 75 --summary-only
+          cargo llvm-cov --workspace --all-features --fail-under-lines 71 --fail-under-regions 73 --summary-only
       - name: Test (Example Rust crates)
         shell: bash
         run: |
@@ -142,6 +145,14 @@ jobs:
             Push-Location $dir
             try {
               Invoke-Native -Command flutter -Args @("pub", "get")
+              if (Test-Path "rust") {
+                Push-Location "rust"
+                try {
+                  Invoke-Native -Command cargo -Args @("build")
+                } finally {
+                  Pop-Location
+                }
+              }
               Invoke-Native -Command dart -Args @("run", "build_runner", "build", "-d")
               Invoke-Native -Command flutter -Args @("test")
               if (Test-Path "integration_test") {

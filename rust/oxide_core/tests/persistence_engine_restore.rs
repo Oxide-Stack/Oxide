@@ -26,8 +26,12 @@ impl Reducer for ReducerImpl {
 
     async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 
-    fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
-        match action {
+    fn reduce(
+        &mut self,
+        state: &mut Self::State,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+    ) -> CoreResult<StateChange> {
+        match ctx.input {
             Action::Inc => {
                 state.counter = state.counter.saturating_add(1);
                 Ok(StateChange::Full)
@@ -41,7 +45,7 @@ impl Reducer for ReducerImpl {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> CoreResult<StateChange> {
         Ok(StateChange::None)
     }
@@ -55,6 +59,8 @@ async fn persistence_restores_state_across_engines() {
         POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
     }
     let _ = oxide_core::runtime::init(thread_pool);
+    #[cfg(feature = "navigation-binding")]
+    let _ = oxide_core::init_navigation();
 
     let key = "oxide_core.test.persistence_engine_restore.v1".to_string();
     let path = oxide_core::persistence::default_persistence_path(&key);

@@ -33,9 +33,9 @@ impl Reducer for TestReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
     ) -> CoreResult<oxide_core::StateChange> {
-        match action {
+        match ctx.input {
             Action::Inc => {
                 state.value = state.value.saturating_add(1);
             }
@@ -46,7 +46,7 @@ impl Reducer for TestReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
     ) -> CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)
     }
@@ -76,6 +76,8 @@ async fn dispatch_then_encode_decode_snapshot() {
         POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
     }
     let _ = oxide_core::runtime::init(thread_pool);
+    #[cfg(feature = "navigation-binding")]
+    let _ = oxide_core::init_navigation();
 
     let engine = oxide_core::ReducerEngine::<TestReducer>::new(
         TestReducer::default(),

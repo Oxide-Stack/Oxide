@@ -14,6 +14,44 @@ Real-world example that integrates Oxide with a free public API (JSONPlaceholder
 - Intended FRB surface: `init_app`, `init_oxide`, and the three engine + state/action/snapshot type sets.
 - Not part of the FRB surface: reducer implementation structs and side-effect sender plumbing.
 
+## Isolated Channels Demo (Additive)
+
+This example also ships an isolated-channels demo API surface (exercised by the Flutter UI via the “Isolated Channels Demo” toolbar action). It demonstrates:
+
+- Rust → Dart event streaming
+- Rust → Dart → Rust callbacks (request/response)
+- Simple duplex messaging
+
+To try it:
+
+- Run the app and tap the “Isolated Channels Demo” icon in the top app bar.
+
+Generated Dart wrappers live at:
+
+- `lib/src/rust/api/isolated_channels_bridge.dart`
+
+Example usage (from Flutter code):
+
+```dart
+import 'package:api_browser_app/src/rust/api/isolated_channels_bridge.dart' as ch;
+import 'package:api_browser_app/src/rust/isolated_channels_demo/channels.dart';
+
+Future<void> startDemo() async {
+  await ch.initIsolatedChannelsDemo();
+
+  ch.apiBrowserDemoEventsStream().listen((event) {
+    event.when(notify: (message) => print('notify: $message'));
+  });
+
+  ch.apiBrowserDemoDialogRequestsStream().listen((pending) async {
+    await ch.apiBrowserDemoDialogRespond(
+      id: pending.id,
+      response: ApiBrowserDemoDialogResponse.confirm(true),
+    );
+  });
+}
+```
+
 ## Changes Applied
 
 - Fixed broken Rust imports and removed unnecessary “sink” indirection in reducer side-effect wiring.

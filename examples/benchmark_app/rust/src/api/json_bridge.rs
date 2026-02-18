@@ -24,18 +24,18 @@ impl oxide_core::Reducer for JsonRootReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        let (json, iterations) = match action {
+        let (json, iterations) = match ctx.input {
             JsonAction::RunLight { iterations } => (LIGHT_JSON, iterations),
             JsonAction::RunHeavy { iterations } => (HEAVY_JSON, iterations),
         };
 
-        if iterations == 0 {
+        if *iterations == 0 {
             return Ok(oxide_core::StateChange::None);
         }
 
-        for _ in 0..iterations {
+        for _ in 0..*iterations {
             run_json_once(state, json)?;
         }
 
@@ -45,7 +45,7 @@ impl oxide_core::Reducer for JsonRootReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)
     }

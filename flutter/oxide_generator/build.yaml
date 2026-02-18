@@ -5,4 +5,10 @@ builders:
     build_extensions: {".dart": [".oxide.g.dart"]}
     auto_apply: dependents
     build_to: source
+  oxide_navigation:
+    import: "package:oxide_generator/oxide_generator.dart"
+    builder_factories: ["oxideNavigationBuilder"]
+    build_extensions: {"$package$": ["lib/oxide_generated/routes/route_kind.g.dart", "lib/oxide_generated/routes/route_models.g.dart", "lib/oxide_generated/navigation/route_builders.g.dart", "lib/oxide_generated/navigation/navigation_runtime.g.dart"]}
+    auto_apply: dependents
+    build_to: source
 

@@ -9,8 +9,16 @@ pub mod api;
 mod state;
 mod frb_generated;
 
+#[cfg(feature = "isolated-channels")]
+mod isolated_channels_demo;
+
 /// Error type exposed across the FFI boundary.
 pub use oxide_core::OxideError;
+
+#[oxide_generator_rs::routes]
+pub mod routes {
+    include!("routes/mod.rs");
+}
 
 #[cfg(test)]
 mod tests;

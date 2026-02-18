@@ -538,7 +538,7 @@ dependencies = [
 
 [[package]]
 name = "oxide_core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "base64",
  "bincode",
@@ -547,6 +547,7 @@ dependencies = [
  "gloo-timers",
  "js-sys",
  "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "tokio-stream",
@@ -556,7 +557,7 @@ dependencies = [
 
 [[package]]
 name = "oxide_generator_rs"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -664,11 +665,13 @@ checksum = "c08c74e62047bb2de4ff487b251e4a92e24f48745648451635cec7d591162d9f"
 
 [[package]]
 name = "rust_lib_counter_app"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "flutter_rust_bridge",
  "oxide_core",
  "oxide_generator_rs",
+ "serde",
+ "serde_json",
  "tokio",
  "tokio-stream",
 ]

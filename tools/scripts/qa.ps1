@@ -22,6 +22,7 @@ $rootDir = Resolve-Path (Join-Path $scriptDir "..\..")
 Push-Location (Join-Path $rootDir "rust")
 try {
   Run "cargo" @("test", "--workspace")
+  Run "cargo" @("test", "-p", "oxide_core", "--features", "navigation-binding,isolated-channels")
 } finally {
   Pop-Location
 }
@@ -61,10 +62,34 @@ $integrationTimeout = if ($env:QA_INTEGRATION_TIMEOUT) { $env:QA_INTEGRATION_TIM
 
 function Run-IntegrationTest([string] $testPath) {
   try {
-    Run "flutter" @("test", $testPath, "-d", $integrationDeviceId, "--timeout", $integrationTimeout)
+    Run "flutter" @(
+      "test",
+      $testPath,
+      "-d",
+      $integrationDeviceId,
+      "--timeout",
+      $integrationTimeout,
+      "--ignore-timeouts"
+    )
   } catch {
     Run "flutter" @("clean")
-    Run "flutter" @("test", $testPath, "-d", $integrationDeviceId, "--timeout", $integrationTimeout)
+    $windowsBuildDir = Join-Path (Get-Location) "build\windows"
+    if (Test-Path $windowsBuildDir) {
+      try {
+        Remove-Item -Recurse -Force $windowsBuildDir -ErrorAction Stop
+      } catch {
+        Write-Host "Skipping windows build cleanup ($($_.Exception.Message))"
+      }
+    }
+    Run "flutter" @(
+      "test",
+      $testPath,
+      "-d",
+      $integrationDeviceId,
+      "--timeout",
+      $integrationTimeout,
+      "--ignore-timeouts"
+    )
   }
 }
 

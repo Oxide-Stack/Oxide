@@ -1,0 +1,2 @@
+int? currentRssBytes() => null;
+

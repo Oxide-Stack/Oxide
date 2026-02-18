@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -14,7 +15,7 @@ void main() {
   });
 
   testWidgets('Ticker stream updates are wired up', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: MyApp()));
+    await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: TickerHomeScreen())));
     for (var i = 0; i < 50 && find.text('Ticks: 0').evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }

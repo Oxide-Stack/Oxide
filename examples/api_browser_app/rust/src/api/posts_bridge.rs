@@ -43,14 +43,14 @@ impl oxide_core::Reducer for PostsReducer {
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match action {
+        match ctx.input {
             PostsAction::LoadForUser { user_id } => {
-                state.selected_user_id = Some(user_id);
+                state.selected_user_id = Some(*user_id);
                 state.selected_post_id = None;
                 if let Some(tx) = self.sideeffect_tx.as_ref() {
-                    let _ = tx.send(PostsSideEffect::Fetch { user_id });
+                    let _ = tx.send(PostsSideEffect::Fetch { user_id: *user_id });
                 }
                 Ok(StateChange::Full)
             }
@@ -61,7 +61,7 @@ impl oxide_core::Reducer for PostsReducer {
                 Ok(StateChange::None)
             }
             PostsAction::SelectPost { post_id } => {
-                state.selected_post_id = Some(post_id);
+                state.selected_post_id = Some(*post_id);
                 Ok(StateChange::Full)
             }
         }
@@ -70,9 +70,9 @@ impl oxide_core::Reducer for PostsReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        effect: Self::SideEffect,
+        ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match effect {
+        match ctx.input {
             PostsSideEffect::Fetch { user_id } => {
                 state.phase = LoadPhase::Loading;
                 state.posts.clear();
@@ -81,6 +81,7 @@ impl oxide_core::Reducer for PostsReducer {
                 let Some(tx) = self.sideeffect_tx.clone() else {
                     return Ok(StateChange::Full);
                 };
+                let user_id = *user_id;
 
                 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
                 oxide_core::runtime::spawn_local(async move {
@@ -111,10 +112,10 @@ impl oxide_core::Reducer for PostsReducer {
                 Ok(StateChange::Full)
             }
             PostsSideEffect::Loaded { user_id, posts } => {
-                if state.selected_user_id != Some(user_id) {
+                if state.selected_user_id != Some(*user_id) {
                     return Ok(StateChange::None);
                 }
-                state.posts = posts;
+                state.posts = posts.clone();
                 state.phase = LoadPhase::Ready;
                 if state.selected_post_id.is_none() {
                     state.selected_post_id = state.posts.first().map(|p| p.id);
@@ -122,10 +123,9 @@ impl oxide_core::Reducer for PostsReducer {
                 Ok(StateChange::Full)
             }
             PostsSideEffect::Failed { message } => {
-                state.phase = LoadPhase::Error { message };
+                state.phase = LoadPhase::Error { message: message.clone() };
                 Ok(StateChange::Full)
             }
         }
     }
 }
-

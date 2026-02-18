@@ -62,8 +62,31 @@ fn frb_init_app_is_callable() {
 fn reducer_effect_noop_returns_none() {
     let mut reducer = AppRootReducer::default();
     let mut state = AppState::new();
-    let change = Reducer::effect(&mut reducer, &mut state, ())
-        .expect("effect");
+    let input = ();
+    let snapshot = oxide_core::StateSnapshot {
+        revision: 0,
+        state: state.clone(),
+        slices: Vec::new(),
+    };
+
+    #[cfg(feature = "navigation-binding")]
+    let nav_runtime = oxide_core::NavigationRuntime::new();
+    #[cfg(feature = "navigation-binding")]
+    let route_ctx = nav_runtime.current_route_context();
+
+    #[cfg(feature = "navigation-binding")]
+    let ctx = oxide_core::Context {
+        input: &input,
+        state_snapshot: &snapshot,
+        nav: oxide_core::NavigationCtx::new(&nav_runtime, &route_ctx),
+    };
+    #[cfg(not(feature = "navigation-binding"))]
+    let ctx = oxide_core::Context {
+        input: &input,
+        state_snapshot: &snapshot,
+    };
+
+    let change = reducer.effect(&mut state, ctx).expect("effect");
     assert_eq!(change, StateChange::None);
 }
 

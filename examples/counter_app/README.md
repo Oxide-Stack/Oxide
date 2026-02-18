@@ -14,6 +14,44 @@ Minimal example showing basic state management with Oxide + Flutter Rust Bridge 
 - Intended FRB surface: `init_app`, `init_oxide`, the engine type, and the state/action/snapshot types.
 - Not part of the FRB surface: reducer implementation structs and any internal side-effect wiring.
 
+## Isolated Channels Demo (Additive)
+
+This example also ships an isolated-channels demo API surface (feature-gated on the Rust side and exercised by the Flutter UI via the “Channels” tab). It demonstrates:
+
+- Rust → Dart event streaming
+- Rust → Dart → Rust callbacks (request/response)
+- Simple duplex messaging
+
+To try it:
+
+- Run the app, open the “Channels” tab, and press “Start Demo”.
+
+Generated Dart wrappers live at:
+
+- `lib/src/rust/api/isolated_channels_bridge.dart`
+
+Example usage (from Flutter code):
+
+```dart
+import 'package:counter_app/src/rust/api/isolated_channels_bridge.dart' as ch;
+import 'package:counter_app/src/rust/isolated_channels_demo/channels.dart';
+
+Future<void> startDemo() async {
+  await ch.initIsolatedChannelsDemo();
+
+  ch.counterDemoEventsStream().listen((event) {
+    event.when(notify: (message) => print('notify: $message'));
+  });
+
+  ch.counterDemoDialogRequestsStream().listen((pending) async {
+    await ch.counterDemoDialogRespond(
+      id: pending.id,
+      response: CounterDemoDialogResponse.confirm(true),
+    );
+  });
+}
+```
+
 ## Changes Applied
 
 - Hid reducer implementation types from FRB to avoid redundant Dart-visible “reducer” artifacts.

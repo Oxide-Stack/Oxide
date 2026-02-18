@@ -16,19 +16,23 @@ impl oxide_core::Reducer for CounterRootReducer {
     type Action = CounterAction;
     type SideEffect = CounterSideEffect;
 
-    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
+    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {
+        if let Ok(runtime) = oxide_core::navigation_runtime() {
+            runtime.push(crate::routes::HomeRoute {});
+        }
+    }
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        let CounterAction::Run { iterations } = action;
-        if iterations == 0 {
+        let CounterAction::Run { iterations } = ctx.input;
+        if *iterations == 0 {
             return Ok(oxide_core::StateChange::None);
         }
 
-        for _ in 0..iterations {
+        for _ in 0..*iterations {
             state.counter = state.counter.saturating_add(1);
             state.checksum = fnv1a_mix_u64(state.checksum, state.counter);
         }
@@ -39,7 +43,7 @@ impl oxide_core::Reducer for CounterRootReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)
     }

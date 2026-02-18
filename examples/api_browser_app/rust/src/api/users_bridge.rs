@@ -40,14 +40,17 @@ impl oxide_core::Reducer for UsersReducer {
         if let Some(tx) = self.sideeffect_tx.as_ref() {
             let _ = tx.send(UsersSideEffect::Fetch);
         }
+        if let Ok(runtime) = oxide_core::navigation_runtime() {
+            runtime.push(crate::routes::HomeRoute {});
+        }
     }
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match action {
+        match ctx.input {
             UsersAction::Refresh => {
                 if let Some(tx) = self.sideeffect_tx.as_ref() {
                     let _ = tx.send(UsersSideEffect::Fetch);
@@ -55,7 +58,7 @@ impl oxide_core::Reducer for UsersReducer {
                 Ok(StateChange::None)
             }
             UsersAction::SelectUser { user_id } => {
-                state.selected_user_id = Some(user_id);
+                state.selected_user_id = Some(*user_id);
                 Ok(StateChange::Full)
             }
         }
@@ -64,9 +67,9 @@ impl oxide_core::Reducer for UsersReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        effect: Self::SideEffect,
+        ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match effect {
+        match ctx.input {
             UsersSideEffect::Fetch => {
                 state.phase = LoadPhase::Loading;
 
@@ -101,7 +104,7 @@ impl oxide_core::Reducer for UsersReducer {
                 Ok(StateChange::Full)
             }
             UsersSideEffect::Loaded { users } => {
-                state.users = users;
+                state.users = users.clone();
                 state.phase = LoadPhase::Ready;
                 if state.selected_user_id.is_none() {
                     state.selected_user_id = state.users.first().map(|u| u.id);
@@ -109,10 +112,9 @@ impl oxide_core::Reducer for UsersReducer {
                 Ok(StateChange::Full)
             }
             UsersSideEffect::Failed { message } => {
-                state.phase = LoadPhase::Error { message };
+                state.phase = LoadPhase::Error { message: message.clone() };
                 Ok(StateChange::Full)
             }
         }
     }
 }
-

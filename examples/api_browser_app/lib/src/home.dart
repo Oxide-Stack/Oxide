@@ -108,7 +108,9 @@ class _UsersPane extends StatelessWidget {
                   title: Text(user.name),
                   subtitle: Text('@${user.username}'),
                   selected: selected,
-                  onTap: () => unawaited(onSelectUser(userId: user.id)),
+                  onTap: () {
+                    unawaited(onSelectUser(userId: user.id));
+                  },
                 );
               },
             ),

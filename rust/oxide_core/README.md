@@ -15,13 +15,13 @@ In your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxide_core = "0.2.0"
+oxide_core = "0.3.0"
 ```
 
 When working inside this repository, use a combined version + path dependency (Cargo prefers `path` locally, while published crates resolve by `version`):
 
 ```toml
-oxide_core = { version = "0.2.0", path = "../rust/oxide_core" }
+oxide_core = { version = "0.3.0", path = "../rust/oxide_core" }
 ```
 
 ## Core Concepts
@@ -54,8 +54,12 @@ impl Reducer for CounterReducer {
 
   async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
 
-  fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
-    match action {
+  fn reduce(
+    &mut self,
+    state: &mut Self::State,
+    ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+  ) -> CoreResult<StateChange> {
+    match ctx.input {
       CounterAction::Inc => state.value = state.value.saturating_add(1),
     }
     Ok(StateChange::Full)
@@ -64,7 +68,7 @@ impl Reducer for CounterReducer {
   fn effect(
     &mut self,
     _state: &mut Self::State,
-    _effect: Self::SideEffect,
+    _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
   ) -> CoreResult<StateChange> {
     Ok(StateChange::None)
   }
@@ -98,8 +102,12 @@ use oxide_core::ReducerEngine;
 #
 #   async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
 #
-#   fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange> {
-#     match action {
+#   fn reduce(
+#     &mut self,
+#     state: &mut Self::State,
+#     ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+#   ) -> CoreResult<StateChange> {
+#     match ctx.input {
 #       CounterAction::Inc => state.value = state.value.saturating_add(1),
 #     }
 #     Ok(StateChange::Full)
@@ -108,7 +116,7 @@ use oxide_core::ReducerEngine;
 #   fn effect(
 #     &mut self,
 #     _state: &mut Self::State,
-#     _effect: Self::SideEffect,
+#     _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
 #   ) -> CoreResult<StateChange> {
 #     Ok(StateChange::None)
 #   }
@@ -120,6 +128,10 @@ runtime.block_on(async {
     POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
   }
   let _ = oxide_core::runtime::init(thread_pool);
+  #[cfg(feature = "navigation-binding")]
+  {
+    let _ = oxide_core::init_navigation();
+  }
 
   let engine = ReducerEngine::<CounterReducer>::new(CounterReducer::default(), CounterState { value: 0 })
     .await

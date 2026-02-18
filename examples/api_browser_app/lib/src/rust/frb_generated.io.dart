@@ -5,12 +5,15 @@
 
 import 'api/bridge.dart';
 import 'api/comments_bridge.dart';
+import 'api/isolated_channels_bridge.dart';
+import 'api/navigation_bridge.dart';
 import 'api/posts_bridge.dart';
 import 'api/users_bridge.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'frb_generated.dart';
+import 'isolated_channels_demo/channels.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 import 'state/comments_action.dart';
 import 'state/comments_state.dart';
@@ -41,6 +44,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcUsersEnginePtr;
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_OxideChannelErrorPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelErrorPtr;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_OxideErrorPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideErrorPtr;
 
@@ -62,6 +69,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ArcUsersEngine
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcUsersEngine(
+    dynamic raw,
+  );
+
+  @protected
+  OxideChannelError
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
     dynamic raw,
   );
 
@@ -90,6 +103,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FutureOr<bool> Function(String)
+  dco_decode_DartFn_Inputs_String_Output_bool_AnyhowException(dynamic raw);
+
+  @protected
+  Object dco_decode_DartOpaque(dynamic raw);
+
+  @protected
   ArcCommentsEngine
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcCommentsEngine(
     dynamic raw,
@@ -108,10 +128,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  OxideChannelError
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    dynamic raw,
+  );
+
+  @protected
   OxideError
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     dynamic raw,
   );
+
+  @protected
+  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw);
+
+  @protected
+  RustStreamSink<ApiBrowserDemoDialogPendingRequest>
+  dco_decode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
+    dynamic raw,
+  );
+
+  @protected
+  RustStreamSink<ApiBrowserDemoEvent>
+  dco_decode_StreamSink_api_browser_demo_event_Sse(dynamic raw);
+
+  @protected
+  RustStreamSink<ApiBrowserDemoOut>
+  dco_decode_StreamSink_api_browser_demo_out_Sse(dynamic raw);
 
   @protected
   RustStreamSink<CommentsStateSnapshot>
@@ -127,6 +170,39 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String dco_decode_String(dynamic raw);
+
+  @protected
+  ApiBrowserDemoDialogPendingRequest
+  dco_decode_api_browser_demo_dialog_pending_request(dynamic raw);
+
+  @protected
+  ApiBrowserDemoDialogRequest dco_decode_api_browser_demo_dialog_request(
+    dynamic raw,
+  );
+
+  @protected
+  ApiBrowserDemoDialogResponse dco_decode_api_browser_demo_dialog_response(
+    dynamic raw,
+  );
+
+  @protected
+  ApiBrowserDemoEvent dco_decode_api_browser_demo_event(dynamic raw);
+
+  @protected
+  ApiBrowserDemoIn dco_decode_api_browser_demo_in(dynamic raw);
+
+  @protected
+  ApiBrowserDemoOut dco_decode_api_browser_demo_out(dynamic raw);
+
+  @protected
+  bool dco_decode_bool(dynamic raw);
+
+  @protected
+  ApiBrowserDemoDialogResponse
+  dco_decode_box_autoadd_api_browser_demo_dialog_response(dynamic raw);
+
+  @protected
+  ApiBrowserDemoIn dco_decode_box_autoadd_api_browser_demo_in(dynamic raw);
 
   @protected
   CommentsAction dco_decode_box_autoadd_comments_action(dynamic raw);
@@ -153,6 +229,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CommentsStateSnapshot dco_decode_comments_state_snapshot(dynamic raw);
 
   @protected
+  PlatformInt64 dco_decode_isize(dynamic raw);
+
+  @protected
   List<Comment> dco_decode_list_comment(dynamic raw);
 
   @protected
@@ -166,6 +245,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LoadPhase dco_decode_load_phase(dynamic raw);
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
 
   @protected
   BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
@@ -228,6 +310,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  OxideChannelError
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   OxideError
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     SseDeserializer deserializer,
@@ -252,6 +340,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Object sse_decode_DartOpaque(SseDeserializer deserializer);
+
+  @protected
   ArcCommentsEngine
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcCommentsEngine(
     SseDeserializer deserializer,
@@ -270,10 +361,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  OxideChannelError
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   OxideError
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     SseDeserializer deserializer,
   );
+
+  @protected
+  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<ApiBrowserDemoDialogPendingRequest>
+  sse_decode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<ApiBrowserDemoEvent>
+  sse_decode_StreamSink_api_browser_demo_event_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<ApiBrowserDemoOut>
+  sse_decode_StreamSink_api_browser_demo_out_Sse(SseDeserializer deserializer);
 
   @protected
   RustStreamSink<CommentsStateSnapshot>
@@ -291,6 +409,49 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
+
+  @protected
+  ApiBrowserDemoDialogPendingRequest
+  sse_decode_api_browser_demo_dialog_pending_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ApiBrowserDemoDialogRequest sse_decode_api_browser_demo_dialog_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ApiBrowserDemoDialogResponse sse_decode_api_browser_demo_dialog_response(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ApiBrowserDemoEvent sse_decode_api_browser_demo_event(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ApiBrowserDemoIn sse_decode_api_browser_demo_in(SseDeserializer deserializer);
+
+  @protected
+  ApiBrowserDemoOut sse_decode_api_browser_demo_out(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  ApiBrowserDemoDialogResponse
+  sse_decode_box_autoadd_api_browser_demo_dialog_response(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ApiBrowserDemoIn sse_decode_box_autoadd_api_browser_demo_in(
+    SseDeserializer deserializer,
+  );
 
   @protected
   CommentsAction sse_decode_box_autoadd_comments_action(
@@ -321,6 +482,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
+
+  @protected
   List<Comment> sse_decode_list_comment(SseDeserializer deserializer);
 
   @protected
@@ -334,6 +498,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   LoadPhase sse_decode_load_phase(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
   BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
@@ -382,9 +549,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
-
-  @protected
   void sse_encode_AnyhowException(
     AnyhowException self,
     SseSerializer serializer,
@@ -408,6 +572,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcUsersEngine(
     ArcUsersEngine self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    OxideChannelError self,
     SseSerializer serializer,
   );
 
@@ -440,6 +611,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_DartFn_Inputs_String_Output_bool_AnyhowException(
+    FutureOr<bool> Function(String) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_DartOpaque(Object self, SseSerializer serializer);
+
+  @protected
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcCommentsEngine(
     ArcCommentsEngine self,
@@ -462,8 +642,39 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    OxideChannelError self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     OxideError self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_String_Sse(
+    RustStreamSink<String> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
+    RustStreamSink<ApiBrowserDemoDialogPendingRequest> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_api_browser_demo_event_Sse(
+    RustStreamSink<ApiBrowserDemoEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_api_browser_demo_out_Sse(
+    RustStreamSink<ApiBrowserDemoOut> self,
     SseSerializer serializer,
   );
 
@@ -487,6 +698,57 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_api_browser_demo_dialog_pending_request(
+    ApiBrowserDemoDialogPendingRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_api_browser_demo_dialog_request(
+    ApiBrowserDemoDialogRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_api_browser_demo_dialog_response(
+    ApiBrowserDemoDialogResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_api_browser_demo_event(
+    ApiBrowserDemoEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_api_browser_demo_in(
+    ApiBrowserDemoIn self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_api_browser_demo_out(
+    ApiBrowserDemoOut self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_api_browser_demo_dialog_response(
+    ApiBrowserDemoDialogResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_api_browser_demo_in(
+    ApiBrowserDemoIn self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_comments_action(
@@ -528,6 +790,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_comment(List<Comment> self, SseSerializer serializer);
 
   @protected
@@ -544,6 +809,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_load_phase(LoadPhase self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
@@ -592,9 +860,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -711,6 +976,40 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcUsersEngine =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcUsersEnginePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelErrorPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_api_browser_app_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelErrorPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelErrorPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_api_browser_app_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelErrorPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void

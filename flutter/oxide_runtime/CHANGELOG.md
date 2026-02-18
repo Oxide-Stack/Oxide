@@ -1,3 +1,7 @@
+## 0.3.0
+- Add isolated channels Dart runtime (event, callback, duplex) and runtime tests
+- Add navigation runtime APIs and a go_router handler
+
 ## 0.2.0
 - Split runtime core into SRP-focused files while keeping exports stable
 - Implement filterSnapshotsBySlices in Dart runtime for efficient partial rebuilds

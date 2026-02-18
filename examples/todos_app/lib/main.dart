@@ -1,11 +1,11 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
+import 'oxide_generated/navigation/navigation_runtime.g.dart';
+import 'oxide_generated/routes/route_kind.g.dart';
 import 'src/oxide.dart';
 import 'src/rust/api/bridge.dart' show initOxide;
 import 'src/rust/frb_generated.dart';
@@ -15,41 +15,58 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
   await initOxide();
+  oxideNavStart();
   runApp(const ProviderScope(child: MyApp()));
 }
 
+@OxideApp(navigation: OxideNavigation.navigator())
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: DefaultTabController(
-        length: 4,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Todos (4 Backends)'),
-            bottom: const TabBar(
-              tabs: [
-                Tab(text: 'Inherited'),
-                Tab(text: 'Hooks'),
-                Tab(text: 'Riverpod'),
-                Tab(text: 'BLoC'),
-              ],
-            ),
-          ),
-          body: const TabBarView(
-            children: [
-              TodosListInheritedOxideScope(
-                child: TodosNextIdInheritedOxideScope(child: _InheritedPane()),
-              ),
-              TodosListHooksOxideScope(
-                child: TodosNextIdHooksOxideScope(child: _HooksPane()),
-              ),
-              _RiverpodPane(),
-              _BlocPane(),
+    return MaterialApp(navigatorKey: oxideNavigatorKey, home: const TodosSplashScreen());
+  }
+}
+
+@OxideRoutePage(RouteKind.splash)
+final class TodosSplashScreen extends ConsumerWidget {
+  const TodosSplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(todosListRiverpodOxideProvider);
+    return const Scaffold(body: Center(child: Text('Loading…')));
+  }
+}
+
+@OxideRoutePage(RouteKind.home)
+final class TodosHomeScreen extends StatelessWidget {
+  const TodosHomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Todos (4 Backends)'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Inherited'),
+              Tab(text: 'Hooks'),
+              Tab(text: 'Riverpod'),
+              Tab(text: 'BLoC'),
             ],
           ),
+        ),
+        body: const TabBarView(
+          children: [
+            TodosListInheritedOxideScope(child: TodosNextIdInheritedOxideScope(child: _InheritedPane())),
+            TodosListHooksOxideScope(child: TodosNextIdHooksOxideScope(child: _HooksPane())),
+            _RiverpodPane(),
+            _BlocPane(),
+          ],
         ),
       ),
     );
@@ -99,7 +116,11 @@ class _InheritedPaneState extends State<_InheritedPane> {
               final view = listController.oxide;
               final state = view.state;
               if (view.isLoading) return const Center(child: Text('Loading…'));
-              if (view.error != null) return Center(child: Text('Error: ${view.error}', style: const TextStyle(color: Colors.red)));
+              if (view.error != null) {
+                return Center(
+                  child: Text('Error: ${view.error}', style: const TextStyle(color: Colors.red)),
+                );
+              }
               if (state == null) return const Center(child: Text('No state'));
               return _TodosListSection(
                 title: 'Todos (slice: todos)',
@@ -247,10 +268,7 @@ class _TodosListSection extends StatelessWidget {
           const SizedBox(height: 12),
           TextField(
             controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Add Todo Title (must be non-empty)',
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(labelText: 'Add Todo Title (must be non-empty)', border: OutlineInputBorder()),
           ),
           const SizedBox(height: 8),
           FilledButton(
@@ -278,10 +296,7 @@ class _TodosListSection extends StatelessWidget {
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => onDelete(t.id),
-                    icon: const Icon(Icons.delete),
-                  ),
+                  IconButton(onPressed: () => onDelete(t.id), icon: const Icon(Icons.delete)),
                 ],
               ),
             ),

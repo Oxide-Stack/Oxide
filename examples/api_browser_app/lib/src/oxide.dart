@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:oxide_annotations/oxide_annotations.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
 import 'rust/api/comments_bridge.dart' as comments_api;

@@ -2,7 +2,10 @@ use std::sync::{Arc, Mutex as StdMutex};
 
 use tokio::sync::{Mutex, mpsc, watch};
 
-use crate::engine::{CoreResult, InitContext, Reducer, StateChange, StateSnapshot};
+use crate::engine::{Context, CoreResult, InitContext, Reducer, StateChange, StateSnapshot};
+
+#[cfg(feature = "navigation-binding")]
+use crate::engine::{NavigationCtx, navigation_runtime};
 
 #[cfg(feature = "state-persistence")]
 use crate::persistence::{
@@ -209,18 +212,33 @@ where
         action: R::Action,
     ) -> CoreResult<StateSnapshot<R::State, StateSlice>> {
         let mut state = self.shared.state.lock().await;
+        let before_snapshot = StateSnapshot {
+            revision: state.revision,
+            state: state.state.clone(),
+            slices: Vec::new(),
+        };
+
+        #[cfg(feature = "navigation-binding")]
+        let (runtime, route_ctx) = {
+            let runtime = navigation_runtime()?;
+            let route_ctx = runtime.current_route_context();
+            (runtime, route_ctx)
+        };
+
         // Apply reducer logic against a cloned state so failures never partially
         // mutate the committed state.
         let mut next_state = state.state.clone();
-        let change = state.reducer.reduce(&mut next_state, action)?;
+        let ctx = Context {
+            input: &action,
+            state_snapshot: &before_snapshot,
+            #[cfg(feature = "navigation-binding")]
+            nav: NavigationCtx::new(runtime, &route_ctx),
+        };
+        let change = state.reducer.reduce(&mut next_state, ctx)?;
 
         match change {
             // Why: "no externally-visible change" should not spam watchers.
-            StateChange::None => Ok(StateSnapshot {
-                revision: state.revision,
-                state: state.state.clone(),
-                slices: Vec::new(),
-            }),
+            StateChange::None => Ok(before_snapshot),
             StateChange::Full => {
                 state.state = next_state;
                 state.revision = state.revision.saturating_add(1);
@@ -304,8 +322,26 @@ async fn sideeffect_loop<R, StateSlice>(
 {
     while let Some(effect) = rx.recv().await {
         let mut state = shared.state.lock().await;
+        let before_snapshot = StateSnapshot {
+            revision: state.revision,
+            state: state.state.clone(),
+            slices: Vec::new(),
+        };
+
+        #[cfg(feature = "navigation-binding")]
+        let (runtime, route_ctx) = {
+            let runtime = navigation_runtime().expect("navigation runtime initialized");
+            let route_ctx = runtime.current_route_context();
+            (runtime, route_ctx)
+        };
         let mut next_state = state.state.clone();
-        let change = match state.reducer.effect(&mut next_state, effect) {
+        let ctx = Context {
+            input: &effect,
+            state_snapshot: &before_snapshot,
+            #[cfg(feature = "navigation-binding")]
+            nav: NavigationCtx::new(runtime, &route_ctx),
+        };
+        let change = match state.reducer.effect(&mut next_state, ctx) {
             Ok(change) => change,
             Err(_) => {
                 continue;

@@ -34,16 +34,19 @@ impl oxide_core::Reducer for AppRootReducer {
 
     async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>) {
         self.sideeffect_tx = Some(ctx.sideeffect_tx);
+        if let Ok(runtime) = oxide_core::navigation_runtime() {
+            runtime.push(crate::routes::HomeRoute {});
+        }
     }
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State, AppStateSlice>,
     ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
-        match action {
+        match ctx.input {
             AppAction::StartTicker { interval_ms } => {
-                let next_interval = interval_ms.max(1);
+                let next_interval = (*interval_ms).max(1);
                 if state.control.is_running && state.control.interval_ms == next_interval {
                     return Ok(StateChange::None);
                 }
@@ -101,9 +104,9 @@ impl oxide_core::Reducer for AppRootReducer {
     fn effect(
         &mut self,
         state: &mut Self::State,
-        effect: Self::SideEffect,
+        ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State, AppStateSlice>,
     ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
-        match effect {
+        match ctx.input {
             AppSideEffect::AutoTickFromThread => {
                 if !state.control.is_running {
                     return Ok(StateChange::None);
@@ -272,6 +275,7 @@ pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
     }
 
     let _ = oxide_core::runtime::init(thread_pool);
+    crate::navigation::runtime::init()?;
 
     Ok(())
 }

@@ -19,6 +19,7 @@ pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
     }
 
     let _ = oxide_core::runtime::init(thread_pool);
+    crate::navigation::runtime::init()?;
     Ok(())
 }
 
@@ -32,14 +33,18 @@ impl oxide_core::Reducer for AppRootReducer {
     type Action = AppAction;
     type SideEffect = AppSideEffect;
 
-    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
+    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {
+        if let Ok(runtime) = oxide_core::navigation_runtime() {
+            runtime.push(crate::routes::HomeRoute {});
+        }
+    }
 
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        action: Self::Action,
+        ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        match action {
+        match ctx.input {
             AppAction::Increment => {
                 let next = state.counter.saturating_add(1);
                 if next == state.counter {
@@ -69,7 +74,7 @@ impl oxide_core::Reducer for AppRootReducer {
     fn effect(
         &mut self,
         _state: &mut Self::State,
-        _effect: Self::SideEffect,
+        _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)
     }
