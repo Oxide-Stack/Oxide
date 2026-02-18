@@ -59,6 +59,8 @@ async fn persistence_restores_state_across_engines() {
         POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
     }
     let _ = oxide_core::runtime::init(thread_pool);
+    #[cfg(feature = "navigation-binding")]
+    let _ = oxide_core::init_navigation();
 
     let key = "oxide_core.test.persistence_engine_restore.v1".to_string();
     let path = oxide_core::persistence::default_persistence_path(&key);
