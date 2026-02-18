@@ -1,3 +1,6 @@
+## 0.3.0
+- Add navigation codegen builder and refresh metadata
+
 ## 0.2.0
 - Split string-based codegen into SRP-focused modules without changing output
 - Make OxideCodegenConfig slice fields optional when unused

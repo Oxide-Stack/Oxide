@@ -62,7 +62,7 @@ set BUILD_TOOL_PKG_DIR_POSIX=%BUILD_TOOL_PKG_DIR:\=/%
 
 (
     echo name: build_tool_runner
-    echo version: 0.2.0
+    echo version: 0.3.0
     echo publish_to: none
     echo.
     echo environment:

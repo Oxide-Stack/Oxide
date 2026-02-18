@@ -22,7 +22,7 @@ fi
 
 cat << EOF > "pubspec.yaml"
 name: build_tool_runner
-version: 0.2.0
+version: 0.3.0
 publish_to: none
 
 environment:

@@ -1,5 +1,12 @@
-## Unreleased
-- Add feature-gated OxideIsolatedChannels (event channels, callbacking, duplex) and runtime init hooks
+
+
+## 0.3.0
+- Add isolated channels and navigation runtime support across Rust and Flutter packages
+- Add isolated channels and navigation codegen support in Rust/Flutter generators and annotations
+- Expand example apps with navigation routes, isolated-channel demos, and routing benchmarks
+- Improve rust_builder Windows Dart SDK detection and align example build scripts
+- Refresh usage docs for isolated channels, navigation, reducer patterns, persistence, and UI backends
+- Update workspace metadata and root docs for the 0.3.0 release
 
 ## 0.2.0
 - Add sliced state updates and partial rebuild support across runtimes

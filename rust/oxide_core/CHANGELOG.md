@@ -1,5 +1,10 @@
-## Unreleased
-- Add feature-gated isolated channels runtime primitives and error model
+
+
+## 0.3.0
+- Add isolated channels runtime primitives (event, callbacking, duplex) with init plumbing and tests
+- Add navigation runtime/context, route models, typed route traits, and navigation runtime tests
+- Adjust persistence path handling and expand test coverage
+- Remove unused store import
 
 ## 0.2.0
 - Reorganize internals under engine/ while preserving public API

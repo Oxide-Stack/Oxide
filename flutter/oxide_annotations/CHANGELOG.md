@@ -1,3 +1,6 @@
+## 0.3.0
+- Add navigation annotations support and refresh metadata
+
 ## 0.2.0
 - No changes in this release.
 
