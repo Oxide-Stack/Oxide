@@ -239,3 +239,30 @@ async fn incoming_handler_converts_panics_to_platform_error() {
     let err = handler.handle(1).unwrap_err();
     assert!(matches!(err, crate::OxideChannelError::PlatformError(_)));
 }
+
+#[test]
+fn reducer_default_infer_slices_returns_empty() {
+    let reducer = TestReducer::default();
+    let before = TestState { value: 1 };
+    let after = TestState { value: 2 };
+    let slices = reducer.infer_slices(&before, &after);
+    assert!(slices.is_empty());
+}
+
+#[tokio::test]
+async fn watch_receiver_to_stream_emits_updates() {
+    let (tx, rx) = tokio::sync::watch::channel(1_u32);
+    let mut stream = crate::watch_receiver_to_stream(rx);
+
+    let first = stream.next().await.unwrap();
+    assert_eq!(first, 1);
+
+    tx.send(2).unwrap();
+    let second = stream.next().await.unwrap();
+    assert_eq!(second, 2);
+}
+
+#[test]
+fn test_side_effect_noop_variant_is_constructible() {
+    let _ = TestSideEffect::Noop;
+}

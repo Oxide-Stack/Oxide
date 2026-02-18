@@ -7,6 +7,8 @@
 use proc_macro::TokenStream;
 use syn::Item;
 use syn::parse_macro_input;
+#[cfg(test)]
+use std::sync::{Mutex, OnceLock};
 
 mod derive;
 mod meta;
@@ -14,6 +16,8 @@ mod reducer;
 mod routes;
 #[cfg(feature = "isolated-channels")]
 mod isolated_channels;
+#[cfg(test)]
+pub(crate) static TEST_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 #[proc_macro_attribute]
 /// Marks a struct or enum as an Oxide state type.

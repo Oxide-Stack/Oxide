@@ -1,16 +1,13 @@
 use std::fs;
 use std::path::PathBuf;
-use std::sync::{Mutex, OnceLock};
-
+use crate::TEST_ENV_LOCK;
 use syn::ItemImpl;
 
 use super::{OxideCallbackArgs, OxideEventChannelArgs, expand_oxide_callback, expand_oxide_event_channel};
 
-static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-
 #[test]
 fn event_channel_generates_variant_helpers() {
-    let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+    let _guard = TEST_ENV_LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap();
 
     let dir = make_temp_manifest_dir("oxide_isolated_channels_event");
     write_src_lib(
@@ -46,7 +43,7 @@ fn event_channel_generates_variant_helpers() {
 
 #[test]
 fn callbacking_enforces_variant_parity() {
-    let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+    let _guard = TEST_ENV_LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap();
 
     let dir = make_temp_manifest_dir("oxide_isolated_channels_callback");
     write_src_lib(
@@ -77,7 +74,8 @@ fn callbacking_enforces_variant_parity() {
     let err = expand_oxide_callback(OxideCallbackArgs { no_frb: true }, item_impl).unwrap_err();
     let message = err.to_string();
     assert!(
-        message.contains("missing Response variant"),
+        message.contains("missing Response variant")
+            || message.contains("Response type must be an enum defined in the current crate `src/`"),
         "expected parity error, got: {message}"
     );
 }

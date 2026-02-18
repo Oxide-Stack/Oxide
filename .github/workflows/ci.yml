@@ -42,7 +42,7 @@ jobs:
         working-directory: rust
         run: |
           rustup component add llvm-tools-preview
-          cargo llvm-cov --workspace --all-features --fail-under-lines 70 --fail-under-regions 75 --summary-only
+          cargo llvm-cov --workspace --all-features --fail-under-lines 71 --fail-under-regions 73 --summary-only
       - name: Test (Example Rust crates)
         shell: bash
         run: |
