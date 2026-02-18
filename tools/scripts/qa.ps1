@@ -22,6 +22,7 @@ $rootDir = Resolve-Path (Join-Path $scriptDir "..\..")
 Push-Location (Join-Path $rootDir "rust")
 try {
   Run "cargo" @("test", "--workspace")
+  Run "cargo" @("test", "-p", "oxide_core", "--features", "navigation-binding,isolated-channels")
 } finally {
   Pop-Location
 }

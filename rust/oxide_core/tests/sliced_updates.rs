@@ -83,9 +83,17 @@ fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
     POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
 }
 
+fn init_test_runtime() {
+    let _ = oxide_core::runtime::init(thread_pool);
+    #[cfg(feature = "navigation-binding")]
+    {
+        let _ = oxide_core::init_navigation();
+    }
+}
+
 #[tokio::test]
 async fn infer_emits_changed_slice() {
-    let _ = oxide_core::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<SlicedReducer, SlicedStateSlice>::new(
         SlicedReducer::default(),
@@ -105,7 +113,7 @@ async fn infer_emits_changed_slice() {
 
 #[tokio::test]
 async fn explicit_slices_bypass_inference() {
-    let _ = oxide_core::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<SlicedReducer, SlicedStateSlice>::new(
         SlicedReducer::default(),
@@ -121,7 +129,7 @@ async fn explicit_slices_bypass_inference() {
 
 #[tokio::test]
 async fn full_emits_empty_slices() {
-    let _ = oxide_core::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<SlicedReducer, SlicedStateSlice>::new(
         SlicedReducer::default(),

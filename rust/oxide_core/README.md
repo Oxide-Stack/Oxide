@@ -128,6 +128,10 @@ runtime.block_on(async {
     POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
   }
   let _ = oxide_core::runtime::init(thread_pool);
+  #[cfg(feature = "navigation-binding")]
+  {
+    let _ = oxide_core::init_navigation();
+  }
 
   let engine = ReducerEngine::<CounterReducer>::new(CounterReducer::default(), CounterState { value: 0 })
     .await

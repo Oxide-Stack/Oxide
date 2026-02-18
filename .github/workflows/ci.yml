@@ -24,6 +24,9 @@ jobs:
       - name: Test (Rust workspace)
         working-directory: rust
         run: cargo test --workspace
+      - name: Test oxide_core (navigation + isolated channels)
+        working-directory: rust
+        run: cargo test -p oxide_core --features "navigation-binding,isolated-channels"
       - name: Check (WASM targets)
         working-directory: rust
         run: |

@@ -10,6 +10,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 cd "$ROOT_DIR/rust"
 cargo test --workspace
+cargo test -p oxide_core --features "navigation-binding,isolated-channels"
 
 cd "$ROOT_DIR/flutter/oxide_runtime"
 flutter test

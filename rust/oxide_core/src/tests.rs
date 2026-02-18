@@ -68,14 +68,22 @@ impl Reducer for TestReducer {
     }
 }
 
-#[tokio::test]
-async fn engine_emits_after_full_update_dispatch() {
+fn init_test_runtime() {
     fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
         static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
             std::sync::OnceLock::new();
         POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
     }
     let _ = crate::runtime::init(thread_pool);
+    #[cfg(feature = "navigation-binding")]
+    {
+        let _ = crate::init_navigation();
+    }
+}
+
+#[tokio::test]
+async fn engine_emits_after_full_update_dispatch() {
+    init_test_runtime();
 
     let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
         .await
@@ -98,12 +106,7 @@ async fn engine_emits_after_full_update_dispatch() {
 
 #[tokio::test]
 async fn engine_does_not_emit_or_bump_revision_on_none() {
-    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
-        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
-            std::sync::OnceLock::new();
-        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
-    }
-    let _ = crate::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
         .await
@@ -124,12 +127,7 @@ async fn engine_does_not_emit_or_bump_revision_on_none() {
 
 #[tokio::test]
 async fn engine_does_not_commit_state_on_error() {
-    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
-        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
-            std::sync::OnceLock::new();
-        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
-    }
-    let _ = crate::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
         .await
@@ -152,12 +150,7 @@ async fn engine_does_not_commit_state_on_error() {
 
 #[tokio::test]
 async fn engine_processes_sideeffects_and_emits_snapshots() {
-    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
-        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
-            std::sync::OnceLock::new();
-        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
-    }
-    let _ = crate::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
         .await

@@ -47,14 +47,22 @@ impl Reducer for ReducerImpl {
     }
 }
 
-#[tokio::test]
-async fn reducer_engine_round_trip() {
+fn init_test_runtime() {
     fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
         static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
             std::sync::OnceLock::new();
         POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
     }
     let _ = oxide_core::runtime::init(thread_pool);
+    #[cfg(feature = "navigation-binding")]
+    {
+        let _ = oxide_core::init_navigation();
+    }
+}
+
+#[tokio::test]
+async fn reducer_engine_round_trip() {
+    init_test_runtime();
 
     let engine = ReducerEngine::<ReducerImpl>::new(ReducerImpl::default(), State { value: 0 })
         .await
@@ -66,12 +74,7 @@ async fn reducer_engine_round_trip() {
 
 #[tokio::test]
 async fn reducer_engine_dispatch_returns_error() {
-    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
-        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
-            std::sync::OnceLock::new();
-        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
-    }
-    let _ = oxide_core::runtime::init(thread_pool);
+    init_test_runtime();
 
     let engine = ReducerEngine::<ReducerImpl>::new(ReducerImpl::default(), State { value: 0 })
         .await
