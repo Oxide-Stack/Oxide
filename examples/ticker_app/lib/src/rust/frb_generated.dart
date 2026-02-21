@@ -403,7 +403,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           },
           codec: SseCodec(
             decodeSuccessData: sse_decode_unit,
-            decodeErrorData: null,
+            decodeErrorData:
+                sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
           ),
           constMeta: kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta,
           argValues: [sink],
@@ -635,6 +636,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return AppAction_EmitSideEffectTick();
       case 5:
         return AppAction_Reset();
+      case 6:
+        return AppAction_OpenConfirm(title: dco_decode_String(raw[1]));
+      case 7:
+        return AppAction_Pop();
+      case 8:
+        return AppAction_PopUntilHome();
+      case 9:
+        return AppAction_ResetStack();
       default:
         throw Exception("unreachable");
     }
@@ -684,6 +693,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
   int dco_decode_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -702,14 +717,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_bool(raw);
+  }
+
+  @protected
   TickState dco_decode_tick_state(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return TickState(
       ticks: dco_decode_u_64(arr[0]),
       lastTickSource: dco_decode_String(arr[1]),
+      lastConfirmed: dco_decode_opt_box_autoadd_bool(arr[2]),
     );
   }
 
@@ -858,6 +880,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return AppAction_EmitSideEffectTick();
       case 5:
         return AppAction_Reset();
+      case 6:
+        var var_title = sse_decode_String(deserializer);
+        return AppAction_OpenConfirm(title: var_title);
+      case 7:
+        return AppAction_Pop();
+      case 8:
+        return AppAction_PopUntilHome();
+      case 9:
+        return AppAction_ResetStack();
       default:
         throw UnimplementedError('');
     }
@@ -904,6 +935,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_bool(deserializer));
+  }
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getInt32();
@@ -931,11 +968,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_bool(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   TickState sse_decode_tick_state(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_ticks = sse_decode_u_64(deserializer);
     var var_lastTickSource = sse_decode_String(deserializer);
-    return TickState(ticks: var_ticks, lastTickSource: var_lastTickSource);
+    var var_lastConfirmed = sse_decode_opt_box_autoadd_bool(deserializer);
+    return TickState(
+      ticks: var_ticks,
+      lastTickSource: var_lastTickSource,
+      lastConfirmed: var_lastConfirmed,
+    );
   }
 
   @protected
@@ -1105,6 +1158,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(4, serializer);
       case AppAction_Reset():
         sse_encode_i_32(5, serializer);
+      case AppAction_OpenConfirm(title: final title):
+        sse_encode_i_32(6, serializer);
+        sse_encode_String(title, serializer);
+      case AppAction_Pop():
+        sse_encode_i_32(7, serializer);
+      case AppAction_PopUntilHome():
+        sse_encode_i_32(8, serializer);
+      case AppAction_ResetStack():
+        sse_encode_i_32(9, serializer);
     }
   }
 
@@ -1151,6 +1213,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self, serializer);
+  }
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
@@ -1179,10 +1247,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_bool(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_tick_state(TickState self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.ticks, serializer);
     sse_encode_String(self.lastTickSource, serializer);
+    sse_encode_opt_box_autoadd_bool(self.lastConfirmed, serializer);
   }
 
   @protected

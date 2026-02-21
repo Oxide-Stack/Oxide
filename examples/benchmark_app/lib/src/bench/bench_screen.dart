@@ -8,11 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import '../../oxide_generated/routes/route_kind.g.dart';
+import '../../oxide_generated/routes/route_models.g.dart';
 import '../oxide.dart';
 import '../rust/api/bridge.dart' show openCharts;
+import 'bench_detail.dart';
 import 'bench_charts.dart';
 import 'bench_models.dart';
+import 'routing_bench_screen.dart';
 import 'workloads.dart';
 
 final class _Inputs {
@@ -103,20 +105,69 @@ final class _BenchChartsArgs {
 
 _BenchChartsArgs? _benchChartsArgs;
 
-@OxideRoutePage(RouteKind.splash)
+@OxideRoutePage('Splash')
 final class BenchSplashScreen extends ConsumerWidget {
-  const BenchSplashScreen({super.key});
+  const BenchSplashScreen({super.key, required this.route});
+
+  final SplashRoute route;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(benchCounterRiverpodOxideProvider);
-    return const Scaffold(body: Center(child: Text('Loading…')));
+    return Scaffold(
+      body: Center(
+        child: Semantics(
+          label: 'Loading',
+          child: const CircularProgressIndicator(),
+        ),
+      ),
+    );
   }
 }
 
-@OxideRoutePage(RouteKind.home)
+class _LoadingView extends StatelessWidget {
+  const _LoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Semantics(
+        label: 'Loading',
+        child: const CircularProgressIndicator(),
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView(this.title, this.error);
+
+  final String title;
+  final Object? error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text('$error', textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+@OxideRoutePage('Home')
 final class BenchHomeScreen extends StatelessWidget {
-  const BenchHomeScreen({super.key});
+  const BenchHomeScreen({super.key, required this.route});
+
+  final HomeRoute route;
 
   @override
   Widget build(BuildContext context) {
@@ -124,9 +175,11 @@ final class BenchHomeScreen extends StatelessWidget {
   }
 }
 
-@OxideRoutePage(RouteKind.charts)
+@OxideRoutePage('Charts')
 final class BenchChartsScreen extends StatelessWidget {
-  const BenchChartsScreen({super.key});
+  const BenchChartsScreen({super.key, required this.route});
+
+  final ChartsRoute route;
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +188,37 @@ final class BenchChartsScreen extends StatelessWidget {
       return const Scaffold(body: Center(child: Text('Missing chart args')));
     }
     return _ChartsView(samplesByVariant: args.samplesByVariant, iterations: args.iterations, samples: args.samples, warmup: args.warmup);
+  }
+}
+
+@OxideRoutePage('RoutingBench')
+final class RoutingBenchPage extends StatelessWidget {
+  const RoutingBenchPage({super.key, required this.route});
+
+  final RoutingBenchRoute route;
+
+  @override
+  Widget build(BuildContext context) {
+    return const RoutingBenchScreen();
+  }
+}
+
+@OxideRoutePage('BenchDetail')
+final class BenchDetailPage extends StatelessWidget {
+  const BenchDetailPage({super.key, required this.route});
+
+  final BenchDetailRoute route;
+
+  @override
+  Widget build(BuildContext context) {
+    final raw = route.id;
+    final id = switch (raw) {
+      int() => raw,
+      BigInt() => raw.toInt(),
+      String() => int.tryParse(raw) ?? 0,
+      _ => 0,
+    };
+    return BenchDetailScreen(id: id);
   }
 }
 
@@ -184,8 +268,8 @@ final class _BenchScreenState extends State<_BenchScreen> {
           future: _inputs,
           builder: (context, snap) {
             if (!snap.hasData) {
-              if (snap.hasError) return Center(child: Text('Error loading assets: ${snap.error}'));
-              return const Center(child: CircularProgressIndicator());
+              if (snap.hasError) return _ErrorView('Error loading assets', snap.error);
+              return const _LoadingView();
             }
             return _BenchDashboard(inputs: snap.data!);
           },

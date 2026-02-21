@@ -16,7 +16,7 @@ pub fn init_navigation() -> CoreResult<()> {
 
 /// Returns the global navigation runtime if initialized.
 pub fn navigation_runtime() -> CoreResult<&'static NavigationRuntime> {
-    NAVIGATION.get().ok_or_else(|| OxideError::Internal {
-        message: "navigation runtime not initialized; call init_navigation() first".into(),
+    NAVIGATION.get().ok_or_else(|| OxideError::Validation {
+        message: "navigation runtime not initialized; call init_navigation() (or init_engine_globals()) first".into(),
     })
 }

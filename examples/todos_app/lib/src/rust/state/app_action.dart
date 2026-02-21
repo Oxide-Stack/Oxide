@@ -22,4 +22,9 @@ sealed class AppAction with _$AppAction {
   /// Delete the todo with the given ID.
   const factory AppAction.deleteTodo({required String id}) =
       AppAction_DeleteTodo;
+  const factory AppAction.openConfirm({required String title}) =
+      AppAction_OpenConfirm;
+  const factory AppAction.pop() = AppAction_Pop;
+  const factory AppAction.popUntilHome() = AppAction_PopUntilHome;
+  const factory AppAction.resetStack() = AppAction_ResetStack;
 }

@@ -21,6 +21,7 @@ enum TestAction {
 enum TestSideEffect {
     Increment,
     Noop,
+    Fail,
 }
 
 #[derive(Default)]
@@ -64,6 +65,12 @@ impl Reducer for TestReducer {
                 Ok(StateChange::Full)
             }
             TestSideEffect::Noop => Ok(StateChange::None),
+            TestSideEffect::Fail => {
+                state.value = state.value.saturating_add(1);
+                Err(OxideError::Internal {
+                    message: "effect boom".to_string(),
+                })
+            }
         }
     }
 }
@@ -169,6 +176,115 @@ async fn engine_processes_sideeffects_and_emits_snapshots() {
         .expect("second snapshot");
     assert_eq!(second.revision, 1);
     assert_eq!(second.state, TestState { value: 1 });
+}
+
+#[tokio::test]
+async fn engine_reports_sideeffect_errors_and_does_not_commit() {
+    init_test_runtime();
+
+    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
+        .await
+        .unwrap();
+    let tx = engine.sideeffect_sender();
+    let mut error_stream = WatchStream::new(engine.subscribe_errors());
+
+    let first = error_stream.next().await.expect("first error value");
+    assert!(first.is_none());
+
+    tx.send(TestSideEffect::Fail).unwrap();
+    let err = tokio::time::timeout(std::time::Duration::from_secs(1), error_stream.next())
+        .await
+        .expect("side-effect error")
+        .expect("error update")
+        .expect("some error");
+    assert!(err.to_string().contains("effect boom"));
+
+    let after = engine.current().await;
+    assert_eq!(after.revision, 0);
+    assert_eq!(after.state, TestState { value: 0 });
+}
+
+#[cfg(feature = "state-persistence")]
+#[tokio::test]
+async fn engine_reports_persistence_encode_failures() {
+    use crate::persistence::PersistenceConfig;
+    use crate::serde::{Deserialize, Serialize};
+
+    #[derive(Clone)]
+    struct BadState;
+
+    impl Serialize for BadState {
+        fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: crate::serde::Serializer,
+        {
+            use crate::serde::ser::Error as _;
+            Err(S::Error::custom("boom"))
+        }
+    }
+
+    impl<'de> Deserialize<'de> for BadState {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: crate::serde::Deserializer<'de>,
+        {
+            let _ = crate::serde::de::IgnoredAny::deserialize(deserializer)?;
+            Ok(BadState)
+        }
+    }
+
+    #[derive(Default)]
+    struct BadReducer;
+
+    impl Reducer for BadReducer {
+        type State = BadState;
+        type Action = ();
+        type SideEffect = ();
+
+        async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
+
+        fn reduce(
+            &mut self,
+            _state: &mut Self::State,
+            _ctx: crate::Context<'_, Self::Action, Self::State, ()>,
+        ) -> CoreResult<StateChange> {
+            Ok(StateChange::Full)
+        }
+
+        fn effect(
+            &mut self,
+            _state: &mut Self::State,
+            _ctx: crate::Context<'_, Self::SideEffect, Self::State, ()>,
+        ) -> CoreResult<StateChange> {
+            Ok(StateChange::None)
+        }
+    }
+
+    init_test_runtime();
+
+    let engine = ReducerEngine::<BadReducer>::new_persistent(
+        BadReducer::default(),
+        BadState,
+        PersistenceConfig {
+            key: "oxide_core_test_bad_state".to_string(),
+            min_interval: std::time::Duration::from_millis(0),
+        },
+    )
+    .await
+    .unwrap();
+
+    let mut error_stream = WatchStream::new(engine.subscribe_errors());
+    let first = error_stream.next().await.expect("first error value");
+    assert!(first.is_none());
+
+    let _ = engine.dispatch(()).await.unwrap();
+    let err = tokio::time::timeout(std::time::Duration::from_secs(1), error_stream.next())
+        .await
+        .expect("persistence error")
+        .expect("error update")
+        .expect("some error");
+    assert!(matches!(err, OxideError::Persistence { .. }));
+    assert!(err.to_string().contains("boom"));
 }
 
 #[cfg(feature = "isolated-channels")]

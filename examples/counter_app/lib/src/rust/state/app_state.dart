@@ -7,19 +7,21 @@ import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 ///oxide:state
-///oxide:meta:{"kind":"state","name":"AppState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)"],"fields":[{"name":"counter","ty":"u64"}],"variants":null}
+///oxide:meta:{"kind":"state","name":"AppState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)"],"fields":[{"name":"counter","ty":"u64"},{"name":"last_confirmed","ty":"Option < bool >"}],"variants":null}
 class AppState {
   final BigInt counter;
+  final bool? lastConfirmed;
 
-  const AppState({required this.counter});
+  const AppState({required this.counter, this.lastConfirmed});
 
   @override
-  int get hashCode => counter.hashCode;
+  int get hashCode => counter.hashCode ^ lastConfirmed.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is AppState &&
           runtimeType == other.runtimeType &&
-          counter == other.counter;
+          counter == other.counter &&
+          lastConfirmed == other.lastConfirmed;
 }

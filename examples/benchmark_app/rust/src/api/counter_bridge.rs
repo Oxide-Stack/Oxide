@@ -18,7 +18,7 @@ impl oxide_core::Reducer for CounterRootReducer {
 
     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {
         if let Ok(runtime) = oxide_core::navigation_runtime() {
-            runtime.push(crate::routes::HomeRoute {});
+            let _ = runtime.push(crate::routes::HomeRoute {});
         }
     }
 

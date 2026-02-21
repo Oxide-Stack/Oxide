@@ -16,6 +16,8 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
     required this.handler,
     required this.emitResult,
     required this.setCurrentRoute,
+    this.onCommandError,
+    this.onStreamError,
   });
 
   /// Stream of commands emitted by Rust.
@@ -30,11 +32,29 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
   /// Callback invoked to keep Rust route context in sync.
   final Future<void> Function(RouteT route) setCurrentRoute;
 
-  StreamSubscription<OxideNavigationCommand<RouteT, KindT>>? _sub;
+  /// Callback invoked when executing a decoded navigation command fails.
+  final void Function(
+    Object error,
+    StackTrace stackTrace,
+    OxideNavigationCommand<RouteT, KindT> cmd,
+  )? onCommandError;
+
+  /// Callback invoked when the command stream itself errors (decode/transport layer).
+  final void Function(Object error, StackTrace stackTrace)? onStreamError;
+
+  StreamSubscription<void>? _sub;
 
   /// Starts processing navigation commands.
   void start() {
-    _sub ??= commands.listen(_handle);
+    _sub ??= commands
+        .asyncMap(_handleSafely)
+        .listen((_) {}, onError: (Object error, StackTrace stackTrace) {
+      if (onStreamError != null) {
+        onStreamError!(error, stackTrace);
+        return;
+      }
+      Zone.current.handleUncaughtError(error, stackTrace);
+    });
   }
 
   /// Stops processing navigation commands.
@@ -42,6 +62,18 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
     final sub = _sub;
     _sub = null;
     await sub?.cancel();
+  }
+
+  Future<void> _handleSafely(OxideNavigationCommand<RouteT, KindT> cmd) async {
+    try {
+      await _handle(cmd);
+    } catch (error, stackTrace) {
+      if (onCommandError != null) {
+        onCommandError!(error, stackTrace, cmd);
+        return;
+      }
+      Zone.current.handleUncaughtError(error, stackTrace);
+    }
   }
 
   Future<void> _handle(OxideNavigationCommand<RouteT, KindT> cmd) async {
@@ -67,4 +99,3 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
     }
   }
 }
-

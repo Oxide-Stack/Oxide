@@ -17,16 +17,25 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
     required this.navigatorKey,
     required this.kindOf,
     required this.routeBuilders,
+    this.navigatorWaitTimeout = const Duration(seconds: 10),
   });
 
   final GlobalKey<NavigatorState> navigatorKey;
   final KindT Function(RouteT route) kindOf;
   final Map<KindT, Widget Function(BuildContext context, RouteT route)> routeBuilders;
+  final Duration navigatorWaitTimeout;
 
   Future<NavigatorState> _waitForNavigator() async {
+    final deadline = DateTime.now().add(navigatorWaitTimeout);
     while (true) {
       final navigator = navigatorKey.currentState;
       if (navigator != null) return navigator;
+      if (DateTime.now().isAfter(deadline)) {
+        throw StateError(
+          'Timed out waiting for NavigatorState. '
+          'Ensure your app wires the Oxide navigatorKey into MaterialApp/CupertinoApp.',
+        );
+      }
       await WidgetsBinding.instance.endOfFrame;
     }
   }
@@ -57,8 +66,12 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
       return;
     }
     unawaited(() async {
-      final navigator = await _waitForNavigator();
-      navigator.pop<Object?>(result);
+      try {
+        final navigator = await _waitForNavigator();
+        navigator.pop<Object?>(result);
+      } catch (error, stackTrace) {
+        Zone.current.handleUncaughtError(error, stackTrace);
+      }
     }());
   }
 
@@ -71,9 +84,13 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
       return;
     }
     unawaited(() async {
-      final navigator = await _waitForNavigator();
-      final targetName = kind.toString();
-      navigator.popUntil((route) => route.settings.name == targetName || route.isFirst);
+      try {
+        final navigator = await _waitForNavigator();
+        final targetName = kind.toString();
+        navigator.popUntil((route) => route.settings.name == targetName || route.isFirst);
+      } catch (error, stackTrace) {
+        Zone.current.handleUncaughtError(error, stackTrace);
+      }
     }());
   }
 
@@ -89,12 +106,16 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
       return;
     }
     unawaited(() async {
-      final navigator = await _waitForNavigator();
-      if (routes.isEmpty) {
-        navigator.popUntil((r) => r.isFirst);
-        return;
+      try {
+        final navigator = await _waitForNavigator();
+        if (routes.isEmpty) {
+          navigator.popUntil((r) => r.isFirst);
+          return;
+        }
+        await _resetAsync(navigator, routes);
+      } catch (error, stackTrace) {
+        Zone.current.handleUncaughtError(error, stackTrace);
       }
-      await _resetAsync(navigator, routes);
     }());
   }
 

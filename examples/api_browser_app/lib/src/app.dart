@@ -1,25 +1,28 @@
+import 'package:api_browser_app/oxide_generated/routes/route_kind.g.dart' show RouteKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
-
-import '../oxide_generated/routes/route_kind.g.dart';
 import 'home.dart';
 import 'isolated_channels_demo_page.dart';
 import 'oxide.dart';
 
-@OxideRoutePage(RouteKind.splash)
+@OxideRoutePage('Splash')
 final class ApiBrowserSplashScreen extends ConsumerWidget {
   const ApiBrowserSplashScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(usersRiverpodOxideProvider);
-    return const Scaffold(body: Center(child: Text('Loading…')));
+    return Scaffold(
+      body: Center(
+        child: Semantics(label: 'Loading', child: const CircularProgressIndicator()),
+      ),
+    );
   }
 }
 
 @OxideRoutePage(RouteKind.home)
-class ApiBrowserHome extends ConsumerWidget {
+final class ApiBrowserHome extends ConsumerWidget {
   const ApiBrowserHome({super.key});
 
   @override
@@ -30,9 +33,7 @@ class ApiBrowserHome extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ApiBrowserIsolatedChannelsDemoPage()),
-              );
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ApiBrowserIsolatedChannelsDemoPage()));
             },
             icon: const Icon(Icons.swap_horiz),
             tooltip: 'Isolated Channels Demo',

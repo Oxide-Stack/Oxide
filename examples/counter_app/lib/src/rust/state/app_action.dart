@@ -5,7 +5,20 @@
 
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+part 'app_action.freezed.dart';
 
-///oxide:actions
-///oxide:meta:{"kind":"actions","name":"AppAction","docs":[],"variants":[{"name":"Increment","docs":[],"fields":[]},{"name":"Decrement","docs":[],"fields":[]},{"name":"Reset","docs":[],"fields":[]}]}
-enum AppAction { increment, decrement, reset }
+@freezed
+sealed class AppAction with _$AppAction {
+  const AppAction._();
+
+  const factory AppAction.increment() = AppAction_Increment;
+  const factory AppAction.decrement() = AppAction_Decrement;
+  const factory AppAction.reset() = AppAction_Reset;
+  const factory AppAction.openDetail() = AppAction_OpenDetail;
+  const factory AppAction.openConfirm({required String title}) =
+      AppAction_OpenConfirm;
+  const factory AppAction.pop() = AppAction_Pop;
+  const factory AppAction.popUntilHome() = AppAction_PopUntilHome;
+  const factory AppAction.resetStack() = AppAction_ResetStack;
+}

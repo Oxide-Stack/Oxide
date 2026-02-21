@@ -1,5 +1,5 @@
 [package]
-name = "rust_lib_counter_app"
+name = "rust_lib_todos_app"
 version = "0.3.0"
 edition = "2021"
 publish = false

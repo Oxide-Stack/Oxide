@@ -8,18 +8,23 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// State for the todos example.
 ///oxide:state
-///oxide:meta:{"kind":"state","name":"AppState","docs":["State for the todos example."],"fields":[{"name":"todos","ty":"Vec < TodoItem >"},{"name":"next_id","ty":"u64"}],"variants":null}
+///oxide:meta:{"kind":"state","name":"AppState","docs":["State for the todos example."],"fields":[{"name":"todos","ty":"Vec < TodoItem >"},{"name":"next_id","ty":"u64"},{"name":"last_confirmed","ty":"Option < bool >"}],"variants":null}
 class AppState {
   /// Current list of todos.
   final List<TodoItem> todos;
 
   /// Monotonically increasing ID source.
   final BigInt nextId;
+  final bool? lastConfirmed;
 
-  const AppState({required this.todos, required this.nextId});
+  const AppState({
+    required this.todos,
+    required this.nextId,
+    this.lastConfirmed,
+  });
 
   @override
-  int get hashCode => todos.hashCode ^ nextId.hashCode;
+  int get hashCode => todos.hashCode ^ nextId.hashCode ^ lastConfirmed.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -27,13 +32,14 @@ class AppState {
       other is AppState &&
           runtimeType == other.runtimeType &&
           todos == other.todos &&
-          nextId == other.nextId;
+          nextId == other.nextId &&
+          lastConfirmed == other.lastConfirmed;
 }
 
 /// Slice identifiers for top-level segments of this state.
 ///
 /// This enum is generated when `#[state(sliced = true)]` is enabled.
-enum AppStateSlice { todos, nextId }
+enum AppStateSlice { todos, nextId, lastConfirmed }
 
 /// Single todo item stored in [`AppState`].
 ///oxide:state

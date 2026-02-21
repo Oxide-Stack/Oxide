@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:todos_app/main.dart';
+import 'package:todos_app/src/features/home/todos_home_screen.dart';
 import 'package:todos_app/src/rust/api/bridge.dart' show initOxide;
 import 'package:todos_app/src/rust/frb_generated.dart';
 
@@ -15,7 +15,7 @@ void main() {
   });
 
   testWidgets('Todo CRUD updates Rust state', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: TodosHomeScreen())));
+    await tester.pumpWidget(ProviderScope(child: MaterialApp(home: const TodosHomeScreen())));
     await tester.pump(const Duration(milliseconds: 250));
 
     final input = find.byType(TextField);

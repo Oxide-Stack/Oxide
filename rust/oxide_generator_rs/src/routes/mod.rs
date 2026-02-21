@@ -120,27 +120,21 @@ fn generate_navigation_module() -> syn::Result<TokenStream2> {
                 #[flutter_rust_bridge::frb]
                 pub async fn oxide_nav_commands_stream(
                     sink: crate::frb_generated::StreamSink<String>,
-                ) {
-                    let _ = super::runtime::init();
-                    let runtime =
-                        ::oxide_core::navigation_runtime().expect("navigation initialized");
-                    let mut rx = runtime.subscribe_commands();
+                ) -> ::oxide_core::CoreResult<()> {
+                    super::runtime::init()?;
+                    let runtime = ::oxide_core::navigation_runtime()?;
+                    let mut rx = runtime.subscribe_commands()?;
 
-                    loop {
-                        match rx.recv().await {
-                            Ok(cmd) => {
-                                if let Ok(json) = ::serde_json::to_string(&cmd) {
-                                    let _ = sink.add(json);
-                                }
+                    while let Some(cmd) = rx.recv().await {
+                        let json = ::serde_json::to_string(&cmd).map_err(|e| {
+                            ::oxide_core::OxideError::Internal {
+                                message: format!("failed to serialize navigation command: {e}"),
                             }
-                            Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Lagged(
-                                _,
-                            )) => continue,
-                            Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Closed) => {
-                                break
-                            }
-                        }
+                        })?;
+                        let _ = sink.add(json);
                     }
+
+                    Ok(())
                 }
 
                 /// Emits a result payload for a previously-issued ticket.
@@ -151,8 +145,11 @@ fn generate_navigation_module() -> syn::Result<TokenStream2> {
                 ) -> ::oxide_core::CoreResult<()> {
                     super::runtime::init()?;
                     let runtime = ::oxide_core::navigation_runtime()?;
-                    let value: ::serde_json::Value =
-                        ::serde_json::from_str(&result_json).unwrap_or(::serde_json::Value::Null);
+                    let value: ::serde_json::Value = ::serde_json::from_str(&result_json).map_err(|e| {
+                        ::oxide_core::OxideError::Validation {
+                            message: format!("invalid navigation result JSON: {e}"),
+                        }
+                    })?;
                     let _ = runtime.emit_result(&ticket, value).await;
                     Ok(())
                 }
@@ -165,8 +162,11 @@ fn generate_navigation_module() -> syn::Result<TokenStream2> {
                 ) -> ::oxide_core::CoreResult<()> {
                     super::runtime::init()?;
                     let runtime = ::oxide_core::navigation_runtime()?;
-                    let payload: ::serde_json::Value =
-                        ::serde_json::from_str(&payload_json).unwrap_or(::serde_json::Value::Null);
+                    let payload: ::serde_json::Value = ::serde_json::from_str(&payload_json).map_err(|e| {
+                        ::oxide_core::OxideError::Validation {
+                            message: format!("invalid current-route JSON payload: {e}"),
+                        }
+                    })?;
                     runtime.set_current_route(Some(::oxide_core::navigation::NavRoute {
                         kind,
                         payload,

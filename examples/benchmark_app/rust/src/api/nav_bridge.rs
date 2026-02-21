@@ -26,7 +26,7 @@ impl oxide_core::Reducer for BenchNavReducer {
         match ctx.input {
             BenchNavAction::OpenCharts => {
                 if let Ok(runtime) = oxide_core::navigation_runtime() {
-                    runtime.push(crate::routes::ChartsRoute {});
+                    let _ = runtime.push(crate::routes::ChartsRoute {});
                 }
                 Ok(oxide_core::StateChange::None)
             }

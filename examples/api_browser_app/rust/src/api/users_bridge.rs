@@ -41,7 +41,7 @@ impl oxide_core::Reducer for UsersReducer {
             let _ = tx.send(UsersSideEffect::Fetch);
         }
         if let Ok(runtime) = oxide_core::navigation_runtime() {
-            runtime.push(crate::routes::HomeRoute {});
+            let _ = runtime.push(crate::routes::HomeRoute {});
         }
     }
 

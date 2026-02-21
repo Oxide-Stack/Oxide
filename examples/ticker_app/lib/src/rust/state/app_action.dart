@@ -30,4 +30,9 @@ sealed class AppAction with _$AppAction {
 
   /// Reset the tick counter back to zero.
   const factory AppAction.reset() = AppAction_Reset;
+  const factory AppAction.openConfirm({required String title}) =
+      AppAction_OpenConfirm;
+  const factory AppAction.pop() = AppAction_Pop;
+  const factory AppAction.popUntilHome() = AppAction_PopUntilHome;
+  const factory AppAction.resetStack() = AppAction_ResetStack;
 }

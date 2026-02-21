@@ -17,7 +17,7 @@ final class OxideNavigationBuilder implements Builder {
   @override
   Future<void> build(BuildStep buildStep) async {
     final metadata = await readRustRouteMetadata();
-    final routePages = await discoverRoutePages(buildStep.resolver);
+    final routePages = await discoverRoutePages(buildStep);
 
     await buildStep.writeAsString(
       AssetId(buildStep.inputId.package, 'lib/oxide_generated/routes/route_kind.g.dart'),

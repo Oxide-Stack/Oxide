@@ -72,11 +72,12 @@ pub async fn create_shared_engine() -> Result<Arc<AppEngine>, oxide_core::OxideE
 impl oxide_core::Reducer for AppRootReducer {
     type State = AppState;
     type Action = AppAction;
-    type SideEffect = ();
+    type SideEffect = AppSideEffect;
 
-    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {
+    async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>) {
+        self.sideeffect_tx = Some(ctx.sideeffect_tx);
         if let Ok(runtime) = oxide_core::navigation_runtime() {
-            runtime.push(crate::routes::HomeRoute {});
+            let _ = runtime.push(crate::routes::HomeRoute {});
         }
     }
 
@@ -110,21 +111,69 @@ impl oxide_core::Reducer for AppRootReducer {
                 Self::delete_todo(state, id.as_str())?;
                 Ok(StateChange::Infer)
             }
+            AppAction::OpenConfirm { title } => {
+                state.last_confirmed = None;
+                let Some(tx) = self.sideeffect_tx.as_ref() else {
+                    return Ok(StateChange::Infer);
+                };
+                let tx = tx.clone();
+                let title = title.clone();
+                oxide_core::runtime::spawn(async move {
+                    let Ok(runtime) = oxide_core::navigation_runtime() else {
+                        return;
+                    };
+                    let Ok((_ticket, rx)) = runtime.push_with_ticket(crate::routes::ConfirmRoute { title }).await else {
+                        return;
+                    };
+                    let Ok(value) = rx.await else {
+                        return;
+                    };
+                    let ok = serde_json::from_value::<bool>(value).unwrap_or(false);
+                    let _ = tx.send(AppSideEffect::ConfirmResolved { ok });
+                });
+                Ok(StateChange::Infer)
+            }
+            AppAction::Pop => {
+                let _ = ctx.nav.pop();
+                Ok(StateChange::None)
+            }
+            AppAction::PopUntilHome => {
+                let _ = ctx.nav.pop_until(crate::routes::RouteKind::Home);
+                Ok(StateChange::None)
+            }
+            AppAction::ResetStack => {
+                if let Ok(runtime) = oxide_core::navigation_runtime() {
+                    let _ = runtime.reset(vec![crate::routes::RoutePayload::Home(crate::routes::HomeRoute {})]);
+                }
+                Ok(StateChange::None)
+            }
         }
     }
 
     fn effect(
         &mut self,
-        _state: &mut Self::State,
-        _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State, AppStateSlice>,
+        state: &mut Self::State,
+        ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State, AppStateSlice>,
     ) -> oxide_core::CoreResult<StateChange<AppStateSlice>> {
-        Ok(StateChange::None)
+        match ctx.input {
+            AppSideEffect::ConfirmResolved { ok } => {
+                state.last_confirmed = Some(*ok);
+                Ok(StateChange::Infer)
+            }
+        }
     }
 }
 
 #[flutter_rust_bridge::frb(ignore)]
+pub(crate) enum AppSideEffect {
+    ConfirmResolved { ok: bool },
+}
+
+#[flutter_rust_bridge::frb(ignore)]
 #[derive(Default)]
-pub(crate) struct AppRootReducer {}
+pub(crate) struct AppRootReducer {
+    sideeffect_tx: Option<tokio::sync::mpsc::UnboundedSender<AppSideEffect>>,
+}
 
 impl AppRootReducer {
     fn toggle_todo(state: &mut AppState, id: &str) -> oxide_core::CoreResult<()> {

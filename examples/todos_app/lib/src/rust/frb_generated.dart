@@ -73,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
-        stem: 'rust_lib_counter_app',
+        stem: 'rust_lib_todos_app',
         ioDirectory: 'rust/target/release/',
         webPrefix: 'pkg/',
       );
@@ -403,7 +403,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           },
           codec: SseCodec(
             decodeSuccessData: sse_decode_unit,
-            decodeErrorData: null,
+            decodeErrorData:
+                sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
           ),
           constMeta: kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta,
           argValues: [sink],
@@ -629,6 +630,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return AppAction_ToggleTodo(id: dco_decode_String(raw[1]));
       case 2:
         return AppAction_DeleteTodo(id: dco_decode_String(raw[1]));
+      case 3:
+        return AppAction_OpenConfirm(title: dco_decode_String(raw[1]));
+      case 4:
+        return AppAction_Pop();
+      case 5:
+        return AppAction_PopUntilHome();
+      case 6:
+        return AppAction_ResetStack();
       default:
         throw Exception("unreachable");
     }
@@ -638,11 +647,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AppState dco_decode_app_state(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return AppState(
       todos: dco_decode_list_todo_item(arr[0]),
       nextId: dco_decode_u_64(arr[1]),
+      lastConfirmed: dco_decode_opt_box_autoadd_bool(arr[2]),
     );
   }
 
@@ -678,6 +688,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
   int dco_decode_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -699,6 +715,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<TodoItem> dco_decode_list_todo_item(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_todo_item).toList();
+  }
+
+  @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_bool(raw);
   }
 
   @protected
@@ -843,6 +865,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         var var_id = sse_decode_String(deserializer);
         return AppAction_DeleteTodo(id: var_id);
+      case 3:
+        var var_title = sse_decode_String(deserializer);
+        return AppAction_OpenConfirm(title: var_title);
+      case 4:
+        return AppAction_Pop();
+      case 5:
+        return AppAction_PopUntilHome();
+      case 6:
+        return AppAction_ResetStack();
       default:
         throw UnimplementedError('');
     }
@@ -853,7 +884,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_todos = sse_decode_list_todo_item(deserializer);
     var var_nextId = sse_decode_u_64(deserializer);
-    return AppState(todos: var_todos, nextId: var_nextId);
+    var var_lastConfirmed = sse_decode_opt_box_autoadd_bool(deserializer);
+    return AppState(
+      todos: var_todos,
+      nextId: var_nextId,
+      lastConfirmed: var_lastConfirmed,
+    );
   }
 
   @protected
@@ -886,6 +922,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AppAction sse_decode_box_autoadd_app_action(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_app_action(deserializer));
+  }
+
+  @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_bool(deserializer));
   }
 
   @protected
@@ -925,6 +967,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ans_.add(sse_decode_todo_item(deserializer));
     }
     return ans_;
+  }
+
+  @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_bool(deserializer));
+    } else {
+      return null;
+    }
   }
 
   @protected
@@ -1086,6 +1139,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case AppAction_DeleteTodo(id: final id):
         sse_encode_i_32(2, serializer);
         sse_encode_String(id, serializer);
+      case AppAction_OpenConfirm(title: final title):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(title, serializer);
+      case AppAction_Pop():
+        sse_encode_i_32(4, serializer);
+      case AppAction_PopUntilHome():
+        sse_encode_i_32(5, serializer);
+      case AppAction_ResetStack():
+        sse_encode_i_32(6, serializer);
     }
   }
 
@@ -1094,6 +1156,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_todo_item(self.todos, serializer);
     sse_encode_u_64(self.nextId, serializer);
+    sse_encode_opt_box_autoadd_bool(self.lastConfirmed, serializer);
   }
 
   @protected
@@ -1129,6 +1192,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_app_action(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self, serializer);
   }
 
   @protected
@@ -1168,6 +1237,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_todo_item(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_bool(self, serializer);
     }
   }
 

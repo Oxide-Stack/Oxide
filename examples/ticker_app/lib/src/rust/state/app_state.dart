@@ -37,18 +37,24 @@ enum AppStateSlice { control, tick }
 
 /// Tick counter and metadata updated by ticking actions.
 ///oxide:state
-///oxide:meta:{"kind":"state","name":"TickState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","Tick counter and metadata updated by ticking actions."],"fields":[{"name":"ticks","ty":"u64"},{"name":"last_tick_source","ty":"String"}],"variants":null}
+///oxide:meta:{"kind":"state","name":"TickState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","Tick counter and metadata updated by ticking actions."],"fields":[{"name":"ticks","ty":"u64"},{"name":"last_tick_source","ty":"String"},{"name":"last_confirmed","ty":"Option < bool >"}],"variants":null}
 class TickState {
   /// Number of ticks observed so far.
   final BigInt ticks;
 
   /// Most recent tick source (`auto`, `manual`, or `side_effect`).
   final String lastTickSource;
+  final bool? lastConfirmed;
 
-  const TickState({required this.ticks, required this.lastTickSource});
+  const TickState({
+    required this.ticks,
+    required this.lastTickSource,
+    this.lastConfirmed,
+  });
 
   @override
-  int get hashCode => ticks.hashCode ^ lastTickSource.hashCode;
+  int get hashCode =>
+      ticks.hashCode ^ lastTickSource.hashCode ^ lastConfirmed.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -56,7 +62,8 @@ class TickState {
       other is TickState &&
           runtimeType == other.runtimeType &&
           ticks == other.ticks &&
-          lastTickSource == other.lastTickSource;
+          lastTickSource == other.lastTickSource &&
+          lastConfirmed == other.lastConfirmed;
 }
 
 /// Runtime control settings for the ticker.

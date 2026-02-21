@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex as StdMutex};
 
 use tokio::sync::{Mutex, mpsc, watch};
 
-use crate::engine::{Context, CoreResult, InitContext, Reducer, StateChange, StateSnapshot};
+use crate::engine::{Context, CoreResult, InitContext, OxideError, Reducer, StateChange, StateSnapshot};
 
 #[cfg(feature = "navigation-binding")]
 use crate::engine::{NavigationCtx, navigation_runtime};
@@ -43,6 +43,7 @@ where
 {
     state: Mutex<EngineState<R, StateSlice>>,
     tx: watch::Sender<StateSnapshot<R::State, StateSlice>>,
+    error_tx: watch::Sender<Option<OxideError>>,
     sideeffect_tx: mpsc::UnboundedSender<R::SideEffect>,
     #[cfg(feature = "frb-spawn")]
     _sideeffect_task: StdMutex<Option<flutter_rust_bridge::JoinHandle<()>>>,
@@ -159,6 +160,7 @@ where
             slices: Vec::new(),
         };
         let (tx, _rx) = watch::channel(initial_snapshot);
+        let (error_tx, _error_rx) = watch::channel::<Option<OxideError>>(None);
 
         let (sideeffect_tx, sideeffect_rx) = mpsc::unbounded_channel::<R::SideEffect>();
         let init_ctx = InitContext {
@@ -175,6 +177,7 @@ where
                 reducer,
             }),
             tx,
+            error_tx,
             sideeffect_tx: sideeffect_tx.clone(),
             #[cfg(feature = "frb-spawn")]
             _sideeffect_task: StdMutex::new(None),
@@ -188,7 +191,7 @@ where
             let mut slot = shared
                 ._sideeffect_task
                 .lock()
-                .expect("sideeffect task mutex");
+                .unwrap_or_else(|e| e.into_inner());
             *slot = Some(handle);
         }
 
@@ -301,12 +304,25 @@ where
         self.shared.tx.subscribe()
     }
 
+    /// Subscribes to engine errors that cannot be returned from the originating call site.
+    ///
+    /// This includes:
+    /// - background side-effect failures (`Reducer::effect`)
+    /// - persistence encoding failures (when `state-persistence` is enabled)
+    /// - missing runtime dependencies (e.g., navigation runtime not initialized)
+    pub fn subscribe_errors(&self) -> watch::Receiver<Option<OxideError>> {
+        self.shared.error_tx.subscribe()
+    }
+
     fn persist_if_enabled(&self, _snapshot: &StateSnapshot<R::State, StateSlice>) {
         #[cfg(feature = "state-persistence")]
         {
             if let Some(persistence) = &self.shared.persistence {
-                if let Ok(bytes) = (persistence.encode)(&_snapshot.state) {
-                    persistence.worker.queue(bytes);
+                match (persistence.encode)(&_snapshot.state) {
+                    Ok(bytes) => persistence.worker.queue(bytes),
+                    Err(err) => {
+                        let _ = self.shared.error_tx.send(Some(err));
+                    }
                 }
             }
         }
@@ -329,10 +345,15 @@ async fn sideeffect_loop<R, StateSlice>(
         };
 
         #[cfg(feature = "navigation-binding")]
-        let (runtime, route_ctx) = {
-            let runtime = navigation_runtime().expect("navigation runtime initialized");
-            let route_ctx = runtime.current_route_context();
-            (runtime, route_ctx)
+        let (runtime, route_ctx) = match navigation_runtime() {
+            Ok(runtime) => {
+                let route_ctx = runtime.current_route_context();
+                (runtime, route_ctx)
+            }
+            Err(err) => {
+                let _ = shared.error_tx.send(Some(err));
+                continue;
+            }
         };
         let mut next_state = state.state.clone();
         let ctx = Context {
@@ -343,7 +364,8 @@ async fn sideeffect_loop<R, StateSlice>(
         };
         let change = match state.reducer.effect(&mut next_state, ctx) {
             Ok(change) => change,
-            Err(_) => {
+            Err(err) => {
+                let _ = shared.error_tx.send(Some(err));
                 continue;
             }
         };
@@ -370,8 +392,11 @@ async fn sideeffect_loop<R, StateSlice>(
         #[cfg(feature = "state-persistence")]
         {
             if let Some(persistence) = &shared.persistence {
-                if let Ok(bytes) = (persistence.encode)(&snapshot.state) {
-                    persistence.worker.queue(bytes);
+                match (persistence.encode)(&snapshot.state) {
+                    Ok(bytes) => persistence.worker.queue(bytes),
+                    Err(err) => {
+                        let _ = shared.error_tx.send(Some(err));
+                    }
                 }
             }
         }

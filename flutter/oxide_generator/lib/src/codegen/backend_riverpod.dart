@@ -48,7 +48,12 @@ $coreInstantiation
 
   Future<void> _initialize() async {
     await _core.initialize();
-    _subscription = $snapshotsStream.listen((_) => state = _view());
+    if (!ref.mounted) return;
+    _subscription = $snapshotsStream.listen((_) {
+      if (!ref.mounted) return;
+      state = _view();
+    });
+    if (!ref.mounted) return;
     state = _view();
   }
 
@@ -63,6 +68,7 @@ $coreInstantiation
 
   Future<void> _dispatch(${c.actionsType} action) async {
     await _core.dispatchAction(action);
+    if (!ref.mounted) return;
     state = _view();
   }
 }

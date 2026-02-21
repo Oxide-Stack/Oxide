@@ -64,6 +64,13 @@ pub enum StateChange<StateSlice: 'static = ()> {
 /// still enabling async I/O by performing it in spawned tasks and sending the
 /// result back as a side-effect.
 ///
+/// ## Avoid blocking work
+/// `reduce` and `effect` run under the engine's internal mutex. They must not
+/// perform blocking I/O or long-running CPU work, because that would stall all
+/// dispatch and side-effect processing. Perform such work in spawned tasks and
+/// return results back to the engine by enqueuing a side-effect via
+/// `InitContext::sideeffect_tx`.
+///
 /// # Threading
 /// Reducers are used by [`ReducerEngine`](crate::ReducerEngine). Actions are
 /// dispatched serially; you do not need to make your reducer internally

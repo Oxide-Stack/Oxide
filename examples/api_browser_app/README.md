@@ -9,6 +9,10 @@ Real-world example that integrates Oxide with a free public API (JSONPlaceholder
 - Deterministic integration testing using a local HTTP server (no external network dependency).
 - End-to-end Rust ↔ Flutter wiring (FRB + `@OxideStore` + generated glue).
 
+## Navigation Choice
+
+This example uses Oxide's Navigator 1.0 integration for Rust-driven navigation, and also demonstrates plain Flutter `Navigator.push` for an auxiliary “Isolated Channels Demo” page.
+
 ## Rust Surface
 
 - Intended FRB surface: `init_app`, `init_oxide`, and the three engine + state/action/snapshot type sets.
@@ -66,7 +70,9 @@ dart run build_runner build -d
 flutter run
 ```
 
-## Regenerate FRB bindings (if Rust API changes)
+## Generate FRB bindings
+
+This repo does not commit the Rust FRB glue (`rust/src/frb_generated.rs`). Run this on a fresh checkout and whenever the Rust API changes:
 
 ```bash
 flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml

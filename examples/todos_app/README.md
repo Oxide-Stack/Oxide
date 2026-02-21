@@ -9,6 +9,10 @@ Focused example showing CRUD operations over a Rust-owned todo list.
 - Rust-side validation and `NotFound` errors surfaced back to Flutter.
 - Rust emits sliced updates so Flutter can efficiently react to partial state changes.
 
+## Navigation Choice
+
+This example uses Oxide's Navigator 1.0 integration by wiring the generated `oxideNavigatorKey` into `MaterialApp`. Rust emits navigation commands, and Flutter executes them through the Navigator-backed handler.
+
 ## Rust Surface
 
 - Intended FRB surface: `init_app`, `init_oxide`, the engine type, and the state/action/snapshot types.
@@ -35,7 +39,9 @@ dart run build_runner build -d
 flutter run
 ```
 
-## Regenerate FRB bindings (if Rust API changes)
+## Generate FRB bindings
+
+This repo does not commit the Rust FRB glue (`rust/src/frb_generated.rs`). Run this on a fresh checkout and whenever the Rust API changes:
 
 ```bash
 flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml

@@ -7,7 +7,6 @@ use oxide_core::navigation::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
-use tokio_stream::StreamExt;
 
 #[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 enum TestRouteKind {
@@ -150,73 +149,70 @@ fn route_defaults_return_empty_values() {
 
 #[tokio::test]
 async fn push_emits_a_command() {
-    oxide_core::init_navigation().unwrap();
-    let runtime = oxide_core::navigation_runtime().unwrap();
+    let runtime = oxide_core::NavigationRuntime::new();
 
-    let mut stream =
-        tokio_stream::wrappers::BroadcastStream::new(runtime.subscribe_commands()).filter_map(|r| r.ok());
+    let mut rx = runtime.subscribe_commands().unwrap();
 
-    runtime.push(TestRoute {
+    runtime
+        .push(TestRoute {
         kind: TestRouteKind::Home,
-    });
+    })
+        .unwrap();
 
-    while let Some(cmd) = stream.next().await {
-        match cmd {
-            NavCommand::Push { route, ticket: None } if route.kind == "Home" => return,
-            _ => continue,
-        }
-    }
-
-    panic!("did not observe expected Home push command");
+    let cmd = tokio::time::timeout(Duration::from_secs(1), rx.recv())
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(matches!(cmd, NavCommand::Push { route, ticket: None } if route.kind == "Home"));
 }
 
 #[tokio::test]
 async fn push_with_ticket_can_be_resolved() {
-    oxide_core::init_navigation().unwrap();
-    let runtime = oxide_core::navigation_runtime().unwrap();
+    let runtime = oxide_core::NavigationRuntime::new();
 
     let route = TestRoute {
         kind: TestRouteKind::Charts,
     };
 
-    let mut stream =
-        tokio_stream::wrappers::BroadcastStream::new(runtime.subscribe_commands()).filter_map(|r| r.ok());
+    let mut rx = runtime.subscribe_commands().unwrap();
 
-    let (ticket, rx) = runtime.push_with_ticket(route.clone()).await;
+    let (ticket, result_rx) = runtime.push_with_ticket(route.clone()).await.unwrap();
 
-    while let Some(cmd) = stream.next().await {
-        match cmd {
-            NavCommand::Push { route: pushed, ticket: Some(t) } if t == ticket => {
-                assert_eq!(pushed.kind, "Charts");
-                break;
-            }
-            _ => continue,
+    let cmd = tokio::time::timeout(Duration::from_secs(1), rx.recv())
+        .await
+        .unwrap()
+        .unwrap();
+    match cmd {
+        NavCommand::Push {
+            route: pushed,
+            ticket: Some(t),
+        } if t == ticket => {
+            assert_eq!(pushed.kind, "Charts");
         }
+        other => panic!("unexpected command: {other:?}"),
     }
 
     let resolved = runtime.emit_result(&ticket, serde_json::json!({"ok": true})).await;
     assert!(resolved);
 
-    let value = rx.await.unwrap();
+    let value = result_rx.await.unwrap();
     assert_eq!(value, serde_json::json!({"ok": true}));
 }
 
 #[tokio::test]
 async fn pop_and_pop_until_emit_commands() {
-    oxide_core::init_navigation().unwrap();
-    let runtime = oxide_core::navigation_runtime().unwrap();
+    let runtime = oxide_core::NavigationRuntime::new();
 
-    let mut stream =
-        tokio_stream::wrappers::BroadcastStream::new(runtime.subscribe_commands()).filter_map(|r| r.ok());
+    let mut rx = runtime.subscribe_commands().unwrap();
 
-    runtime.pop();
-    runtime.pop_until(TestRouteKind::Home);
+    runtime.pop().unwrap();
+    runtime.pop_until(TestRouteKind::Home).unwrap();
 
-    let first = tokio::time::timeout(Duration::from_secs(1), stream.next())
+    let first = tokio::time::timeout(Duration::from_secs(1), rx.recv())
         .await
         .unwrap()
         .unwrap();
-    let second = tokio::time::timeout(Duration::from_secs(1), stream.next())
+    let second = tokio::time::timeout(Duration::from_secs(1), rx.recv())
         .await
         .unwrap()
         .unwrap();
@@ -227,15 +223,15 @@ async fn pop_and_pop_until_emit_commands() {
 
 #[tokio::test]
 async fn pop_with_json_emits_result() {
-    oxide_core::init_navigation().unwrap();
-    let runtime = oxide_core::navigation_runtime().unwrap();
+    let runtime = oxide_core::NavigationRuntime::new();
 
-    let mut stream =
-        tokio_stream::wrappers::BroadcastStream::new(runtime.subscribe_commands()).filter_map(|r| r.ok());
+    let mut rx = runtime.subscribe_commands().unwrap();
 
-    runtime.pop_with_json(serde_json::json!({"ok": true}));
+    runtime
+        .pop_with_json(serde_json::json!({"ok": true}))
+        .unwrap();
 
-    let cmd = tokio::time::timeout(Duration::from_secs(1), stream.next())
+    let cmd = tokio::time::timeout(Duration::from_secs(1), rx.recv())
         .await
         .unwrap()
         .unwrap();
@@ -245,15 +241,16 @@ async fn pop_with_json_emits_result() {
 #[tokio::test]
 async fn reset_emits_payload_without_envelope() {
     let runtime = oxide_core::NavigationRuntime::new();
-    let mut stream =
-        tokio_stream::wrappers::BroadcastStream::new(runtime.subscribe_commands()).filter_map(|r| r.ok());
+    let mut rx = runtime.subscribe_commands().unwrap();
 
-    runtime.reset(vec![WrappedPayload {
+    runtime
+        .reset(vec![WrappedPayload {
         kind: TestRouteKind::Charts,
         payload: serde_json::json!({"id": 7}),
-    }]);
+    }])
+        .unwrap();
 
-    let cmd = tokio::time::timeout(Duration::from_secs(1), stream.next())
+    let cmd = tokio::time::timeout(Duration::from_secs(1), rx.recv())
         .await
         .unwrap()
         .unwrap();
@@ -271,17 +268,18 @@ async fn reset_emits_payload_without_envelope() {
 #[tokio::test]
 async fn route_extras_are_encoded_in_push() {
     let runtime = oxide_core::NavigationRuntime::new();
-    let mut stream =
-        tokio_stream::wrappers::BroadcastStream::new(runtime.subscribe_commands()).filter_map(|r| r.ok());
+    let mut rx = runtime.subscribe_commands().unwrap();
 
-    runtime.push(RouteWithExtras {
+    runtime
+        .push(RouteWithExtras {
         kind: TestRouteKind::Home,
         extras: TestExtra {
             label: "hello".to_string(),
         },
-    });
+    })
+        .unwrap();
 
-    let cmd = tokio::time::timeout(Duration::from_secs(1), stream.next())
+    let cmd = tokio::time::timeout(Duration::from_secs(1), rx.recv())
         .await
         .unwrap()
         .unwrap();
@@ -330,18 +328,18 @@ async fn navigation_ctx_emits_commands_and_exposes_route() {
 
     assert_eq!(nav.route(), &context);
 
-    let mut stream =
-        tokio_stream::wrappers::BroadcastStream::new(runtime.subscribe_commands()).filter_map(|r| r.ok());
+    let mut rx = runtime.subscribe_commands().unwrap();
 
     nav.push(TestRoute {
         kind: TestRouteKind::Home,
-    });
-    nav.pop();
-    nav.pop_until(TestRouteKind::Charts);
+    })
+    .unwrap();
+    nav.pop().unwrap();
+    nav.pop_until(TestRouteKind::Charts).unwrap();
 
     let mut seen = Vec::new();
     while seen.len() < 3 {
-        let cmd = tokio::time::timeout(Duration::from_secs(1), stream.next())
+        let cmd = tokio::time::timeout(Duration::from_secs(1), rx.recv())
             .await
             .unwrap()
             .unwrap();

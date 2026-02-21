@@ -15,4 +15,8 @@ pub enum AppAction {
     EmitSideEffectTick,
     /// Reset the tick counter back to zero.
     Reset,
+    OpenConfirm { title: String },
+    Pop,
+    PopUntilHome,
+    ResetStack,
 }

@@ -821,7 +821,7 @@ dependencies = [
 
 [[package]]
 name = "oxide_core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "base64",
  "flutter_rust_bridge",
@@ -839,7 +839,7 @@ dependencies = [
 
 [[package]]
 name = "oxide_generator_rs"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1113,7 +1113,7 @@ dependencies = [
 
 [[package]]
 name = "rust_lib_api_browser_app"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "flutter_rust_bridge",
  "oxide_core",

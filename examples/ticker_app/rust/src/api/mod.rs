@@ -8,5 +8,4 @@
 //! ```
 
 pub mod bridge;
-#[cfg(feature = "navigation-binding")]
-pub use crate::navigation::frb as navigation_bridge;
+pub mod navigation_bridge;
