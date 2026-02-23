@@ -7,23 +7,6 @@ use crate::state::app_action::AppAction;
 use crate::state::app_state::AppState;
 use oxide_core::StateChange;
 
-#[flutter_rust_bridge::frb(init)]
-/// Initializes Flutter Rust Bridge for this library.
-pub fn init_app() {
-    flutter_rust_bridge::setup_default_user_utils();
-}
-
-#[flutter_rust_bridge::frb]
-pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
-    fn thread_pool() -> oxide_core::runtime::ThreadPool {
-        crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
-    }
-
-    let _ = oxide_core::runtime::init(thread_pool);
-    crate::navigation::runtime::init()?;
-    Ok(())
-}
-
 #[reducer(
     engine = AppEngine,
     snapshot = AppStateSnapshot,

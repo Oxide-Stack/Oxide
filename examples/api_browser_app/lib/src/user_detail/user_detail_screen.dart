@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../oxide_generated/routes/route_models.g.dart';
+import '../../oxide.dart';
 
 final class ApiBrowserUserDetailScreen extends StatelessWidget {
   const ApiBrowserUserDetailScreen({super.key, required this.route});
@@ -15,4 +15,3 @@ final class ApiBrowserUserDetailScreen extends StatelessWidget {
     );
   }
 }
-

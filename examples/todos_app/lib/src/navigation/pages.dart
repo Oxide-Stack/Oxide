@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import '../../oxide_generated/routes/route_models.g.dart';
+import '../../oxide.dart';
 import '../features/home/todos_home_screen.dart';
 import '../features/navigation/confirm_screen.dart';
 import '../features/splash/todos_splash_screen.dart';

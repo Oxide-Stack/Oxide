@@ -6,16 +6,16 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-/// Initializes the Oxide navigation runtime.
-Future<void> initNavigation() =>
+Future<CoreResult> initNavigation() =>
     RustLib.instance.api.crateApiNavigationBridgeInitNavigation();
 
-/// Streams serialized navigation commands emitted by Rust reducers/effects.
-Stream<String> oxideNavCommandsStream() =>
+Stream<OxideNavCommand> oxideNavCommandsStream() =>
     RustLib.instance.api.crateApiNavigationBridgeOxideNavCommandsStream();
 
-/// Emits a JSON result for a previously issued ticket id.
-Future<void> oxideNavEmitResult({
+Stream<String> oxideNavCommandsJsonStream() =>
+    RustLib.instance.api.crateApiNavigationBridgeOxideNavCommandsJsonStream();
+
+Future<CoreResult> oxideNavEmitResult({
   required String ticket,
   required String resultJson,
 }) => RustLib.instance.api.crateApiNavigationBridgeOxideNavEmitResult(
@@ -23,11 +23,24 @@ Future<void> oxideNavEmitResult({
   resultJson: resultJson,
 );
 
-/// Updates the current route context in the Rust navigation runtime.
-Future<void> oxideNavSetCurrentRoute({
+Future<CoreResult> oxideNavSetCurrentRoute({RoutePayload? route}) => RustLib
+    .instance
+    .api
+    .crateApiNavigationBridgeOxideNavSetCurrentRoute(route: route);
+
+Future<CoreResult> oxideNavSetCurrentRouteJson({
   required String kind,
   required String payloadJson,
-}) => RustLib.instance.api.crateApiNavigationBridgeOxideNavSetCurrentRoute(
+}) => RustLib.instance.api.crateApiNavigationBridgeOxideNavSetCurrentRouteJson(
   kind: kind,
   payloadJson: payloadJson,
 );
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<:: CoreResult < () >>>
+abstract class CoreResult implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<OxideNavCommand>>
+abstract class OxideNavCommand implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RoutePayload>>
+abstract class RoutePayload implements RustOpaqueInterface {}

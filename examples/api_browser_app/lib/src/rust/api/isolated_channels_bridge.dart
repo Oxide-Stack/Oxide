@@ -5,7 +5,7 @@
 
 import '../frb_generated.dart';
 import '../isolated_channels_demo/channels.dart';
-import 'bridge.dart';
+import 'comments_bridge.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
@@ -78,9 +78,6 @@ Future<void> apiBrowserDemoDuplexIncoming({required ApiBrowserDemoIn event}) =>
 /// Returns the last duplex incoming message text observed by Rust.
 Future<String?> apiBrowserDemoLastIncomingText() => RustLib.instance.api
     .crateApiIsolatedChannelsBridgeApiBrowserDemoLastIncomingText();
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< OxideChannelError>>
-abstract class OxideChannelError implements RustOpaqueInterface {}
 
 /// A callback request envelope exposed to Dart for the demo dialog service.
 ///

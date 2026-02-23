@@ -10,8 +10,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 Future<String> apiBaseUrl() => RustLib.instance.api.crateApiBridgeApiBaseUrl();
 
-Future<void> initOxide() => RustLib.instance.api.crateApiBridgeInitOxide();
-
 Future<void> setApiBaseUrl({required String url}) =>
     RustLib.instance.api.crateApiBridgeSetApiBaseUrl(url: url);
 
@@ -20,6 +18,3 @@ Future<String> getApiBaseUrl() =>
 
 Future<void> resetApiBaseUrl() =>
     RustLib.instance.api.crateApiBridgeResetApiBaseUrl();
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< OxideError>>
-abstract class OxideError implements RustOpaqueInterface {}

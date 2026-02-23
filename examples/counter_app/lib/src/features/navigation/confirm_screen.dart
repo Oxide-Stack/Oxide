@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../oxide_generated/routes/route_models.g.dart';
+import '../../../oxide.dart';
 
 final class CounterConfirmScreen extends StatelessWidget {
   const CounterConfirmScreen({super.key, required this.route});

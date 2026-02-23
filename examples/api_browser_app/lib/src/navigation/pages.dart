@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import '../../oxide_generated/routes/route_models.g.dart';
+import '../../oxide.dart';
 import '../app.dart';
 import '../user_detail/user_detail_screen.dart';
 
@@ -41,4 +41,3 @@ final class ApiBrowserUserDetailPage extends StatelessWidget {
     return ApiBrowserUserDetailScreen(route: route);
   }
 }
-

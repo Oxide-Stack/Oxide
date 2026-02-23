@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import '../../oxide_generated/routes/route_models.g.dart';
+import '../../oxide.dart';
 import '../oxide.dart';
 import '../rust/api/bridge.dart' show openCharts;
 import 'bench_detail.dart';

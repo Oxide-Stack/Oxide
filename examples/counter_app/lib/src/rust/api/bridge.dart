@@ -13,8 +13,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new`, `subscribe`
 // These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
 
-Future<void> initOxide() => RustLib.instance.api.crateApiBridgeInitOxide();
-
 Future<ArcAppEngine> createEngine() =>
     RustLib.instance.api.crateApiBridgeCreateEngine();
 

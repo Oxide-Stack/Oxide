@@ -21,11 +21,11 @@ Start from an FRB-integrated Flutter app/template (or copy one of this repo’s 
 
 - building Rust
 - generating bindings
-- initializing `RustLib` in Flutter
+- initializing Rust from Flutter
 
 FRB docs: https://fzyzcjy.github.io/flutter_rust_bridge/
 
-Before creating any Oxide engine, call `initOxide()` after `RustLib.init()` (see [init-oxide.md](./init-oxide.md)).
+Before using any Oxide APIs, call `OxideStack.init()` from `main()` (see [init-oxide.md](./init-oxide.md)).
 
 ## Topics
 

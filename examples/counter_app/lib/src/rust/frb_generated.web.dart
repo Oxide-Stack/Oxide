@@ -8,11 +8,16 @@
 
 import 'api/bridge.dart';
 import 'api/isolated_channels_bridge.dart';
-import 'api/navigation_bridge.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'isolated_channels_demo/channels.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_callback_counter_demo_dialog.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_counter_demo_duplex.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_counter_demo_duplex/frb.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_counter_demo_events.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_counter_demo_events/frb.dart';
+import 'isolated_channels_demo/state.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 import 'state/app_action.dart';
 import 'state/app_state.dart';
@@ -90,9 +95,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw);
-
-  @protected
   RustStreamSink<AppStateSnapshot> dco_decode_StreamSink_app_state_snapshot_Sse(
     dynamic raw,
   );
@@ -141,6 +143,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CounterDemoIn dco_decode_box_autoadd_counter_demo_in(dynamic raw);
 
   @protected
+  CounterDemoOut dco_decode_box_autoadd_counter_demo_out(dynamic raw);
+
+  @protected
+  CounterDemoDialog dco_decode_counter_demo_dialog(dynamic raw);
+
+  @protected
   CounterDemoDialogPendingRequest
   dco_decode_counter_demo_dialog_pending_request(dynamic raw);
 
@@ -153,7 +161,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CounterDemoDuplex dco_decode_counter_demo_duplex(dynamic raw);
+
+  @protected
   CounterDemoEvent dco_decode_counter_demo_event(dynamic raw);
+
+  @protected
+  CounterDemoEvents dco_decode_counter_demo_events(dynamic raw);
 
   @protected
   CounterDemoIn dco_decode_counter_demo_in(dynamic raw);
@@ -234,11 +248,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   RustStreamSink<AppStateSnapshot> sse_decode_StreamSink_app_state_snapshot_Sse(
     SseDeserializer deserializer,
   );
@@ -291,6 +300,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CounterDemoOut sse_decode_box_autoadd_counter_demo_out(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CounterDemoDialog sse_decode_counter_demo_dialog(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   CounterDemoDialogPendingRequest
   sse_decode_counter_demo_dialog_pending_request(SseDeserializer deserializer);
 
@@ -305,7 +324,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CounterDemoDuplex sse_decode_counter_demo_duplex(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   CounterDemoEvent sse_decode_counter_demo_event(SseDeserializer deserializer);
+
+  @protected
+  CounterDemoEvents sse_decode_counter_demo_events(
+    SseDeserializer deserializer,
+  );
 
   @protected
   CounterDemoIn sse_decode_counter_demo_in(SseDeserializer deserializer);
@@ -405,12 +434,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_StreamSink_app_state_snapshot_Sse(
     RustStreamSink<AppStateSnapshot> self,
     SseSerializer serializer,
@@ -474,6 +497,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_counter_demo_out(
+    CounterDemoOut self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_counter_demo_dialog(
+    CounterDemoDialog self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_counter_demo_dialog_pending_request(
     CounterDemoDialogPendingRequest self,
     SseSerializer serializer,
@@ -492,8 +527,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_counter_demo_duplex(
+    CounterDemoDuplex self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_counter_demo_event(
     CounterDemoEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_counter_demo_events(
+    CounterDemoEvents self,
     SseSerializer serializer,
   );
 

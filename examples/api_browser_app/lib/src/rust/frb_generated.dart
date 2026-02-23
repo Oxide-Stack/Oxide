@@ -6,7 +6,6 @@
 import 'api/bridge.dart';
 import 'api/comments_bridge.dart';
 import 'api/isolated_channels_bridge.dart';
-import 'api/navigation_bridge.dart';
 import 'api/posts_bridge.dart';
 import 'api/users_bridge.dart';
 import 'dart:async';
@@ -15,6 +14,12 @@ import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'isolated_channels_demo/channels.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_callback_api_browser_demo_dialog.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_api_browser_demo_duplex.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_api_browser_demo_duplex/frb.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_api_browser_demo_events.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_api_browser_demo_events/frb.dart';
+import 'isolated_channels_demo/state.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'state/comments_action.dart';
 import 'state/comments_state.dart';
@@ -67,9 +72,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       RustLibWire.fromExternalLibrary;
 
   @override
-  Future<void> executeRustInitializers() async {
-    await api.crateApiBridgeInitApp();
-  }
+  Future<void> executeRustInitializers() async {}
 
   @override
   ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig =>
@@ -79,7 +82,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1223929980;
+  int get rustContentHash => 1058507334;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -91,6 +94,10 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
 abstract class RustLibApi extends BaseApi {
   Future<String> crateApiBridgeApiBaseUrl();
+
+  Future<bool> crateIsolatedChannelsDemoChannelsApiBrowserDemoDialogConfirm({
+    required String title,
+  });
 
   Future<bool> crateApiIsolatedChannelsBridgeApiBrowserDemoDialogConfirm({
     required String title,
@@ -117,8 +124,16 @@ abstract class RustLibApi extends BaseApi {
   Stream<ApiBrowserDemoOut>
   crateApiIsolatedChannelsBridgeApiBrowserDemoDuplexOutgoingStream();
 
+  Future<void> crateIsolatedChannelsDemoChannelsApiBrowserDemoDuplexSend({
+    required ApiBrowserDemoOut event,
+  });
+
   Future<void> crateApiIsolatedChannelsBridgeApiBrowserDemoDuplexSend({
     required String text,
+  });
+
+  Future<void> crateIsolatedChannelsDemoChannelsApiBrowserDemoEventsNotify({
+    required String message,
   });
 
   Stream<ApiBrowserDemoEvent>
@@ -178,29 +193,42 @@ abstract class RustLibApi extends BaseApi {
 
   Future<String> crateApiBridgeGetApiBaseUrl();
 
-  Future<void> crateApiBridgeInitApp();
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexIncoming();
 
   Future<void> crateApiIsolatedChannelsBridgeInitIsolatedChannelsDemo();
 
-  Future<void> crateApiNavigationBridgeInitNavigation();
+  Future<void> crateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandler();
 
-  Future<void> crateApiBridgeInitOxide();
+  Future<String?> crateIsolatedChannelsDemoStateLastIncomingText();
 
-  Stream<String> crateApiNavigationBridgeOxideNavCommandsStream();
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexOutgoing();
 
-  Future<void> crateApiNavigationBridgeOxideNavEmitResult({
-    required String ticket,
-    required String resultJson,
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideApiBrowserDemoDuplexIncoming({
+    required ApiBrowserDemoIn event,
   });
 
-  Future<void> crateApiNavigationBridgeOxideNavSetCurrentRoute({
-    required String kind,
-    required String payloadJson,
-  });
+  Stream<ApiBrowserDemoEvent>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsFrbOxideEventsStream();
+
+  Stream<ApiBrowserDemoOut>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideOutgoingStream();
 
   Future<void> crateApiBridgeResetApiBaseUrl();
 
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedCallbackApiBrowserDemoDialogRuntime();
+
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsRuntime();
+
   Future<void> crateApiBridgeSetApiBaseUrl({required String url});
+
+  Future<void> crateIsolatedChannelsDemoStateSetLastIncomingText({
+    required String text,
+  });
 
   Stream<CommentsStateSnapshot> crateApiCommentsBridgeStateStream({
     required ArcCommentsEngine engine,
@@ -295,7 +323,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "api_base_url", argNames: []);
 
   @override
-  Future<bool> crateApiIsolatedChannelsBridgeApiBrowserDemoDialogConfirm({
+  Future<bool> crateIsolatedChannelsDemoChannelsApiBrowserDemoDialogConfirm({
     required String title,
   }) {
     return handler.executeNormal(
@@ -307,6 +335,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             generalizedFrbRustBinding,
             serializer,
             funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsApiBrowserDemoDialogConfirmConstMeta,
+        argValues: [title],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsApiBrowserDemoDialogConfirmConstMeta =>
+      const TaskConstMeta(
+        debugName: "api_browser_demo_dialog_confirm",
+        argNames: ["title"],
+      );
+
+  @override
+  Future<bool> crateApiIsolatedChannelsBridgeApiBrowserDemoDialogConfirm({
+    required String title,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(title, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
             port: port_,
           );
         },
@@ -348,7 +412,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 4,
             port: port_,
           );
         },
@@ -387,7 +451,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 4,
+              funcId: 5,
               port: port_,
             );
           },
@@ -429,7 +493,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
@@ -465,7 +529,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -502,7 +566,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 7,
+              funcId: 8,
               port: port_,
             );
           },
@@ -528,6 +592,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateIsolatedChannelsDemoChannelsApiBrowserDemoDuplexSend({
+    required ApiBrowserDemoOut event,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_api_browser_demo_out(event, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsApiBrowserDemoDuplexSendConstMeta,
+        argValues: [event],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsApiBrowserDemoDuplexSendConstMeta =>
+      const TaskConstMeta(
+        debugName: "api_browser_demo_duplex_send",
+        argNames: ["event"],
+      );
+
+  @override
   Future<void> crateApiIsolatedChannelsBridgeApiBrowserDemoDuplexSend({
     required String text,
   }) {
@@ -539,7 +638,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 10,
             port: port_,
           );
         },
@@ -563,6 +662,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateIsolatedChannelsDemoChannelsApiBrowserDemoEventsNotify({
+    required String message,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(message, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsApiBrowserDemoEventsNotifyConstMeta,
+        argValues: [message],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsApiBrowserDemoEventsNotifyConstMeta =>
+      const TaskConstMeta(
+        debugName: "api_browser_demo_events_notify",
+        argNames: ["message"],
+      );
+
+  @override
   Stream<ApiBrowserDemoEvent>
   crateApiIsolatedChannelsBridgeApiBrowserDemoEventsStream() {
     final sink = RustStreamSink<ApiBrowserDemoEvent>();
@@ -575,7 +709,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 9,
+              funcId: 12,
               port: port_,
             );
           },
@@ -610,7 +744,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 13,
             port: port_,
           );
         },
@@ -642,7 +776,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 14,
             port: port_,
           );
         },
@@ -671,7 +805,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 15,
             port: port_,
           );
         },
@@ -700,7 +834,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 16,
             port: port_,
           );
         },
@@ -735,7 +869,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 17,
             port: port_,
           );
         },
@@ -768,7 +902,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 18,
             port: port_,
           );
         },
@@ -801,7 +935,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 19,
             port: port_,
           );
         },
@@ -836,7 +970,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 20,
             port: port_,
           );
         },
@@ -875,7 +1009,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 21,
             port: port_,
           );
         },
@@ -914,7 +1048,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 22,
             port: port_,
           );
         },
@@ -951,7 +1085,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 23,
             port: port_,
           );
         },
@@ -984,7 +1118,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 24,
             port: port_,
           );
         },
@@ -1017,7 +1151,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 25,
             port: port_,
           );
         },
@@ -1047,7 +1181,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 23,
+            funcId: 26,
             port: port_,
           );
         },
@@ -1079,7 +1213,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 24,
+            funcId: 27,
             port: port_,
           );
         },
@@ -1098,7 +1232,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "get_api_base_url", argNames: []);
 
   @override
-  Future<void> crateApiBridgeInitApp() {
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexIncoming() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1106,7 +1241,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 25,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1114,15 +1249,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiBridgeInitAppConstMeta,
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexIncomingConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBridgeInitAppConstMeta =>
-      const TaskConstMeta(debugName: "init_app", argNames: []);
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexIncomingConstMeta =>
+      const TaskConstMeta(debugName: "incoming", argNames: []);
 
   @override
   Future<void> crateApiIsolatedChannelsBridgeInitIsolatedChannelsDemo() {
@@ -1133,7 +1270,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 29,
             port: port_,
           );
         },
@@ -1158,108 +1295,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateApiNavigationBridgeInitNavigation() {
+  Future<void> crateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandler() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 27,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-        ),
-        constMeta: kCrateApiNavigationBridgeInitNavigationConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeInitNavigationConstMeta =>
-      const TaskConstMeta(debugName: "init_navigation", argNames: []);
-
-  @override
-  Future<void> crateApiBridgeInitOxide() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 28,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-        ),
-        constMeta: kCrateApiBridgeInitOxideConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiBridgeInitOxideConstMeta =>
-      const TaskConstMeta(debugName: "init_oxide", argNames: []);
-
-  @override
-  Stream<String> crateApiNavigationBridgeOxideNavCommandsStream() {
-    final sink = RustStreamSink<String>();
-    unawaited(
-      handler.executeNormal(
-        NormalTask(
-          callFfi: (port_) {
-            final serializer = SseSerializer(generalizedFrbRustBinding);
-            sse_encode_StreamSink_String_Sse(sink, serializer);
-            pdeCallFfi(
-              generalizedFrbRustBinding,
-              serializer,
-              funcId: 29,
-              port: port_,
-            );
-          },
-          codec: SseCodec(
-            decodeSuccessData: sse_decode_unit,
-            decodeErrorData:
-                sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-          ),
-          constMeta: kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta,
-          argValues: [sink],
-          apiImpl: this,
-        ),
-      ),
-    );
-    return sink.stream;
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta =>
-      const TaskConstMeta(
-        debugName: "oxide_nav_commands_stream",
-        argNames: ["sink"],
-      );
-
-  @override
-  Future<void> crateApiNavigationBridgeOxideNavEmitResult({
-    required String ticket,
-    required String resultJson,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(ticket, serializer);
-          sse_encode_String(resultJson, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -1269,33 +1309,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
+          decodeErrorData: null,
         ),
-        constMeta: kCrateApiNavigationBridgeOxideNavEmitResultConstMeta,
-        argValues: [ticket, resultJson],
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandlerConstMeta,
+        argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavEmitResultConstMeta =>
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandlerConstMeta =>
       const TaskConstMeta(
-        debugName: "oxide_nav_emit_result",
-        argNames: ["ticket", "resultJson"],
+        debugName: "install_duplex_incoming_handler",
+        argNames: [],
       );
 
   @override
-  Future<void> crateApiNavigationBridgeOxideNavSetCurrentRoute({
-    required String kind,
-    required String payloadJson,
-  }) {
+  Future<String?> crateIsolatedChannelsDemoStateLastIncomingText() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(kind, serializer);
-          sse_encode_String(payloadJson, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -1304,21 +1340,157 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: null,
         ),
-        constMeta: kCrateApiNavigationBridgeOxideNavSetCurrentRouteConstMeta,
-        argValues: [kind, payloadJson],
+        constMeta: kCrateIsolatedChannelsDemoStateLastIncomingTextConstMeta,
+        argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavSetCurrentRouteConstMeta =>
+  TaskConstMeta get kCrateIsolatedChannelsDemoStateLastIncomingTextConstMeta =>
+      const TaskConstMeta(debugName: "last_incoming_text", argNames: []);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexOutgoing() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 32,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexOutgoingConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexOutgoingConstMeta =>
+      const TaskConstMeta(debugName: "outgoing", argNames: []);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideApiBrowserDemoDuplexIncoming({
+    required ApiBrowserDemoIn event,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_api_browser_demo_in(event, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 33,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideApiBrowserDemoDuplexIncomingConstMeta,
+        argValues: [event],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideApiBrowserDemoDuplexIncomingConstMeta =>
       const TaskConstMeta(
-        debugName: "oxide_nav_set_current_route",
-        argNames: ["kind", "payloadJson"],
+        debugName: "oxide_api_browser_demo_duplex_incoming",
+        argNames: ["event"],
+      );
+
+  @override
+  Stream<ApiBrowserDemoEvent>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsFrbOxideEventsStream() {
+    final sink = RustStreamSink<ApiBrowserDemoEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_StreamSink_api_browser_demo_event_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 34,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta:
+              kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsFrbOxideEventsStreamConstMeta,
+          argValues: [sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsFrbOxideEventsStreamConstMeta =>
+      const TaskConstMeta(debugName: "oxide_events_stream", argNames: ["sink"]);
+
+  @override
+  Stream<ApiBrowserDemoOut>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideOutgoingStream() {
+    final sink = RustStreamSink<ApiBrowserDemoOut>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_StreamSink_api_browser_demo_out_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 35,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta:
+              kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideOutgoingStreamConstMeta,
+          argValues: [sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideOutgoingStreamConstMeta =>
+      const TaskConstMeta(
+        debugName: "oxide_outgoing_stream",
+        argNames: ["sink"],
       );
 
   @override
@@ -1330,7 +1502,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 32,
+            funcId: 36,
             port: port_,
           );
         },
@@ -1349,6 +1521,66 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "reset_api_base_url", argNames: []);
 
   @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedCallbackApiBrowserDemoDialogRuntime() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 37,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedCallbackApiBrowserDemoDialogRuntimeConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedCallbackApiBrowserDemoDialogRuntimeConstMeta =>
+      const TaskConstMeta(debugName: "runtime", argNames: []);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsRuntime() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 38,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsRuntimeConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsRuntimeConstMeta =>
+      const TaskConstMeta(debugName: "runtime", argNames: []);
+
+  @override
   Future<void> crateApiBridgeSetApiBaseUrl({required String url}) {
     return handler.executeNormal(
       NormalTask(
@@ -1358,7 +1590,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 33,
+            funcId: 39,
             port: port_,
           );
         },
@@ -1375,6 +1607,40 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiBridgeSetApiBaseUrlConstMeta =>
       const TaskConstMeta(debugName: "set_api_base_url", argNames: ["url"]);
+
+  @override
+  Future<void> crateIsolatedChannelsDemoStateSetLastIncomingText({
+    required String text,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(text, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 40,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateIsolatedChannelsDemoStateSetLastIncomingTextConstMeta,
+        argValues: [text],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoStateSetLastIncomingTextConstMeta =>
+      const TaskConstMeta(
+        debugName: "set_last_incoming_text",
+        argNames: ["text"],
+      );
 
   @override
   Stream<CommentsStateSnapshot> crateApiCommentsBridgeStateStream({
@@ -1394,7 +1660,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 34,
+              funcId: 41,
               port: port_,
             );
           },
@@ -1435,7 +1701,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 35,
+              funcId: 42,
               port: port_,
             );
           },
@@ -1476,7 +1742,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 36,
+              funcId: 43,
               port: port_,
             );
           },
@@ -1711,12 +1977,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError();
-  }
-
-  @protected
   RustStreamSink<ApiBrowserDemoDialogPendingRequest>
   dco_decode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
     dynamic raw,
@@ -1767,6 +2027,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiBrowserDemoDialog dco_decode_api_browser_demo_dialog(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return ApiBrowserDemoDialog();
+  }
+
+  @protected
   ApiBrowserDemoDialogPendingRequest
   dco_decode_api_browser_demo_dialog_pending_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -1808,6 +2077,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiBrowserDemoDuplex dco_decode_api_browser_demo_duplex(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return ApiBrowserDemoDuplex();
+  }
+
+  @protected
   ApiBrowserDemoEvent dco_decode_api_browser_demo_event(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
@@ -1816,6 +2094,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  @protected
+  ApiBrowserDemoEvents dco_decode_api_browser_demo_events(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return ApiBrowserDemoEvents();
   }
 
   @protected
@@ -1857,6 +2144,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ApiBrowserDemoIn dco_decode_box_autoadd_api_browser_demo_in(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_api_browser_demo_in(raw);
+  }
+
+  @protected
+  ApiBrowserDemoOut dco_decode_box_autoadd_api_browser_demo_out(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_api_browser_demo_out(raw);
   }
 
   @protected
@@ -2293,14 +2586,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    throw UnimplementedError('Unreachable ()');
-  }
-
-  @protected
   RustStreamSink<ApiBrowserDemoDialogPendingRequest>
   sse_decode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
     SseDeserializer deserializer,
@@ -2356,6 +2641,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiBrowserDemoDialog sse_decode_api_browser_demo_dialog(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ApiBrowserDemoDialog();
+  }
+
+  @protected
   ApiBrowserDemoDialogPendingRequest
   sse_decode_api_browser_demo_dialog_pending_request(
     SseDeserializer deserializer,
@@ -2399,6 +2692,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiBrowserDemoDuplex sse_decode_api_browser_demo_duplex(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ApiBrowserDemoDuplex();
+  }
+
+  @protected
   ApiBrowserDemoEvent sse_decode_api_browser_demo_event(
     SseDeserializer deserializer,
   ) {
@@ -2412,6 +2713,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
+  }
+
+  @protected
+  ApiBrowserDemoEvents sse_decode_api_browser_demo_events(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ApiBrowserDemoEvents();
   }
 
   @protected
@@ -2467,6 +2776,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_api_browser_demo_in(deserializer));
+  }
+
+  @protected
+  ApiBrowserDemoOut sse_decode_box_autoadd_api_browser_demo_out(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_api_browser_demo_out(deserializer));
   }
 
   @protected
@@ -2974,23 +3291,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(
-      self.setupAndSerialize(
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-      ),
-      serializer,
-    );
-  }
-
-  @protected
   void sse_encode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
     RustStreamSink<ApiBrowserDemoDialogPendingRequest> self,
     SseSerializer serializer,
@@ -3099,6 +3399,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_api_browser_demo_dialog(
+    ApiBrowserDemoDialog self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
   void sse_encode_api_browser_demo_dialog_pending_request(
     ApiBrowserDemoDialogPendingRequest self,
     SseSerializer serializer,
@@ -3135,6 +3443,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_api_browser_demo_duplex(
+    ApiBrowserDemoDuplex self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
   void sse_encode_api_browser_demo_event(
     ApiBrowserDemoEvent self,
     SseSerializer serializer,
@@ -3145,6 +3461,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(0, serializer);
         sse_encode_String(message, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_api_browser_demo_events(
+    ApiBrowserDemoEvents self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected
@@ -3195,6 +3519,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_api_browser_demo_in(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_api_browser_demo_out(
+    ApiBrowserDemoOut self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_api_browser_demo_out(self, serializer);
   }
 
   @protected

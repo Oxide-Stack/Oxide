@@ -76,9 +76,6 @@ Future<void> counterDemoDuplexIncoming({required CounterDemoIn event}) =>
 Future<String?> counterDemoLastIncomingText() => RustLib.instance.api
     .crateApiIsolatedChannelsBridgeCounterDemoLastIncomingText();
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< OxideChannelError>>
-abstract class OxideChannelError implements RustOpaqueInterface {}
-
 /// A callback request envelope exposed to Dart for the demo dialog service.
 ///
 /// Why this wrapper exists:

@@ -18,43 +18,6 @@ use std::sync::Arc;
 
 use crate::state::{AppAction, AppState, AppStateSlice, TodoItem};
 
-#[flutter_rust_bridge::frb(init)]
-/// Initializes Flutter Rust Bridge for this library.
-///
-/// # Examples
-/// ```
-/// use rust_lib_counter_app::api::bridge::init_app;
-///
-/// init_app();
-/// ```
-pub fn init_app() {
-    flutter_rust_bridge::setup_default_user_utils();
-}
-
-#[flutter_rust_bridge::frb]
-/// Initializes the Oxide runtime for this example.
-///
-/// Call this once during app startup (after `RustLib.init()` on the Dart side)
-/// before creating any engines.
-///
-/// # Examples
-/// ```
-/// use rust_lib_counter_app::api::bridge::init_oxide;
-///
-/// tokio::runtime::Runtime::new()
-///     .unwrap()
-///     .block_on(async { init_oxide().await.unwrap() });
-/// ```
-pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
-    fn thread_pool() -> oxide_core::runtime::ThreadPool {
-        crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
-    }
-
-    let _ = oxide_core::runtime::init(thread_pool);
-    crate::navigation::runtime::init()?;
-    Ok(())
-}
-
 #[flutter_rust_bridge::frb]
 pub async fn create_shared_engine() -> Result<Arc<AppEngine>, oxide_core::OxideError> {
     static ENGINE: tokio::sync::OnceCell<Arc<AppEngine>> = tokio::sync::OnceCell::const_new();

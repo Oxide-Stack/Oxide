@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../oxide_generated/routes/route_models.g.dart';
 import '../../oxide.dart';
 
 final class CounterDetailScreen extends ConsumerWidget {
@@ -49,4 +48,3 @@ final class CounterDetailScreen extends ConsumerWidget {
     );
   }
 }
-

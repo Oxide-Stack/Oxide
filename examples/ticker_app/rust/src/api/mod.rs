@@ -8,4 +8,8 @@
 //! ```
 
 pub mod bridge;
-pub mod navigation_bridge;
+
+#[cfg(feature = "navigation-binding")]
+pub mod oxide_navigation {
+    pub use crate::routes::oxide_navigation::*;
+}

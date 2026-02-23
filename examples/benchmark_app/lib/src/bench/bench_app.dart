@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import '../../oxide_generated/navigation/navigation_runtime.g.dart';
-import '../../oxide_generated/routes/route_models.g.dart';
+import '../../oxide.dart';
 import 'bench_detail.dart';
 import 'bench_screen.dart';
 import 'routing_bench_screen.dart';
@@ -15,7 +14,7 @@ final class BenchApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final router = GoRouter(
-      navigatorKey: oxideNavigatorKey,
+      navigatorKey: OxideStack.navigatorKey,
       routes: <RouteBase>[
         GoRoute(path: '/', builder: (context, state) => BenchHomeScreen(route: const HomeRoute())),
         GoRoute(path: '/splash', builder: (context, state) => BenchSplashScreen(route: const SplashRoute())),

@@ -80,4 +80,29 @@ void main() {
     expect(src, contains('final r = route as SplashRoute;'));
     expect(src, contains('return SplashScreen(route: r);'));
   });
+
+  test('generateNavigationRuntimeSource uses typed FRB navigation stream', () {
+    final metadata = RustRouteMetadata(
+      crateName: 'rust_lib_example',
+      routes: [
+        RustRouteMeta(
+          kind: 'Splash',
+          rustType: 'SplashRoute',
+          path: null,
+          returnType: 'oxide_core::navigation::NoReturn',
+          extraType: 'oxide_core::navigation::NoExtra',
+          fields: const [],
+        ),
+      ],
+    );
+
+    final src = generateNavigationRuntimeSource(metadata);
+    expect(src, contains('oxideNavCommandsStream()'));
+    expect(src, isNot(contains('oxideNavCommandsJsonStream')));
+    expect(src, contains('oxideNavSetCurrentRoute('));
+    expect(src, isNot(contains('oxideNavSetCurrentRouteJson')));
+    expect(src, contains('_mapOxideNavCommand'));
+    expect(src, isNot(contains('_decodeOxideNavCommand')));
+    expect(src, isNot(contains('jsonDecode(json)')));
+  });
 }

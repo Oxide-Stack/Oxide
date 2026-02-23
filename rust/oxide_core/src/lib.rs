@@ -55,6 +55,20 @@ pub fn init_engine_globals() -> CoreResult<()> {
     Ok(())
 }
 
+#[cfg(feature = "frb-spawn")]
+pub fn init_from_frb(thread_pool_provider: fn() -> runtime::ThreadPool) -> CoreResult<()> {
+    let _ = runtime::init(thread_pool_provider);
+    init_engine_globals()?;
+    Ok(())
+}
+
+#[cfg(not(feature = "frb-spawn"))]
+pub fn init_from_frb(_thread_pool_provider: fn() -> ()) -> CoreResult<()> {
+    runtime::ensure_initialized()?;
+    init_engine_globals()?;
+    Ok(())
+}
+
 #[cfg(feature = "navigation-binding")]
 pub use engine::{
     NavigationCtx, NavigationRuntime, init_navigation, navigation_runtime,

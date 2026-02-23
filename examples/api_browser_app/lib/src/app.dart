@@ -1,9 +1,9 @@
-import 'package:api_browser_app/oxide_generated/routes/route_kind.g.dart' show RouteKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 import 'home.dart';
 import 'isolated_channels_demo_page.dart';
+import '../oxide.dart' show RouteKind;
 import 'oxide.dart';
 
 @OxideRoutePage('Splash')

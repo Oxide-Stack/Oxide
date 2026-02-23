@@ -11,6 +11,8 @@ final class OxideNavigationBuilder implements Builder {
       'lib/oxide_generated/routes/route_models.g.dart',
       'lib/oxide_generated/navigation/route_builders.g.dart',
       'lib/oxide_generated/navigation/navigation_runtime.g.dart',
+      'lib/oxide_generated/oxide_stack.g.dart',
+      'lib/oxide.dart',
     ],
   };
 
@@ -34,6 +36,14 @@ final class OxideNavigationBuilder implements Builder {
     await buildStep.writeAsString(
       AssetId(buildStep.inputId.package, 'lib/oxide_generated/navigation/navigation_runtime.g.dart'),
       generateNavigationRuntimeSource(metadata),
+    );
+    await buildStep.writeAsString(
+      AssetId(buildStep.inputId.package, 'lib/oxide_generated/oxide_stack.g.dart'),
+      generateOxideStackSource(),
+    );
+    await buildStep.writeAsString(
+      AssetId(buildStep.inputId.package, 'lib/oxide.dart'),
+      generateOxideEntrypointSource(),
     );
   }
 }

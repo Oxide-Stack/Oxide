@@ -6,7 +6,6 @@
 import 'api/bridge.dart';
 import 'api/comments_bridge.dart';
 import 'api/isolated_channels_bridge.dart';
-import 'api/navigation_bridge.dart';
 import 'api/posts_bridge.dart';
 import 'api/users_bridge.dart';
 import 'dart:async';
@@ -14,6 +13,12 @@ import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'frb_generated.dart';
 import 'isolated_channels_demo/channels.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_callback_api_browser_demo_dialog.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_api_browser_demo_duplex.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_api_browser_demo_duplex/frb.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_api_browser_demo_events.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_api_browser_demo_events/frb.dart';
+import 'isolated_channels_demo/state.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 import 'state/comments_action.dart';
 import 'state/comments_state.dart';
@@ -140,9 +145,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw);
-
-  @protected
   RustStreamSink<ApiBrowserDemoDialogPendingRequest>
   dco_decode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
     dynamic raw,
@@ -172,6 +174,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  ApiBrowserDemoDialog dco_decode_api_browser_demo_dialog(dynamic raw);
+
+  @protected
   ApiBrowserDemoDialogPendingRequest
   dco_decode_api_browser_demo_dialog_pending_request(dynamic raw);
 
@@ -186,7 +191,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ApiBrowserDemoDuplex dco_decode_api_browser_demo_duplex(dynamic raw);
+
+  @protected
   ApiBrowserDemoEvent dco_decode_api_browser_demo_event(dynamic raw);
+
+  @protected
+  ApiBrowserDemoEvents dco_decode_api_browser_demo_events(dynamic raw);
 
   @protected
   ApiBrowserDemoIn dco_decode_api_browser_demo_in(dynamic raw);
@@ -203,6 +214,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ApiBrowserDemoIn dco_decode_box_autoadd_api_browser_demo_in(dynamic raw);
+
+  @protected
+  ApiBrowserDemoOut dco_decode_box_autoadd_api_browser_demo_out(dynamic raw);
 
   @protected
   CommentsAction dco_decode_box_autoadd_comments_action(dynamic raw);
@@ -373,11 +387,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   RustStreamSink<ApiBrowserDemoDialogPendingRequest>
   sse_decode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
     SseDeserializer deserializer,
@@ -411,6 +420,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  ApiBrowserDemoDialog sse_decode_api_browser_demo_dialog(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ApiBrowserDemoDialogPendingRequest
   sse_decode_api_browser_demo_dialog_pending_request(
     SseDeserializer deserializer,
@@ -427,7 +441,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ApiBrowserDemoDuplex sse_decode_api_browser_demo_duplex(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ApiBrowserDemoEvent sse_decode_api_browser_demo_event(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ApiBrowserDemoEvents sse_decode_api_browser_demo_events(
     SseDeserializer deserializer,
   );
 
@@ -450,6 +474,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ApiBrowserDemoIn sse_decode_box_autoadd_api_browser_demo_in(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ApiBrowserDemoOut sse_decode_box_autoadd_api_browser_demo_out(
     SseDeserializer deserializer,
   );
 
@@ -655,12 +684,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
     RustStreamSink<ApiBrowserDemoDialogPendingRequest> self,
     SseSerializer serializer,
@@ -700,6 +723,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_api_browser_demo_dialog(
+    ApiBrowserDemoDialog self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_api_browser_demo_dialog_pending_request(
     ApiBrowserDemoDialogPendingRequest self,
     SseSerializer serializer,
@@ -718,8 +747,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_api_browser_demo_duplex(
+    ApiBrowserDemoDuplex self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_api_browser_demo_event(
     ApiBrowserDemoEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_api_browser_demo_events(
+    ApiBrowserDemoEvents self,
     SseSerializer serializer,
   );
 
@@ -747,6 +788,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_api_browser_demo_in(
     ApiBrowserDemoIn self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_api_browser_demo_out(
+    ApiBrowserDemoOut self,
     SseSerializer serializer,
   );
 

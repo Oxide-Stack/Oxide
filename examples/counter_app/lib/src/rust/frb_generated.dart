@@ -5,13 +5,18 @@
 
 import 'api/bridge.dart';
 import 'api/isolated_channels_bridge.dart';
-import 'api/navigation_bridge.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'isolated_channels_demo/channels.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_callback_counter_demo_dialog.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_counter_demo_duplex.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_counter_demo_duplex/frb.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_counter_demo_events.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_counter_demo_events/frb.dart';
+import 'isolated_channels_demo/state.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'state/app_action.dart';
 import 'state/app_state.dart';
@@ -59,9 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       RustLibWire.fromExternalLibrary;
 
   @override
-  Future<void> executeRustInitializers() async {
-    await api.crateApiBridgeInitApp();
-  }
+  Future<void> executeRustInitializers() async {}
 
   @override
   ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig =>
@@ -71,7 +74,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1148113875;
+  int get rustContentHash => 1375942314;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -82,6 +85,12 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Future<AppState> crateStateAppStateAppStateNew();
+
+  Future<bool> crateIsolatedChannelsDemoChannelsCounterDemoDialogConfirm({
+    required String title,
+  });
+
   Future<bool> crateApiIsolatedChannelsBridgeCounterDemoDialogConfirm({
     required String title,
   });
@@ -107,8 +116,16 @@ abstract class RustLibApi extends BaseApi {
   Stream<CounterDemoOut>
   crateApiIsolatedChannelsBridgeCounterDemoDuplexOutgoingStream();
 
+  Future<void> crateIsolatedChannelsDemoChannelsCounterDemoDuplexSend({
+    required CounterDemoOut event,
+  });
+
   Future<void> crateApiIsolatedChannelsBridgeCounterDemoDuplexSend({
     required String text,
+  });
+
+  Future<void> crateIsolatedChannelsDemoChannelsCounterDemoEventsNotify({
+    required String message,
   });
 
   Stream<CounterDemoEvent>
@@ -133,24 +150,37 @@ abstract class RustLibApi extends BaseApi {
     required String message,
   });
 
-  Future<void> crateApiBridgeInitApp();
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexIncoming();
 
   Future<void> crateApiIsolatedChannelsBridgeInitIsolatedChannelsDemo();
 
-  Future<void> crateApiNavigationBridgeInitNavigation();
+  Future<void> crateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandler();
 
-  Future<void> crateApiBridgeInitOxide();
+  Future<String?> crateIsolatedChannelsDemoStateLastIncomingText();
 
-  Stream<String> crateApiNavigationBridgeOxideNavCommandsStream();
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexOutgoing();
 
-  Future<void> crateApiNavigationBridgeOxideNavEmitResult({
-    required String ticket,
-    required String resultJson,
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexFrbOxideCounterDemoDuplexIncoming({
+    required CounterDemoIn event,
   });
 
-  Future<void> crateApiNavigationBridgeOxideNavSetCurrentRoute({
-    required String kind,
-    required String payloadJson,
+  Stream<CounterDemoEvent>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsCounterDemoEventsFrbOxideEventsStream();
+
+  Stream<CounterDemoOut>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexFrbOxideOutgoingStream();
+
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedCallbackCounterDemoDialogRuntime();
+
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsCounterDemoEventsRuntime();
+
+  Future<void> crateIsolatedChannelsDemoStateSetLastIncomingText({
+    required String text,
   });
 
   Stream<AppStateSnapshot> crateApiBridgeStateStream({
@@ -192,6 +222,69 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  Future<AppState> crateStateAppStateAppStateNew() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_app_state,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStateAppStateAppStateNewConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateStateAppStateAppStateNewConstMeta =>
+      const TaskConstMeta(debugName: "app_state_new", argNames: []);
+
+  @override
+  Future<bool> crateIsolatedChannelsDemoChannelsCounterDemoDialogConfirm({
+    required String title,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(title, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsCounterDemoDialogConfirmConstMeta,
+        argValues: [title],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsCounterDemoDialogConfirmConstMeta =>
+      const TaskConstMeta(
+        debugName: "counter_demo_dialog_confirm",
+        argNames: ["title"],
+      );
+
+  @override
   Future<bool> crateApiIsolatedChannelsBridgeCounterDemoDialogConfirm({
     required String title,
   }) {
@@ -203,7 +296,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 1,
+            funcId: 3,
             port: port_,
           );
         },
@@ -245,7 +338,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 4,
             port: port_,
           );
         },
@@ -284,7 +377,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 3,
+              funcId: 5,
               port: port_,
             );
           },
@@ -326,7 +419,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 6,
             port: port_,
           );
         },
@@ -362,7 +455,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 7,
             port: port_,
           );
         },
@@ -399,7 +492,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 6,
+              funcId: 8,
               port: port_,
             );
           },
@@ -425,6 +518,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateIsolatedChannelsDemoChannelsCounterDemoDuplexSend({
+    required CounterDemoOut event,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_counter_demo_out(event, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsCounterDemoDuplexSendConstMeta,
+        argValues: [event],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsCounterDemoDuplexSendConstMeta =>
+      const TaskConstMeta(
+        debugName: "counter_demo_duplex_send",
+        argNames: ["event"],
+      );
+
+  @override
   Future<void> crateApiIsolatedChannelsBridgeCounterDemoDuplexSend({
     required String text,
   }) {
@@ -436,7 +564,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 10,
             port: port_,
           );
         },
@@ -460,6 +588,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateIsolatedChannelsDemoChannelsCounterDemoEventsNotify({
+    required String message,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(message, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsCounterDemoEventsNotifyConstMeta,
+        argValues: [message],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsCounterDemoEventsNotifyConstMeta =>
+      const TaskConstMeta(
+        debugName: "counter_demo_events_notify",
+        argNames: ["message"],
+      );
+
+  @override
   Stream<CounterDemoEvent>
   crateApiIsolatedChannelsBridgeCounterDemoEventsStream() {
     final sink = RustStreamSink<CounterDemoEvent>();
@@ -472,7 +635,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 8,
+              funcId: 12,
               port: port_,
             );
           },
@@ -506,7 +669,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 13,
             port: port_,
           );
         },
@@ -538,7 +701,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 14,
             port: port_,
           );
         },
@@ -573,7 +736,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 15,
             port: port_,
           );
         },
@@ -608,7 +771,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 16,
             port: port_,
           );
         },
@@ -642,7 +805,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 17,
             port: port_,
           );
         },
@@ -672,7 +835,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 18,
             port: port_,
           );
         },
@@ -696,7 +859,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateApiBridgeInitApp() {
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexIncoming() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -704,7 +868,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 19,
             port: port_,
           );
         },
@@ -712,15 +876,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiBridgeInitAppConstMeta,
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexIncomingConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBridgeInitAppConstMeta =>
-      const TaskConstMeta(debugName: "init_app", argNames: []);
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexIncomingConstMeta =>
+      const TaskConstMeta(debugName: "incoming", argNames: []);
 
   @override
   Future<void> crateApiIsolatedChannelsBridgeInitIsolatedChannelsDemo() {
@@ -731,7 +897,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 20,
             port: port_,
           );
         },
@@ -756,144 +922,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateApiNavigationBridgeInitNavigation() {
+  Future<void> crateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandler() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 17,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-        ),
-        constMeta: kCrateApiNavigationBridgeInitNavigationConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeInitNavigationConstMeta =>
-      const TaskConstMeta(debugName: "init_navigation", argNames: []);
-
-  @override
-  Future<void> crateApiBridgeInitOxide() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 18,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-        ),
-        constMeta: kCrateApiBridgeInitOxideConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiBridgeInitOxideConstMeta =>
-      const TaskConstMeta(debugName: "init_oxide", argNames: []);
-
-  @override
-  Stream<String> crateApiNavigationBridgeOxideNavCommandsStream() {
-    final sink = RustStreamSink<String>();
-    unawaited(
-      handler.executeNormal(
-        NormalTask(
-          callFfi: (port_) {
-            final serializer = SseSerializer(generalizedFrbRustBinding);
-            sse_encode_StreamSink_String_Sse(sink, serializer);
-            pdeCallFfi(
-              generalizedFrbRustBinding,
-              serializer,
-              funcId: 19,
-              port: port_,
-            );
-          },
-          codec: SseCodec(
-            decodeSuccessData: sse_decode_unit,
-            decodeErrorData:
-                sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-          ),
-          constMeta: kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta,
-          argValues: [sink],
-          apiImpl: this,
-        ),
-      ),
-    );
-    return sink.stream;
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta =>
-      const TaskConstMeta(
-        debugName: "oxide_nav_commands_stream",
-        argNames: ["sink"],
-      );
-
-  @override
-  Future<void> crateApiNavigationBridgeOxideNavEmitResult({
-    required String ticket,
-    required String resultJson,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(ticket, serializer);
-          sse_encode_String(resultJson, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 20,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-        ),
-        constMeta: kCrateApiNavigationBridgeOxideNavEmitResultConstMeta,
-        argValues: [ticket, resultJson],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavEmitResultConstMeta =>
-      const TaskConstMeta(
-        debugName: "oxide_nav_emit_result",
-        argNames: ["ticket", "resultJson"],
-      );
-
-  @override
-  Future<void> crateApiNavigationBridgeOxideNavSetCurrentRoute({
-    required String kind,
-    required String payloadJson,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(kind, serializer);
-          sse_encode_String(payloadJson, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -903,20 +936,282 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
+          decodeErrorData: null,
         ),
-        constMeta: kCrateApiNavigationBridgeOxideNavSetCurrentRouteConstMeta,
-        argValues: [kind, payloadJson],
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandlerConstMeta,
+        argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavSetCurrentRouteConstMeta =>
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandlerConstMeta =>
       const TaskConstMeta(
-        debugName: "oxide_nav_set_current_route",
-        argNames: ["kind", "payloadJson"],
+        debugName: "install_duplex_incoming_handler",
+        argNames: [],
+      );
+
+  @override
+  Future<String?> crateIsolatedChannelsDemoStateLastIncomingText() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 22,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateIsolatedChannelsDemoStateLastIncomingTextConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateIsolatedChannelsDemoStateLastIncomingTextConstMeta =>
+      const TaskConstMeta(debugName: "last_incoming_text", argNames: []);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexOutgoing() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 23,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexOutgoingConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexOutgoingConstMeta =>
+      const TaskConstMeta(debugName: "outgoing", argNames: []);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexFrbOxideCounterDemoDuplexIncoming({
+    required CounterDemoIn event,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_counter_demo_in(event, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 24,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexFrbOxideCounterDemoDuplexIncomingConstMeta,
+        argValues: [event],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexFrbOxideCounterDemoDuplexIncomingConstMeta =>
+      const TaskConstMeta(
+        debugName: "oxide_counter_demo_duplex_incoming",
+        argNames: ["event"],
+      );
+
+  @override
+  Stream<CounterDemoEvent>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsCounterDemoEventsFrbOxideEventsStream() {
+    final sink = RustStreamSink<CounterDemoEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_StreamSink_counter_demo_event_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 25,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta:
+              kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsCounterDemoEventsFrbOxideEventsStreamConstMeta,
+          argValues: [sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsCounterDemoEventsFrbOxideEventsStreamConstMeta =>
+      const TaskConstMeta(debugName: "oxide_events_stream", argNames: ["sink"]);
+
+  @override
+  Stream<CounterDemoOut>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexFrbOxideOutgoingStream() {
+    final sink = RustStreamSink<CounterDemoOut>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_StreamSink_counter_demo_out_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 26,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta:
+              kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexFrbOxideOutgoingStreamConstMeta,
+          argValues: [sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexFrbOxideOutgoingStreamConstMeta =>
+      const TaskConstMeta(
+        debugName: "oxide_outgoing_stream",
+        argNames: ["sink"],
+      );
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedCallbackCounterDemoDialogRuntime() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 27,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedCallbackCounterDemoDialogRuntimeConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedCallbackCounterDemoDialogRuntimeConstMeta =>
+      const TaskConstMeta(debugName: "runtime", argNames: []);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsCounterDemoEventsRuntime() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 28,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsCounterDemoEventsRuntimeConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsCounterDemoEventsRuntimeConstMeta =>
+      const TaskConstMeta(debugName: "runtime", argNames: []);
+
+  @override
+  Future<void> crateIsolatedChannelsDemoStateSetLastIncomingText({
+    required String text,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(text, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 29,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateIsolatedChannelsDemoStateSetLastIncomingTextConstMeta,
+        argValues: [text],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoStateSetLastIncomingTextConstMeta =>
+      const TaskConstMeta(
+        debugName: "set_last_incoming_text",
+        argNames: ["text"],
       );
 
   @override
@@ -937,7 +1232,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 22,
+              funcId: 30,
               port: port_,
             );
           },
@@ -1101,12 +1396,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError();
-  }
-
-  @protected
   RustStreamSink<AppStateSnapshot> dco_decode_StreamSink_app_state_snapshot_Sse(
     dynamic raw,
   ) {
@@ -1225,6 +1514,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CounterDemoOut dco_decode_box_autoadd_counter_demo_out(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_counter_demo_out(raw);
+  }
+
+  @protected
+  CounterDemoDialog dco_decode_counter_demo_dialog(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return CounterDemoDialog();
+  }
+
+  @protected
   CounterDemoDialogPendingRequest
   dco_decode_counter_demo_dialog_pending_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -1264,6 +1568,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CounterDemoDuplex dco_decode_counter_demo_duplex(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return CounterDemoDuplex();
+  }
+
+  @protected
   CounterDemoEvent dco_decode_counter_demo_event(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
@@ -1272,6 +1585,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  @protected
+  CounterDemoEvents dco_decode_counter_demo_events(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return CounterDemoEvents();
   }
 
   @protected
@@ -1443,14 +1765,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    throw UnimplementedError('Unreachable ()');
-  }
-
-  @protected
   RustStreamSink<AppStateSnapshot> sse_decode_StreamSink_app_state_snapshot_Sse(
     SseDeserializer deserializer,
   ) {
@@ -1569,6 +1883,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CounterDemoOut sse_decode_box_autoadd_counter_demo_out(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_counter_demo_out(deserializer));
+  }
+
+  @protected
+  CounterDemoDialog sse_decode_counter_demo_dialog(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CounterDemoDialog();
+  }
+
+  @protected
   CounterDemoDialogPendingRequest
   sse_decode_counter_demo_dialog_pending_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -1610,6 +1940,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CounterDemoDuplex sse_decode_counter_demo_duplex(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CounterDemoDuplex();
+  }
+
+  @protected
   CounterDemoEvent sse_decode_counter_demo_event(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1621,6 +1959,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
+  }
+
+  @protected
+  CounterDemoEvents sse_decode_counter_demo_events(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CounterDemoEvents();
   }
 
   @protected
@@ -1843,23 +2189,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(
-      self.setupAndSerialize(
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-      ),
-      serializer,
-    );
-  }
-
-  @protected
   void sse_encode_StreamSink_app_state_snapshot_Sse(
     RustStreamSink<AppStateSnapshot> self,
     SseSerializer serializer,
@@ -2014,6 +2343,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_counter_demo_out(
+    CounterDemoOut self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_counter_demo_out(self, serializer);
+  }
+
+  @protected
+  void sse_encode_counter_demo_dialog(
+    CounterDemoDialog self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
   void sse_encode_counter_demo_dialog_pending_request(
     CounterDemoDialogPendingRequest self,
     SseSerializer serializer,
@@ -2050,6 +2396,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_counter_demo_duplex(
+    CounterDemoDuplex self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
   void sse_encode_counter_demo_event(
     CounterDemoEvent self,
     SseSerializer serializer,
@@ -2060,6 +2414,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(0, serializer);
         sse_encode_String(message, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_counter_demo_events(
+    CounterDemoEvents self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected

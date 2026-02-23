@@ -20,7 +20,7 @@ fn reset_persistence_file(key: &str) {
 }
 
 async fn create_test_engine(key: &str) -> ReducerEngine<AppRootReducer, AppStateSlice> {
-    crate::api::bridge::init_oxide().await.unwrap();
+    crate::oxide::init::init_oxide();
     ReducerEngine::<AppRootReducer, AppStateSlice>::new_persistent(
         AppRootReducer::default(),
         AppState::new(),
@@ -55,7 +55,7 @@ async fn wait_for_persistence_file(key: &str) {
 
 #[test]
 fn frb_init_app_is_callable() {
-    crate::api::bridge::init_app();
+    crate::oxide::init::init_oxide();
 }
 
 #[test]

@@ -6,6 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `eq`, `fmt`
+
 ///oxide:state
 ///oxide:meta:{"kind":"state","name":"AppState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)"],"fields":[{"name":"counter","ty":"u64"},{"name":"last_confirmed","ty":"Option < bool >"}],"variants":null}
 class AppState {
@@ -13,6 +15,10 @@ class AppState {
   final bool? lastConfirmed;
 
   const AppState({required this.counter, this.lastConfirmed});
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  static Future<AppState> newInstance() =>
+      RustLib.instance.api.crateStateAppStateAppStateNew();
 
   @override
   int get hashCode => counter.hashCode ^ lastConfirmed.hashCode;

@@ -52,7 +52,7 @@ impl Route for SplashRoute {
 
 The macro scans `src/routes/` and writes a JSON metadata file to `target/oxide_routes/`. The Dart generator consumes this file.
 
-When `navigation-binding` is enabled, the macro also generates FRB-ready navigation endpoints under `crate::navigation::frb` (for example: `init_navigation`, `oxide_nav_commands_stream`, `oxide_nav_emit_result`, `oxide_nav_set_current_route`). Applications should not hand-write these bindings.
+When `navigation-binding` is enabled, the macro generates FRB-ready navigation endpoints under `crate::routes::oxide_navigation` (for example: `init_navigation`, `oxide_nav_commands_stream`, `oxide_nav_emit_result`, `oxide_nav_set_current_route`). Applications should not hand-write these bindings; examples re-export them through `crate::api::oxide_navigation` for FRB discovery.
 
 ## Bind Routes to Widgets in Dart
 
@@ -72,67 +72,31 @@ final class SplashScreen extends StatelessWidget { ... }
 final class HomeScreen extends StatelessWidget { ... }
 ```
 
-Then import the generated outputs:
+Then import the single public entrypoint:
 
 ```dart
-import 'oxide_generated/navigation/route_builders.g.dart';
-import 'oxide_generated/routes/route_kind.g.dart';
-import 'oxide_generated/routes/route_models.g.dart';
+import 'oxide.dart';
 ```
 
 ## Execute Rust Commands in Dart
 
-Use the runtime coordinator + a handler (Navigator 1.0):
+Navigation runtime setup is generated.
 
-```dart
-import 'src/rust/api/navigation_bridge.dart' as rust;
-
-final handler = NavigatorNavigationHandler<OxideRoute, RouteKind>(
-  navigatorKey: navigatorKey,
-  kindOf: (r) => r.kind,
-  routeBuilders: oxideRouteBuilders,
-);
-
-final runtime = OxideNavigationRuntime<OxideRoute, RouteKind>(
-  commands: rust.oxideNavCommandsStream().map(decodeNavCommand).whereType(),
-  handler: handler,
-  emitResult: (ticket, result) => rust.oxideNavEmitResult(ticket: ticket, resultJson: jsonEncode(result)),
-  setCurrentRoute: (route) => rust.oxideNavSetCurrentRoute(
-    kind: route.kind.asStr,
-    payloadJson: jsonEncode(route.toJson()),
-  ),
-);
-
-oxideNavStart();
-```
-
-Use the runtime coordinator + a handler (GoRouter):
+Use the generated navigator key with your navigation backend (Navigator 1.0 or GoRouter), and call `OxideStack.init()` from `main()`. When `startNavigation` is enabled (default), the runtime starts automatically.
 
 ```dart
 import 'package:go_router/go_router.dart';
-import 'src/rust/api/navigation_bridge.dart' as rust;
 
-final handler = GoRouterNavigationHandler<OxideRoute, RouteKind>(
-  router: appRouter,
-  kindOf: (r) => r.kind,
-  locationOf: (r) => routeLocationOf(r),
-  locationOfKind: (kind) => kindLocationOf(kind),
+import 'oxide.dart';
+
+final router = GoRouter(
+  navigatorKey: OxideStack.navigatorKey,
+  routes: <RouteBase>[/* your normal GoRouter config */],
 );
-
-final runtime = OxideNavigationRuntime<OxideRoute, RouteKind>(
-  commands: rust.oxideNavCommandsStream().map(decodeNavCommand).whereType(),
-  handler: handler,
-  emitResult: (ticket, result) => rust.oxideNavEmitResult(ticket: ticket, resultJson: jsonEncode(result)),
-  setCurrentRoute: (route) => rust.oxideNavSetCurrentRoute(
-    kind: route.kind.asStr,
-    payloadJson: jsonEncode(route.toJson()),
-  ),
-);
-
-oxideNavStart();
 ```
 
 ## Notes
 
 - Navigation is feature-gated by `navigation-binding`. Builds without this feature exclude all navigation code.
 - Examples in this repository demonstrate a splash-first flow and a Rust-driven transition to the primary route.
+- See [navigation-migration.md](./navigation-migration.md) for upgrades from the manual binding model.

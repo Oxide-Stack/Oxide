@@ -115,6 +115,21 @@ pub fn routes(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 }
 
+#[proc_macro_attribute]
+pub fn oxide_route(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(attr as routes::OxideRouteArgs);
+    let input = parse_macro_input!(item as Item);
+    match input {
+        Item::Struct(item_struct) => match routes::expand_oxide_route_struct(args, item_struct) {
+            Ok(ts) => ts.into(),
+            Err(e) => e.to_compile_error().into(),
+        },
+        other => syn::Error::new_spanned(other, "#[oxide_route] can only be applied to a struct")
+            .to_compile_error()
+            .into(),
+    }
+}
+
 #[cfg(feature = "isolated-channels")]
 #[proc_macro_attribute]
 /// Generates glue for an Oxide isolated event channel or duplex channel.

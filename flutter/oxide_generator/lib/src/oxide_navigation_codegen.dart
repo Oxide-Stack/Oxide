@@ -1,13 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:analyzer/dart/element/element.dart';
-import 'package:analyzer/dart/constant/value.dart';
 import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:glob/glob.dart';
-import 'package:oxide_annotations/oxide_annotations.dart';
-import 'package:source_gen/source_gen.dart';
 
 final _formatter = DartFormatter(languageVersion: DartFormatter.latestShortStyleLanguageVersion, pageWidth: 100);
 
@@ -210,6 +206,8 @@ String generateRouteKindSource(RustRouteMetadata metadata) {
       ..writeln("  String get asStr => switch (this) {")
       ..writeln("    RouteKind.unknown => 'Unknown',")
       ..writeln('  };')
+      ..writeln()
+      ..writeln('  static RouteKind? fromStr(String s) => null;')
       ..writeln('}');
 
     return _formatter.format(buf.toString());
@@ -236,6 +234,17 @@ String generateRouteKindSource(RustRouteMetadata metadata) {
   }
 
   buf
+    ..writeln('  };')
+    ..writeln()
+    ..writeln('  static RouteKind? fromStr(String s) => switch (s) {');
+
+  for (final r in metadata.routes) {
+    final v = _lowerCamel(r.kind);
+    buf.writeln("    '${r.kind}' => RouteKind.$v,");
+  }
+
+  buf
+    ..writeln('    _ => null,')
     ..writeln('  };')
     ..writeln('}');
 
@@ -370,7 +379,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln("import '../routes/route_kind.g.dart';")
     ..writeln("import '../routes/route_models.g.dart';")
     ..writeln()
-    ..writeln("import '../../src/rust/api/navigation_bridge.dart' as rust;")
+    ..writeln("import '../../src/rust/api/oxide_navigation.dart' as rust;")
     ..writeln()
     ..writeln('final GlobalKey<NavigatorState> oxideNavigatorKey = GlobalKey<NavigatorState>();')
     ..writeln()
@@ -385,78 +394,77 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln();
 
   buf
-    ..writeln('OxideNavigationCommand<OxideRoute, RouteKind>? _decodeOxideNavCommand(String json) {')
-    ..writeln('  final obj = jsonDecode(json);')
-    ..writeln('  if (obj is! Map<String, dynamic> || obj.length != 1) return null;')
-    ..writeln('  final entry = obj.entries.first;')
-    ..writeln()
-    ..writeln('  switch (entry.key) {')
-    ..writeln("    case 'Push':")
-    ..writeln('      final payload = entry.value;')
-    ..writeln('      if (payload is! Map<String, dynamic>) return null;')
-    ..writeln("      final routeObj = payload['route'];")
-    ..writeln('      if (routeObj is! Map<String, dynamic>) return null;')
-    ..writeln("      final kind = routeObj['kind'];")
-    ..writeln("      final routePayload = routeObj['payload'];")
-    ..writeln('      if (kind is! String || routePayload is! Map<String, dynamic>) return null;')
-    ..writeln("      final ticket = payload['ticket'] as String?;")
-    ..writeln()
-    ..writeln('      final route = switch (kind) {');
+    ..writeln('OxideRoute _fromRustRoutePayload(rust.RoutePayload payload) {')
+    ..writeln('  return payload.when(');
 
   for (final r in metadata.routes) {
     final rustType = r.rustType;
-    buf.writeln("        '${r.kind}' => $rustType.fromJson(routePayload),");
+    final kindCtor = _lowerCamel(r.kind);
+    buf.writeln('    $kindCtor: (field0) => $rustType(');
+    for (final f in r.fields) {
+      buf.writeln('      ${f.name}: field0.${f.name},');
+    }
+    buf.writeln('    ),');
   }
   buf
-    ..writeln('        _ => null,')
-    ..writeln('      };')
-    ..writeln('      if (route == null) return null;')
-    ..writeln('      return OxideNavigationCommand.push(route: route, ticket: ticket);')
-    ..writeln("    case 'Pop':")
-    ..writeln('      final payload = entry.value;')
-    ..writeln('      if (payload is! Map<String, dynamic>) return null;')
-    ..writeln("      return OxideNavigationCommand.pop(result: payload['result']);")
-    ..writeln("    case 'PopUntil':")
-    ..writeln('      final payload = entry.value;')
-    ..writeln('      if (payload is! Map<String, dynamic>) return null;')
-    ..writeln("      final kind = payload['kind'];")
-    ..writeln('      if (kind is! String) return null;')
-    ..writeln('      final routeKind = switch (kind) {');
+    ..writeln('  );')
+    ..writeln('}')
+    ..writeln()
+    ..writeln('rust.RoutePayload _toRustRoutePayload(OxideRoute route) {')
+    ..writeln('  switch (route.kind) {');
 
   for (final r in metadata.routes) {
-    buf.writeln("        '${r.kind}' => RouteKind.${_lowerCamel(r.kind)},");
+    final rustType = r.rustType;
+    final kindCtor = _lowerCamel(r.kind);
+    buf.writeln('    case RouteKind.$kindCtor:');
+    buf.writeln('      final r = route as $rustType;');
+    buf.writeln('      return rust.RoutePayload.$kindCtor(rust.$rustType(');
+    for (final f in r.fields) {
+      buf.writeln('        ${f.name}: r.${f.name},');
+    }
+    buf.writeln('      ));');
   }
   buf
-    ..writeln('        _ => null,')
-    ..writeln('      };')
-    ..writeln('      if (routeKind == null) return null;')
+    ..writeln('  }')
+    ..writeln('}')
+    ..writeln()
+    ..writeln('RouteKind? _routeKindFromStr(String kind) {')
+    ..writeln('  return switch (kind) {');
+
+  for (final r in metadata.routes) {
+    final kindCtor = _lowerCamel(r.kind);
+    buf.writeln("    '${r.kind}' => RouteKind.$kindCtor,");
+  }
+  buf
+    ..writeln('    _ => null,')
+    ..writeln('  };')
+    ..writeln('}')
+    ..writeln()
+    ..writeln(
+      'OxideNavigationCommand<OxideRoute, RouteKind> _mapOxideNavCommand(rust.OxideNavCommand cmd) {',
+    )
+    ..writeln('  return cmd.when(')
+    ..writeln('    push: (route, ticket) {')
+    ..writeln('      final decoded = _fromRustRoutePayload(route);')
+    ..writeln('      return OxideNavigationCommand.push(route: decoded, ticket: ticket);')
+    ..writeln('    },')
+    ..writeln('    pop: (resultJson) {')
+    ..writeln('      final Object? result = resultJson == null ? null : jsonDecode(resultJson);')
+    ..writeln('      return OxideNavigationCommand.pop(result: result);')
+    ..writeln('    },')
+    ..writeln('    popUntil: (kind) {')
+    ..writeln('      final routeKind = _routeKindFromStr(kind);')
+    ..writeln("      if (routeKind == null) throw StateError('Unknown route kind: \$kind');")
     ..writeln('      return OxideNavigationCommand.popUntil(kind: routeKind);')
-    ..writeln("    case 'Reset':")
-    ..writeln('      final payload = entry.value;')
-    ..writeln('      if (payload is! Map<String, dynamic>) return null;')
-    ..writeln("      final routes = payload['routes'];")
-    ..writeln('      if (routes is! List) return null;')
+    ..writeln('    },')
+    ..writeln('    reset: (routes) {')
     ..writeln('      final decoded = <OxideRoute>[];')
     ..writeln('      for (final r in routes) {')
-    ..writeln('        if (r is! Map<String, dynamic>) continue;')
-    ..writeln("        final kind = r['kind'];")
-    ..writeln("        final routePayload = r['payload'];")
-    ..writeln('        if (kind is! String || routePayload is! Map<String, dynamic>) continue;')
-    ..writeln('        final route = switch (kind) {');
-
-  for (final r in metadata.routes) {
-    final rustType = r.rustType;
-    buf.writeln("          '${r.kind}' => $rustType.fromJson(routePayload),");
-  }
-  buf
-    ..writeln('          _ => null,')
-    ..writeln('        };')
-    ..writeln('        if (route != null) decoded.add(route);')
+    ..writeln('        decoded.add(_fromRustRoutePayload(r));')
     ..writeln('      }')
     ..writeln('      return OxideNavigationCommand.reset(routes: decoded);')
-    ..writeln('  }')
-    ..writeln()
-    ..writeln('  return null;')
+    ..writeln('    },')
+    ..writeln('  );')
     ..writeln('}')
     ..writeln()
     ..writeln(
@@ -464,8 +472,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
       'OxideNavigationRuntime<OxideRoute, RouteKind>(',
     )
     ..writeln('  commands: rust.oxideNavCommandsStream()')
-    ..writeln('      .map(_decodeOxideNavCommand)')
-    ..writeln('      .where((c) => c != null)')
+    ..writeln('      .map(_mapOxideNavCommand)')
     ..writeln('      .cast<OxideNavigationCommand<OxideRoute, RouteKind>>(),')
     ..writeln('  handler: oxideNavigationHandler,')
     ..writeln(
@@ -474,7 +481,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     )
     ..writeln(
       '  setCurrentRoute: (route) => rust.oxideNavSetCurrentRoute('
-      'kind: route.kind.asStr, payloadJson: jsonEncode(route.toJson())),',
+      'route: route == null ? null : _toRustRoutePayload(route)),',
     )
     ..writeln(');')
     ..writeln()
@@ -483,6 +490,59 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('}')
     ..writeln()
     ..writeln('Future<void> oxideNavStop() => oxideNavigationRuntime.stop();');
+
+  return _formatter.format(buf.toString());
+}
+
+String generateOxideStackSource() {
+  final buf = StringBuffer()
+    ..writeln('// Generated by oxide_generator. Do not edit.')
+    ..writeln()
+    ..writeln("import 'package:flutter/widgets.dart';")
+    ..writeln()
+    ..writeln("import '../src/rust/frb_generated.dart';")
+    ..writeln()
+    ..writeln("import 'navigation/navigation_runtime.g.dart';")
+    ..writeln("import 'routes/route_kind.g.dart';")
+    ..writeln("import 'routes/route_models.g.dart';")
+    ..writeln()
+    ..writeln('final class OxideStack {')
+    ..writeln('  static bool _initialized = false;')
+    ..writeln()
+    ..writeln('  static bool get isInitialized => _initialized;')
+    ..writeln()
+    ..writeln('  static GlobalKey<NavigatorState> get navigatorKey => oxideNavigatorKey;')
+    ..writeln()
+    ..writeln('  static Future<void> init({bool startNavigation = true}) async {')
+    ..writeln('    if (_initialized) return;')
+    ..writeln('    await RustLib.init();')
+    ..writeln('    _initialized = true;')
+    ..writeln('    if (startNavigation) {')
+    ..writeln('      oxideNavStart();')
+    ..writeln('    }')
+    ..writeln('  }')
+    ..writeln()
+    ..writeln('  static OxideNavigationRuntime<OxideRoute, RouteKind> get navigation {')
+    ..writeln('    _ensureInitialized();')
+    ..writeln('    return oxideNavigationRuntime;')
+    ..writeln('  }')
+    ..writeln()
+    ..writeln('  static void _ensureInitialized() {')
+    ..writeln('    if (_initialized) return;')
+    ..writeln("    throw StateError('OxideStack.init() must be called from main() before using Oxide APIs.');")
+    ..writeln('  }')
+    ..writeln('}');
+
+  return _formatter.format(buf.toString());
+}
+
+String generateOxideEntrypointSource() {
+  final buf = StringBuffer()
+    ..writeln('// Generated by oxide_generator. Do not edit.')
+    ..writeln()
+    ..writeln("export 'oxide_generated/oxide_stack.g.dart' show OxideStack;")
+    ..writeln("export 'oxide_generated/routes/route_kind.g.dart' show RouteKind, RouteKindX;")
+    ..writeln("export 'oxide_generated/routes/route_models.g.dart';");
 
   return _formatter.format(buf.toString());
 }
@@ -535,57 +595,4 @@ String? _routeKindKeyFromSource(String expr) {
   }
 
   return null;
-}
-
-String? _enumValueExpression(DartObject obj) {
-  final objType = obj.type;
-  final objElement = objType?.element;
-  if (objType == null || objElement is! EnumElement) return null;
-
-  final nameValue = obj.getField('name')?.toStringValue();
-  if (nameValue != null && nameValue.isNotEmpty) {
-    final enumTypeName = objType.getDisplayString(withNullability: false);
-    return '$enumTypeName.$nameValue';
-  }
-
-  final enumIndex = obj.getField('index')?.toIntValue();
-  if (enumIndex == null) return null;
-
-  final constants = (() {
-    final dynamic dyn = objElement;
-    try {
-      final value = dyn.constants;
-      if (value is List) return value;
-    } catch (_) {}
-    return null;
-  })();
-
-  String? constantName;
-  if (constants != null) {
-    if (enumIndex >= 0 && enumIndex < constants.length) {
-      final dynamic dynConstant = constants[enumIndex];
-      final name = dynConstant.name;
-      if (name is String && name.isNotEmpty) constantName = name;
-    }
-  } else {
-    final fields = objElement.fields.where((f) => f.isEnumConstant).toList(growable: false);
-    if (enumIndex >= 0 && enumIndex < fields.length) constantName = fields[enumIndex].name;
-  }
-
-  if (constantName == null || constantName.isEmpty) return null;
-  final enumTypeName = objType.getDisplayString(withNullability: false);
-  return '$enumTypeName.$constantName';
-}
-
-String? _routeKindKey(DartObject obj) {
-  final str = obj.toStringValue();
-  if (str != null && str.isNotEmpty) {
-    return _lowerCamel(str);
-  }
-
-  final expr = _enumValueExpression(obj);
-  if (expr == null || !expr.contains('.')) return null;
-  final last = expr.split('.').last;
-  if (last.isEmpty) return null;
-  return _lowerCamel(last);
 }

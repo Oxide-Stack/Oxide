@@ -4,7 +4,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:benchmark_app/src/bench/bench_screen.dart';
-import 'package:benchmark_app/oxide_generated/routes/route_models.g.dart';
+import 'package:benchmark_app/oxide.dart';
 import 'package:benchmark_app/src/oxide.dart';
 import 'package:benchmark_app/src/rust/api/bridge.dart' show initOxide;
 import 'package:benchmark_app/src/rust/frb_generated.dart';

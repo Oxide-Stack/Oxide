@@ -1,39 +1,24 @@
-# Unified Async Initialization (`initOxide`)
+# Initialization (`OxideStack.init`)
 
-Oxide runs background work via Flutter Rust Bridge (FRB) spawning. This requires a single Rust-side initialization call after `RustLib.init()` and before any engine is created.
+Oxide runs background work using Flutter Rust Bridge (FRB) spawning. The recommended setup is to let a macro-generated Rust init hook run as part of `RustLib.init()`, and expose a single Dart entrypoint (`OxideStack.init`) that must be called from `main()` before using Oxide APIs.
 
-## Rust: Expose `init_oxide`
+## Rust: Use the Macro-Generated Init Hook
 
-Add an FRB-exposed function in your Rust API module (the one referenced by `flutter_rust_bridge.yaml`):
+If your crate uses the `#[oxide_generator_rs::routes]` macro (navigation-enabled apps), Oxide emits an FRB init hook at build time. You do not need to hand-write `init_app` / `init_oxide` functions in your crate.
 
-```rust
-#[flutter_rust_bridge::frb]
-pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
-  fn thread_pool() -> oxide_core::runtime::ThreadPool {
-    crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
-  }
-  let _ = oxide_core::runtime::init(thread_pool);
-  #[cfg(feature = "navigation-binding")]
-  oxide_core::init_navigation()?;
-  #[cfg(feature = "isolated-channels")]
-  oxide_core::init_isolated_channels()?;
-  Ok(())
-}
-```
-
-## Dart: Call `initOxide` In `main`
+## Dart: Call `OxideStack.init()` In `main`
 
 ```dart
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await RustLib.init();
-  await initOxide();
+  await OxideStack.init();
   runApp(const MyApp());
 }
 ```
 
+`OxideStack.init()` calls `RustLib.init()` and (by default) starts the generated navigation runtime.
+
 ## Best Practices
 
-- Call `initOxide()` once per app startup (calling multiple times is harmless).
-- Create engines only after `initOxide()` completes.
-- If you enable optional feature runtimes, initialize them from the same Rust `init_oxide()` entrypoint.
+- Call `OxideStack.init()` once per app startup.
+- Do not access `OxideStack.navigation` or create any Oxide engines before initialization.

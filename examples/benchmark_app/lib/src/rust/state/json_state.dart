@@ -6,6 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `eq`, `fmt`
+
 ///oxide:state
 ///oxide:meta:{"kind":"state","name":"JsonState","docs":[],"fields":[{"name":"counter","ty":"u64"},{"name":"checksum","ty":"u64"}],"variants":null}
 class JsonState {
@@ -13,6 +15,10 @@ class JsonState {
   final BigInt checksum;
 
   const JsonState({required this.counter, required this.checksum});
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  static Future<JsonState> newInstance() =>
+      RustLib.instance.api.crateStateJsonStateJsonStateNew();
 
   @override
   int get hashCode => counter.hashCode ^ checksum.hashCode;
