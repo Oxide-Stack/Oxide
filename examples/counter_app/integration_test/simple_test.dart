@@ -1,17 +1,16 @@
+import 'package:counter_app/oxide_generated/oxide_stack.g.dart' show OxideStack;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:counter_app/src/features/counter/counter_home_screen.dart';
-import 'package:counter_app/src/rust/api/bridge.dart' show initOxide;
 import 'package:counter_app/src/rust/frb_generated.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
-    await RustLib.init();
-    await initOxide();
+    await OxideStack.init();
   });
 
   testWidgets('Counter dispatch updates Rust state', (WidgetTester tester) async {

@@ -268,6 +268,9 @@ pub(crate) fn expand_reducer_impl(
 
     let frb_tokens = if cfg!(feature = "frb") && include_frb {
         quote! {
+            #[allow(unused_imports)]
+            pub use oxide_core::OxideError;
+
             #[flutter_rust_bridge::frb]
             pub async fn create_engine() -> Result<std::sync::Arc<#engine_ident>, oxide_core::OxideError> {
                 Ok(std::sync::Arc::new(#engine_ident::new().await?))

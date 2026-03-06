@@ -1,26 +1,14 @@
 use oxide_generator_rs::reducer;
 
-/// Error type exposed across the FFI boundary.
-///
-/// # Examples
-/// ```
-/// use rust_lib_ticker_app::api::bridge::OxideError;
-///
-/// let _ = OxideError::Validation {
-///     message: "example".to_string(),
-/// };
-/// ```
-pub use oxide_core::OxideError;
-
-use oxide_core::StateChange;
 use oxide_core::tokio;
+use oxide_core::StateChange;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::sync::Mutex as StdMutex;
 use std::time::Duration;
 
-use crate::state::{AppAction, AppState, AppStateSlice};
 use crate::state::app_state::TickState;
+use crate::state::{AppAction, AppState, AppStateSlice};
 
 #[reducer(
     engine = AppEngine,
@@ -109,7 +97,10 @@ impl oxide_core::Reducer for AppRootReducer {
                     let Ok(runtime) = oxide_core::navigation_runtime() else {
                         return;
                     };
-                    let Ok((_ticket, rx)) = runtime.push_with_ticket(crate::routes::ConfirmRoute { title }).await else {
+                    let Ok((_ticket, rx)) = runtime
+                        .push_with_ticket(crate::routes::ConfirmRoute { title })
+                        .await
+                    else {
                         return;
                     };
                     let Ok(value) = rx.await else {
@@ -130,7 +121,9 @@ impl oxide_core::Reducer for AppRootReducer {
             }
             AppAction::ResetStack => {
                 if let Ok(runtime) = oxide_core::navigation_runtime() {
-                    let _ = runtime.reset(vec![crate::routes::RoutePayload::Home(crate::routes::HomeRoute {})]);
+                    let _ = runtime.reset(vec![crate::routes::RoutePayload::Home(
+                        crate::routes::HomeRoute {},
+                    )]);
                 }
                 Ok(StateChange::None)
             }
@@ -224,7 +217,10 @@ struct _TickerTask {
 }
 
 impl _TickerTask {
-    fn start(sideeffect_tx: tokio::sync::mpsc::UnboundedSender<AppSideEffect>, interval_ms: u64) -> Self {
+    fn start(
+        sideeffect_tx: tokio::sync::mpsc::UnboundedSender<AppSideEffect>,
+        interval_ms: u64,
+    ) -> Self {
         let interval_ms = Arc::new(AtomicU64::new(interval_ms.max(1)));
         let interval_clone = Arc::clone(&interval_ms);
         let (stop_tx, mut stop_rx) = tokio::sync::oneshot::channel::<()>();
@@ -239,7 +235,8 @@ impl _TickerTask {
 
                     let stop_fut = (&mut stop_rx).fuse();
                     let sleep_fut =
-                        gloo_timers::future::TimeoutFuture::new(ms.min(u64::from(u32::MAX)) as u32).fuse();
+                        gloo_timers::future::TimeoutFuture::new(ms.min(u64::from(u32::MAX)) as u32)
+                            .fuse();
                     futures::pin_mut!(stop_fut, sleep_fut);
 
                     futures::select_biased! {
@@ -286,6 +283,8 @@ impl _TickerTask {
 #[flutter_rust_bridge::frb]
 pub async fn create_shared_engine() -> Result<Arc<AppEngine>, oxide_core::OxideError> {
     static ENGINE: tokio::sync::OnceCell<Arc<AppEngine>> = tokio::sync::OnceCell::const_new();
-    let engine = ENGINE.get_or_try_init(|| async { create_engine().await }).await?;
+    let engine = ENGINE
+        .get_or_try_init(|| async { create_engine().await })
+        .await?;
     Ok(Arc::clone(engine))
 }

@@ -111,14 +111,7 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
       case OxideNavigationPush<RouteT, KindT>(:final route, :final ticket):
         _pushRoute(route);
         await _syncCurrentRoute();
-        Object? result;
-        try {
-          result = await handler.push(route, ticket: ticket);
-        } finally {
-          _removeRoute(route);
-          await _syncCurrentRoute();
-        }
-        if (ticket != null) await emitResult(ticket, result);
+        unawaited(_completePush(route, ticket, cmd));
       case OxideNavigationPop<RouteT, KindT>(:final result):
         handler.pop(result);
         _popRoute();
@@ -171,6 +164,31 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
   void _updateState() {
     final current = _stack.isEmpty ? null : _stack.last;
     state.value = OxideNavigationState(stack: List.unmodifiable(_stack), current: current, kindOf: kindOf);
+  }
+
+  Future<void> _completePush(
+    RouteT route,
+    String? ticket,
+    OxideNavigationCommand<RouteT, KindT> cmd,
+  ) async {
+    Object? result;
+    try {
+      result = await handler.push(route, ticket: ticket);
+    } catch (error, stackTrace) {
+      _errors.add(OxideNavigationCommandError(error, stackTrace, cmd));
+      if (onCommandError != null) {
+        onCommandError!(error, stackTrace, cmd);
+        return;
+      }
+      Zone.current.handleUncaughtError(error, stackTrace);
+      return;
+    } finally {
+      _removeRoute(route);
+      await _syncCurrentRoute();
+    }
+    if (ticket != null) {
+      await emitResult(ticket, result);
+    }
   }
 
   Future<void> _syncCurrentRoute() async {

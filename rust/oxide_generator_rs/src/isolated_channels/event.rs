@@ -222,7 +222,7 @@ fn expand_duplex_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> sy
                 #[flutter_rust_bridge::frb]
                 pub fn #incoming_fn_ident(
                     event: #incoming_ty,
-                ) -> Result<(), ::oxide_core::OxideChannelError> {
+                ) -> Result<(), oxide_core::OxideChannelError> {
                     super::incoming().handle(event)
                 }
             }

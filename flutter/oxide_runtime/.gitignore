@@ -56,3 +56,6 @@ doc/api/
 # Others
 .DS_Store
 *.log
+
+# FVM Version Cache
+.fvm/

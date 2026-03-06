@@ -53,6 +53,7 @@ Future<RustRouteMetadata> readRustRouteMetadata() async {
     return RustRouteMetadata(crateName: 'unknown', routes: const []);
   }
 
+  final targetCrateName = _readCargoPackageName();
   final routes = <RustRouteMeta>[];
   String crateName = 'unknown';
 
@@ -64,6 +65,9 @@ Future<RustRouteMetadata> readRustRouteMetadata() async {
     if (obj is! Map<String, dynamic>) continue;
 
     final fileCrate = obj['crate_name'];
+    if (targetCrateName != null && fileCrate is String && fileCrate != targetCrateName) {
+      continue;
+    }
     if (fileCrate is String && fileCrate.isNotEmpty) {
       crateName = fileCrate;
     }
@@ -278,7 +282,8 @@ String generateRouteModelsSource(RustRouteMetadata metadata) {
     buf.writeln();
     if (r.fields.isNotEmpty) {
       for (final f in r.fields) {
-        buf.writeln('  final Object ${_lowerCamel(f.name)};');
+        final dartType = _dartTypeFromRust(f.type);
+        buf.writeln('  final $dartType ${_lowerCamel(f.name)};');
       }
       buf.writeln();
     }
@@ -292,7 +297,8 @@ String generateRouteModelsSource(RustRouteMetadata metadata) {
       buf.writeln('    return $className(');
       for (final f in r.fields) {
         final name = _lowerCamel(f.name);
-        buf.writeln("      $name: json['$name'] as Object,");
+        final dartType = _dartTypeFromRust(f.type);
+        buf.writeln("      $name: json['$name'] as $dartType,");
       }
       buf.writeln('    );');
     }
@@ -377,32 +383,40 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln()
     ..writeln("import 'route_builders.g.dart';")
     ..writeln("import '../routes/route_kind.g.dart';")
-    ..writeln("import '../routes/route_models.g.dart';")
+    ..writeln("import '../routes/route_models.g.dart' as route_models;")
     ..writeln()
-    ..writeln("import '../../src/rust/api/oxide_navigation.dart' as rust;")
-    ..writeln()
-    ..writeln('final GlobalKey<NavigatorState> oxideNavigatorKey = GlobalKey<NavigatorState>();')
-    ..writeln()
-    ..writeln(
-      'final NavigatorNavigationHandler<OxideRoute, RouteKind> oxideNavigationHandler = '
-      'NavigatorNavigationHandler<OxideRoute, RouteKind>(',
-    )
-    ..writeln('  navigatorKey: oxideNavigatorKey,')
-    ..writeln('  kindOf: (r) => r.kind,')
-    ..writeln('  routeBuilders: oxideRouteBuilders,')
-    ..writeln(');')
-    ..writeln();
+    ..writeln("import '../../src/rust/routes.dart' as rust_routes;")
+    ..writeln("import '../../src/rust/routes/oxide_navigation.dart' as rust_nav;");
+
+  final rustRouteImports =
+      metadata.routes.map((r) => "import '../../src/rust/routes/${_snakeCase(r.rustType)}.dart';").toSet().toList(growable: false)..sort();
+  for (final importLine in rustRouteImports) {
+    buf.writeln(importLine);
+  }
+  buf.writeln();
+  buf.writeln('final GlobalKey<NavigatorState> oxideNavigatorKey = GlobalKey<NavigatorState>();');
+  buf.writeln();
+  buf.writeln(
+    'final NavigatorNavigationHandler<route_models.OxideRoute, RouteKind> oxideNavigationHandler = '
+    'NavigatorNavigationHandler<route_models.OxideRoute, RouteKind>(',
+  );
+  buf.writeln('  navigatorKey: oxideNavigatorKey,');
+  buf.writeln('  kindOf: (r) => r.kind,');
+  buf.writeln('  routeBuilders: oxideRouteBuilders,');
+  buf.writeln(');');
+  buf.writeln();
 
   buf
-    ..writeln('OxideRoute _fromRustRoutePayload(rust.RoutePayload payload) {')
+    ..writeln('route_models.OxideRoute _fromRustRoutePayload(rust_routes.RoutePayload payload) {')
     ..writeln('  return payload.when(');
 
   for (final r in metadata.routes) {
     final rustType = r.rustType;
     final kindCtor = _lowerCamel(r.kind);
-    buf.writeln('    $kindCtor: (field0) => $rustType(');
+    buf.writeln('    $kindCtor: (field0) => route_models.$rustType(');
     for (final f in r.fields) {
-      buf.writeln('      ${f.name}: field0.${f.name},');
+      final fieldName = _lowerCamel(f.name);
+      buf.writeln('      $fieldName: field0.$fieldName,');
     }
     buf.writeln('    ),');
   }
@@ -410,17 +424,18 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('  );')
     ..writeln('}')
     ..writeln()
-    ..writeln('rust.RoutePayload _toRustRoutePayload(OxideRoute route) {')
+    ..writeln('rust_routes.RoutePayload _toRustRoutePayload(route_models.OxideRoute route) {')
     ..writeln('  switch (route.kind) {');
 
   for (final r in metadata.routes) {
     final rustType = r.rustType;
     final kindCtor = _lowerCamel(r.kind);
     buf.writeln('    case RouteKind.$kindCtor:');
-    buf.writeln('      final r = route as $rustType;');
-    buf.writeln('      return rust.RoutePayload.$kindCtor(rust.$rustType(');
+    buf.writeln('      final r = route as route_models.$rustType;');
+    buf.writeln('      return rust_routes.RoutePayload.$kindCtor($rustType(');
     for (final f in r.fields) {
-      buf.writeln('        ${f.name}: r.${f.name},');
+      final fieldName = _lowerCamel(f.name);
+      buf.writeln('        $fieldName: r.$fieldName,');
     }
     buf.writeln('      ));');
   }
@@ -440,9 +455,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('  };')
     ..writeln('}')
     ..writeln()
-    ..writeln(
-      'OxideNavigationCommand<OxideRoute, RouteKind> _mapOxideNavCommand(rust.OxideNavCommand cmd) {',
-    )
+    ..writeln('OxideNavigationCommand<route_models.OxideRoute, RouteKind> _mapOxideNavCommand(rust_nav.OxideNavCommand cmd) {')
     ..writeln('  return cmd.when(')
     ..writeln('    push: (route, ticket) {')
     ..writeln('      final decoded = _fromRustRoutePayload(route);')
@@ -458,7 +471,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('      return OxideNavigationCommand.popUntil(kind: routeKind);')
     ..writeln('    },')
     ..writeln('    reset: (routes) {')
-    ..writeln('      final decoded = <OxideRoute>[];')
+    ..writeln('      final decoded = <route_models.OxideRoute>[];')
     ..writeln('      for (final r in routes) {')
     ..writeln('        decoded.add(_fromRustRoutePayload(r));')
     ..writeln('      }')
@@ -468,19 +481,20 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('}')
     ..writeln()
     ..writeln(
-      'final OxideNavigationRuntime<OxideRoute, RouteKind> oxideNavigationRuntime = '
-      'OxideNavigationRuntime<OxideRoute, RouteKind>(',
+      'final OxideNavigationRuntime<route_models.OxideRoute, RouteKind> oxideNavigationRuntime = '
+      'OxideNavigationRuntime<route_models.OxideRoute, RouteKind>(',
     )
-    ..writeln('  commands: rust.oxideNavCommandsStream()')
+    ..writeln('  commands: rust_nav.oxideNavCommandsStream()')
     ..writeln('      .map(_mapOxideNavCommand)')
-    ..writeln('      .cast<OxideNavigationCommand<OxideRoute, RouteKind>>(),')
+    ..writeln('      .cast<OxideNavigationCommand<route_models.OxideRoute, RouteKind>>(),')
     ..writeln('  handler: oxideNavigationHandler,')
+    ..writeln('  kindOf: (route) => route.kind,')
     ..writeln(
-      '  emitResult: (ticket, result) => rust.oxideNavEmitResult('
+      '  emitResult: (ticket, result) => rust_nav.oxideNavEmitResult('
       'ticket: ticket, resultJson: jsonEncode(result)),',
     )
     ..writeln(
-      '  setCurrentRoute: (route) => rust.oxideNavSetCurrentRoute('
+      '  setCurrentRoute: (route) => rust_nav.oxideNavSetCurrentRoute('
       'route: route == null ? null : _toRustRoutePayload(route)),',
     )
     ..writeln(');')
@@ -499,6 +513,7 @@ String generateOxideStackSource() {
     ..writeln('// Generated by oxide_generator. Do not edit.')
     ..writeln()
     ..writeln("import 'package:flutter/widgets.dart';")
+    ..writeln("import 'package:oxide_runtime/oxide_runtime.dart';")
     ..writeln()
     ..writeln("import '../src/rust/frb_generated.dart';")
     ..writeln()
@@ -558,6 +573,111 @@ String _lowerCamel(String s) {
 
   final rest = parts.skip(1).map((p) => p.isEmpty ? p : (p[0].toUpperCase() + p.substring(1))).join();
   return '$firstLower$rest';
+}
+
+String _snakeCase(String s) {
+  if (s.isEmpty) return s;
+  final withUnderscores = s.replaceAllMapped(RegExp(r'(?<!^)([A-Z])'), (m) => '_${m[1]}');
+  return withUnderscores.toLowerCase();
+}
+
+String _dartTypeFromRust(String rustType) {
+  final normalized = rustType.replaceAll(' ', '');
+  final optionMatch = RegExp(r'^Option<(.+)>$').firstMatch(normalized);
+  if (optionMatch != null) {
+    return '${_dartTypeFromRust(optionMatch.group(1)!)}?';
+  }
+  final vecMatch = RegExp(r'^Vec<(.+)>$').firstMatch(normalized);
+  if (vecMatch != null) {
+    return 'List<${_dartTypeFromRust(vecMatch.group(1)!)}>';
+  }
+  final boxMatch = RegExp(r'^(Box|Arc|Rc)<(.+)>$').firstMatch(normalized);
+  if (boxMatch != null) {
+    return _dartTypeFromRust(boxMatch.group(2)!);
+  }
+  final mapMatch = RegExp(r'^(HashMap|BTreeMap)<(.+)>$').firstMatch(normalized);
+  if (mapMatch != null) {
+    final args = _splitRustGenericArgs(mapMatch.group(2)!);
+    if (args.length == 2) {
+      return 'Map<${_dartTypeFromRust(args[0])}, ${_dartTypeFromRust(args[1])}>';
+    }
+  }
+  final base = _stripRustPath(normalized);
+  switch (base) {
+    case 'String':
+    case 'str':
+      return 'String';
+    case 'bool':
+      return 'bool';
+    case 'f32':
+    case 'f64':
+      return 'double';
+    case 'i8':
+    case 'i16':
+    case 'i32':
+    case 'isize':
+    case 'u8':
+    case 'u16':
+    case 'u32':
+    case 'usize':
+      return 'int';
+    case 'i64':
+    case 'u64':
+    case 'i128':
+    case 'u128':
+      return 'BigInt';
+    default:
+      return base;
+  }
+}
+
+String _stripRustPath(String s) {
+  final parts = s.split('::');
+  return parts.isEmpty ? s : parts.last;
+}
+
+List<String> _splitRustGenericArgs(String s) {
+  final args = <String>[];
+  final buf = StringBuffer();
+  var depth = 0;
+  for (var i = 0; i < s.length; i++) {
+    final ch = s[i];
+    if (ch == '<') depth++;
+    if (ch == '>') depth--;
+    if (ch == ',' && depth == 0) {
+      args.add(buf.toString());
+      buf.clear();
+      continue;
+    }
+    buf.write(ch);
+  }
+  if (buf.isNotEmpty) {
+    args.add(buf.toString());
+  }
+  return args.map((a) => a.trim()).where((a) => a.isNotEmpty).toList(growable: false);
+}
+
+String? _readCargoPackageName() {
+  final file = File('rust/Cargo.toml');
+  if (!file.existsSync()) return null;
+  final lines = file.readAsLinesSync();
+  var inPackage = false;
+  for (final raw in lines) {
+    final line = raw.split('#').first.trim();
+    if (line.isEmpty) continue;
+    if (line.startsWith('[') && line.endsWith(']')) {
+      inPackage = line == '[package]';
+      continue;
+    }
+    if (!inPackage) continue;
+    if (!line.startsWith('name')) continue;
+    final parts = line.split('=');
+    if (parts.length < 2) continue;
+    final value = parts.sublist(1).join('=').trim();
+    final trimmed = value.replaceAll('"', '').replaceAll("'", '');
+    if (trimmed.isNotEmpty) return trimmed;
+  }
+  return null;
 }
 
 bool _sameRouteMeta(RustRouteMeta a, RustRouteMeta b) {

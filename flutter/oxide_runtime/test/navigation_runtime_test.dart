@@ -9,12 +9,15 @@ final class _TestHandler implements OxideNavigationHandler<String, String> {
   final popUntils = <String>[];
   final resets = <List<String>>[];
   String? current;
+  final pending = <String, Completer<Object?>>{};
 
   @override
   Future<Object?> push(String route, {String? ticket}) async {
     pushed.add(route);
     current = route;
-    return null;
+    final completer = Completer<Object?>();
+    pending[route] = completer;
+    return completer.future;
   }
 
   @override
@@ -36,6 +39,10 @@ final class _TestHandler implements OxideNavigationHandler<String, String> {
   @override
   void setCurrentRoute(String route) {
     current = route;
+  }
+
+  void completePush(String route, [Object? result]) {
+    pending.remove(route)?.complete(result);
   }
 }
 
@@ -69,11 +76,13 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(runtime.state.value.current, 'A');
     expect(runtime.state.value.stack, ['A']);
+    handler.completePush('B', 123);
 
     controller.add(OxideNavigationCommand.reset(routes: ['X', 'Y']));
     await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(runtime.state.value.current, 'Y');
     expect(runtime.state.value.stack, ['X', 'Y']);
+    handler.completePush('A');
 
     await runtime.stop();
     expect(runtime.state.value.current, isNull);

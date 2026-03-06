@@ -35,19 +35,14 @@ pub mod routes {
 }
 ```
 
-Each route is a Rust struct implementing `oxide_core::navigation::Route`:
+Each route is a Rust struct annotated with `#[oxide_generator_rs::oxide_route(...)]`:
 
 ```rust
-use oxide_core::navigation::{NoExtra, NoReturn, Route};
 use serde::{Deserialize, Serialize};
 
+#[oxide_generator_rs::oxide_route()]
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SplashRoute;
-
-impl Route for SplashRoute {
-    type Return = NoReturn;
-    type Extra = NoExtra;
-}
+pub struct SplashRoute {}
 ```
 
 The macro scans `src/routes/` and writes a JSON metadata file to `target/oxide_routes/`. The Dart generator consumes this file.

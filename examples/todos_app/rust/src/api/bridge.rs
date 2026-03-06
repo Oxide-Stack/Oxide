@@ -1,19 +1,7 @@
 use oxide_generator_rs::reducer;
 
-/// Error type exposed across the FFI boundary.
-///
-/// # Examples
-/// ```
-/// use rust_lib_counter_app::api::bridge::OxideError;
-///
-/// let _ = OxideError::Validation {
-///     message: "example".to_string(),
-/// };
-/// ```
-pub use oxide_core::OxideError;
-
-use oxide_core::StateChange;
 use oxide_core::tokio;
+use oxide_core::StateChange;
 use std::sync::Arc;
 
 use crate::state::{AppAction, AppState, AppStateSlice, TodoItem};
@@ -21,7 +9,9 @@ use crate::state::{AppAction, AppState, AppStateSlice, TodoItem};
 #[flutter_rust_bridge::frb]
 pub async fn create_shared_engine() -> Result<Arc<AppEngine>, oxide_core::OxideError> {
     static ENGINE: tokio::sync::OnceCell<Arc<AppEngine>> = tokio::sync::OnceCell::const_new();
-    let engine = ENGINE.get_or_try_init(|| async { create_engine().await }).await?;
+    let engine = ENGINE
+        .get_or_try_init(|| async { create_engine().await })
+        .await?;
     Ok(Arc::clone(engine))
 }
 
@@ -53,7 +43,7 @@ impl oxide_core::Reducer for AppRootReducer {
             AppAction::AddTodo { title } => {
                 let trimmed = title.trim();
                 if trimmed.is_empty() {
-                    return Err(OxideError::Validation {
+                    return Err(oxide_core::OxideError::Validation {
                         message: "todo title must not be empty".to_string(),
                     });
                 }
@@ -85,7 +75,10 @@ impl oxide_core::Reducer for AppRootReducer {
                     let Ok(runtime) = oxide_core::navigation_runtime() else {
                         return;
                     };
-                    let Ok((_ticket, rx)) = runtime.push_with_ticket(crate::routes::ConfirmRoute { title }).await else {
+                    let Ok((_ticket, rx)) = runtime
+                        .push_with_ticket(crate::routes::ConfirmRoute { title })
+                        .await
+                    else {
                         return;
                     };
                     let Ok(value) = rx.await else {
@@ -106,7 +99,9 @@ impl oxide_core::Reducer for AppRootReducer {
             }
             AppAction::ResetStack => {
                 if let Ok(runtime) = oxide_core::navigation_runtime() {
-                    let _ = runtime.reset(vec![crate::routes::RoutePayload::Home(crate::routes::HomeRoute {})]);
+                    let _ = runtime.reset(vec![crate::routes::RoutePayload::Home(
+                        crate::routes::HomeRoute {},
+                    )]);
                 }
                 Ok(StateChange::None)
             }
@@ -140,13 +135,11 @@ pub(crate) struct AppRootReducer {
 
 impl AppRootReducer {
     fn toggle_todo(state: &mut AppState, id: &str) -> oxide_core::CoreResult<()> {
-        let todo = state
-            .todos
-            .iter_mut()
-            .find(|t| t.id == id)
-            .ok_or_else(|| OxideError::NotFound {
+        let todo = state.todos.iter_mut().find(|t| t.id == id).ok_or_else(|| {
+            oxide_core::OxideError::NotFound {
                 resource: format!("todo:{id}"),
-            })?;
+            }
+        })?;
         todo.completed = !todo.completed;
         Ok(())
     }
@@ -155,7 +148,7 @@ impl AppRootReducer {
         let before_len = state.todos.len();
         state.todos.retain(|t| t.id != id);
         if state.todos.len() == before_len {
-            return Err(OxideError::NotFound {
+            return Err(oxide_core::OxideError::NotFound {
                 resource: format!("todo:{id}"),
             });
         }

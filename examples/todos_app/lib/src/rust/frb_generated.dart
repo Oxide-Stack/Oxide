@@ -4,13 +4,17 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/bridge.dart';
-import 'api/navigation_bridge.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'routes.dart';
+import 'routes/confirm_route.dart';
+import 'routes/home_route.dart';
+import 'routes/oxide_navigation.dart';
+import 'routes/splash_route.dart';
 import 'state/app_action.dart';
 import 'state/app_state.dart';
 
@@ -58,7 +62,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   @override
   Future<void> executeRustInitializers() async {
-    await api.crateApiBridgeInitApp();
+    await api.crateOxideInitInitOxide();
   }
 
   @override
@@ -69,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -1431817131;
+  int get rustContentHash => -214610542;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -80,6 +84,13 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Future<List<AppStateSlice>> crateStateAppStateAppStateInferSlicesImpl({
+    required AppState before,
+    required AppState after,
+  });
+
+  Future<AppState> crateStateAppStateAppStateNew();
+
   Future<ArcAppEngine> crateApiBridgeCreateEngine();
 
   Future<ArcAppEngine> crateApiBridgeCreateSharedEngine();
@@ -95,29 +106,26 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiBridgeDisposeEngine({required ArcAppEngine engine});
 
-  Future<void> crateApiBridgeInitApp();
+  Future<void> crateRoutesOxideNavigationInitNavigation();
 
-  Future<CoreResult> crateApiNavigationBridgeInitNavigation();
+  Future<void> crateOxideInitInitOxide();
 
-  Future<void> crateApiBridgeInitOxide();
+  Stream<OxideNavCommand> crateRoutesOxideNavigationOxideNavCommandsStream();
 
-  Stream<String> crateApiNavigationBridgeOxideNavCommandsJsonStream();
-
-  Stream<OxideNavCommand> crateApiNavigationBridgeOxideNavCommandsStream();
-
-  Future<CoreResult> crateApiNavigationBridgeOxideNavEmitResult({
+  Future<void> crateRoutesOxideNavigationOxideNavEmitResult({
     required String ticket,
     required String resultJson,
   });
 
-  Future<CoreResult> crateApiNavigationBridgeOxideNavSetCurrentRoute({
+  Future<void> crateRoutesOxideNavigationOxideNavSetCurrentRoute({
     RoutePayload? route,
   });
 
-  Future<CoreResult> crateApiNavigationBridgeOxideNavSetCurrentRouteJson({
-    required String kind,
-    required String payloadJson,
-  });
+  Future<void> crateRoutesRouteKindAsStr({required RouteKind that});
+
+  Future<RouteKind?> crateRoutesRouteKindFromStr({required String s});
+
+  Future<RouteKind> crateRoutesRoutePayloadKind({required RoutePayload that});
 
   Stream<AppStateSnapshot> crateApiBridgeStateStream({
     required ArcAppEngine engine,
@@ -132,37 +140,12 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ArcAppEnginePtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_CoreResult;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_CoreResult;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CoreResultPtr;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_OxideError;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_OxideError;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_OxideErrorPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_OxideNavCommand;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_OxideNavCommand;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_OxideNavCommandPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_RoutePayload;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_RoutePayload;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_RoutePayloadPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -174,6 +157,68 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  Future<List<AppStateSlice>> crateStateAppStateAppStateInferSlicesImpl({
+    required AppState before,
+    required AppState after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_app_state(before, serializer);
+          sse_encode_box_autoadd_app_state(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_app_state_slice,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStateAppStateAppStateInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateStateAppStateAppStateInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "app_state_infer_slices_impl",
+        argNames: ["before", "after"],
+      );
+
+  @override
+  Future<AppState> crateStateAppStateAppStateNew() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_app_state,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStateAppStateAppStateNewConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateStateAppStateAppStateNewConstMeta =>
+      const TaskConstMeta(debugName: "app_state_new", argNames: []);
+
+  @override
   Future<ArcAppEngine> crateApiBridgeCreateEngine() {
     return handler.executeNormal(
       NormalTask(
@@ -182,7 +227,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 1,
+            funcId: 3,
             port: port_,
           );
         },
@@ -211,7 +256,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 4,
             port: port_,
           );
         },
@@ -246,7 +291,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 5,
             port: port_,
           );
         },
@@ -281,7 +326,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 6,
             port: port_,
           );
         },
@@ -315,7 +360,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 7,
             port: port_,
           );
         },
@@ -334,62 +379,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "dispose_engine", argNames: ["engine"]);
 
   @override
-  Future<void> crateApiBridgeInitApp() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 6,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiBridgeInitAppConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiBridgeInitAppConstMeta =>
-      const TaskConstMeta(debugName: "init_app", argNames: []);
-
-  @override
-  Future<CoreResult> crateApiNavigationBridgeInitNavigation() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 7,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiNavigationBridgeInitNavigationConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeInitNavigationConstMeta =>
-      const TaskConstMeta(debugName: "init_navigation", argNames: []);
-
-  @override
-  Future<void> crateApiBridgeInitOxide() {
+  Future<void> crateRoutesOxideNavigationInitNavigation() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -406,39 +396,65 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData:
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
-        constMeta: kCrateApiBridgeInitOxideConstMeta,
+        constMeta: kCrateRoutesOxideNavigationInitNavigationConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBridgeInitOxideConstMeta =>
+  TaskConstMeta get kCrateRoutesOxideNavigationInitNavigationConstMeta =>
+      const TaskConstMeta(debugName: "init_navigation", argNames: []);
+
+  @override
+  Future<void> crateOxideInitInitOxide() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateOxideInitInitOxideConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateOxideInitInitOxideConstMeta =>
       const TaskConstMeta(debugName: "init_oxide", argNames: []);
 
   @override
-  Stream<String> crateApiNavigationBridgeOxideNavCommandsJsonStream() {
-    final sink = RustStreamSink<String>();
+  Stream<OxideNavCommand> crateRoutesOxideNavigationOxideNavCommandsStream() {
+    final sink = RustStreamSink<OxideNavCommand>();
     unawaited(
       handler.executeNormal(
         NormalTask(
           callFfi: (port_) {
             final serializer = SseSerializer(generalizedFrbRustBinding);
-            sse_encode_StreamSink_String_Sse(sink, serializer);
+            sse_encode_StreamSink_oxide_nav_command_Sse(sink, serializer);
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 9,
+              funcId: 10,
               port: port_,
             );
           },
           codec: SseCodec(
-            decodeSuccessData:
-                sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult,
-            decodeErrorData: null,
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData:
+                sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
           ),
-          constMeta:
-              kCrateApiNavigationBridgeOxideNavCommandsJsonStreamConstMeta,
+          constMeta: kCrateRoutesOxideNavigationOxideNavCommandsStreamConstMeta,
           argValues: [sink],
           apiImpl: this,
         ),
@@ -448,53 +464,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta
-  get kCrateApiNavigationBridgeOxideNavCommandsJsonStreamConstMeta =>
-      const TaskConstMeta(
-        debugName: "oxide_nav_commands_json_stream",
-        argNames: ["sink"],
-      );
-
-  @override
-  Stream<OxideNavCommand> crateApiNavigationBridgeOxideNavCommandsStream() {
-    final sink = RustStreamSink<OxideNavCommand>();
-    unawaited(
-      handler.executeNormal(
-        NormalTask(
-          callFfi: (port_) {
-            final serializer = SseSerializer(generalizedFrbRustBinding);
-            sse_encode_StreamSink_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand_Sse(
-              sink,
-              serializer,
-            );
-            pdeCallFfi(
-              generalizedFrbRustBinding,
-              serializer,
-              funcId: 10,
-              port: port_,
-            );
-          },
-          codec: SseCodec(
-            decodeSuccessData:
-                sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult,
-            decodeErrorData: null,
-          ),
-          constMeta: kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta,
-          argValues: [sink],
-          apiImpl: this,
-        ),
-      ),
-    );
-    return sink.stream;
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta =>
+  get kCrateRoutesOxideNavigationOxideNavCommandsStreamConstMeta =>
       const TaskConstMeta(
         debugName: "oxide_nav_commands_stream",
         argNames: ["sink"],
       );
 
   @override
-  Future<CoreResult> crateApiNavigationBridgeOxideNavEmitResult({
+  Future<void> crateRoutesOxideNavigationOxideNavEmitResult({
     required String ticket,
     required String resultJson,
   }) {
@@ -512,35 +489,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult,
-          decodeErrorData: null,
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
-        constMeta: kCrateApiNavigationBridgeOxideNavEmitResultConstMeta,
+        constMeta: kCrateRoutesOxideNavigationOxideNavEmitResultConstMeta,
         argValues: [ticket, resultJson],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavEmitResultConstMeta =>
+  TaskConstMeta get kCrateRoutesOxideNavigationOxideNavEmitResultConstMeta =>
       const TaskConstMeta(
         debugName: "oxide_nav_emit_result",
         argNames: ["ticket", "resultJson"],
       );
 
   @override
-  Future<CoreResult> crateApiNavigationBridgeOxideNavSetCurrentRoute({
+  Future<void> crateRoutesOxideNavigationOxideNavSetCurrentRoute({
     RoutePayload? route,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-            route,
-            serializer,
-          );
+          sse_encode_opt_box_autoadd_route_payload(route, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -549,34 +523,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult,
-          decodeErrorData: null,
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
-        constMeta: kCrateApiNavigationBridgeOxideNavSetCurrentRouteConstMeta,
+        constMeta: kCrateRoutesOxideNavigationOxideNavSetCurrentRouteConstMeta,
         argValues: [route],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavSetCurrentRouteConstMeta =>
+  TaskConstMeta
+  get kCrateRoutesOxideNavigationOxideNavSetCurrentRouteConstMeta =>
       const TaskConstMeta(
         debugName: "oxide_nav_set_current_route",
         argNames: ["route"],
       );
 
   @override
-  Future<CoreResult> crateApiNavigationBridgeOxideNavSetCurrentRouteJson({
-    required String kind,
-    required String payloadJson,
-  }) {
+  Future<void> crateRoutesRouteKindAsStr({required RouteKind that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(kind, serializer);
-          sse_encode_String(payloadJson, serializer);
+          sse_encode_route_kind(that, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -585,24 +556,74 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult,
+          decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta:
-            kCrateApiNavigationBridgeOxideNavSetCurrentRouteJsonConstMeta,
-        argValues: [kind, payloadJson],
+        constMeta: kCrateRoutesRouteKindAsStrConstMeta,
+        argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta
-  get kCrateApiNavigationBridgeOxideNavSetCurrentRouteJsonConstMeta =>
-      const TaskConstMeta(
-        debugName: "oxide_nav_set_current_route_json",
-        argNames: ["kind", "payloadJson"],
-      );
+  TaskConstMeta get kCrateRoutesRouteKindAsStrConstMeta =>
+      const TaskConstMeta(debugName: "route_kind_as_str", argNames: ["that"]);
+
+  @override
+  Future<RouteKind?> crateRoutesRouteKindFromStr({required String s}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(s, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_box_autoadd_route_kind,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRoutesRouteKindFromStrConstMeta,
+        argValues: [s],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRoutesRouteKindFromStrConstMeta =>
+      const TaskConstMeta(debugName: "route_kind_from_str", argNames: ["s"]);
+
+  @override
+  Future<RouteKind> crateRoutesRoutePayloadKind({required RoutePayload that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_route_payload(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 15,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_route_kind,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRoutesRoutePayloadKindConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRoutesRoutePayloadKindConstMeta =>
+      const TaskConstMeta(debugName: "route_payload_kind", argNames: ["that"]);
 
   @override
   Stream<AppStateSnapshot> crateApiBridgeStateStream({
@@ -622,7 +643,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 14,
+              funcId: 16,
               port: port_,
             );
           },
@@ -653,36 +674,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_CoreResult => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_CoreResult => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_OxideError => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_OxideError => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_OxideNavCommand => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_OxideNavCommand => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_RoutePayload => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_RoutePayload => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -700,39 +697,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CoreResult
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return CoreResultImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   OxideError
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return OxideErrorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  OxideNavCommand
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OxideNavCommandImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  RoutePayload
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return RoutePayloadImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -754,15 +724,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CoreResult
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return CoreResultImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   OxideError
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     dynamic raw,
@@ -772,40 +733,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  OxideNavCommand
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OxideNavCommandImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  RoutePayload
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return RoutePayloadImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  RustStreamSink<OxideNavCommand>
-  dco_decode_StreamSink_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand_Sse(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError();
-  }
-
-  @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError();
-  }
-
-  @protected
   RustStreamSink<AppStateSnapshot> dco_decode_StreamSink_app_state_snapshot_Sse(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  RustStreamSink<OxideNavCommand> dco_decode_StreamSink_oxide_nav_command_Sse(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -880,26 +816,69 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RoutePayload
-  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-      raw,
-    );
-  }
-
-  @protected
   AppAction dco_decode_box_autoadd_app_action(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_app_action(raw);
   }
 
   @protected
+  AppState dco_decode_box_autoadd_app_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_app_state(raw);
+  }
+
+  @protected
   bool dco_decode_box_autoadd_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
+  }
+
+  @protected
+  ConfirmRoute dco_decode_box_autoadd_confirm_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_confirm_route(raw);
+  }
+
+  @protected
+  HomeRoute dco_decode_box_autoadd_home_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_home_route(raw);
+  }
+
+  @protected
+  RouteKind dco_decode_box_autoadd_route_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_route_kind(raw);
+  }
+
+  @protected
+  RoutePayload dco_decode_box_autoadd_route_payload(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_route_payload(raw);
+  }
+
+  @protected
+  SplashRoute dco_decode_box_autoadd_splash_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_splash_route(raw);
+  }
+
+  @protected
+  ConfirmRoute dco_decode_confirm_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return ConfirmRoute(title: dco_decode_String(arr[0]));
+  }
+
+  @protected
+  HomeRoute dco_decode_home_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return HomeRoute();
   }
 
   @protected
@@ -921,28 +900,93 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<RoutePayload> dco_decode_list_route_payload(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_route_payload).toList();
+  }
+
+  @protected
   List<TodoItem> dco_decode_list_todo_item(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_todo_item).toList();
   }
 
   @protected
-  RoutePayload?
-  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    dynamic raw,
-  ) {
+  String? dco_decode_opt_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null
-        ? null
-        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-            raw,
-          );
+    return raw == null ? null : dco_decode_String(raw);
   }
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_bool(raw);
+  }
+
+  @protected
+  RouteKind? dco_decode_opt_box_autoadd_route_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_route_kind(raw);
+  }
+
+  @protected
+  RoutePayload? dco_decode_opt_box_autoadd_route_payload(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_route_payload(raw);
+  }
+
+  @protected
+  OxideNavCommand dco_decode_oxide_nav_command(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return OxideNavCommand_Push(
+          route: dco_decode_box_autoadd_route_payload(raw[1]),
+          ticket: dco_decode_opt_String(raw[2]),
+        );
+      case 1:
+        return OxideNavCommand_Pop(resultJson: dco_decode_opt_String(raw[1]));
+      case 2:
+        return OxideNavCommand_PopUntil(kind: dco_decode_String(raw[1]));
+      case 3:
+        return OxideNavCommand_Reset(
+          routes: dco_decode_list_route_payload(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  RouteKind dco_decode_route_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return RouteKind.values[raw as int];
+  }
+
+  @protected
+  RoutePayload dco_decode_route_payload(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return RoutePayload_Confirm(
+          dco_decode_box_autoadd_confirm_route(raw[1]),
+        );
+      case 1:
+        return RoutePayload_Home(dco_decode_box_autoadd_home_route(raw[1]));
+      case 2:
+        return RoutePayload_Splash(dco_decode_box_autoadd_splash_route(raw[1]));
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  SplashRoute dco_decode_splash_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return SplashRoute();
   }
 
   @protected
@@ -1002,48 +1046,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CoreResult
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return CoreResultImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   OxideError
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return OxideErrorImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  OxideNavCommand
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OxideNavCommandImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  RoutePayload
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return RoutePayloadImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -1074,18 +1082,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  CoreResult
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return CoreResultImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   OxideError
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     SseDeserializer deserializer,
@@ -1098,48 +1094,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  OxideNavCommand
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OxideNavCommandImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  RoutePayload
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return RoutePayloadImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  RustStreamSink<OxideNavCommand>
-  sse_decode_StreamSink_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand_Sse(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    throw UnimplementedError('Unreachable ()');
-  }
-
-  @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    throw UnimplementedError('Unreachable ()');
-  }
-
-  @protected
   RustStreamSink<AppStateSnapshot> sse_decode_StreamSink_app_state_snapshot_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
+  RustStreamSink<OxideNavCommand> sse_decode_StreamSink_oxide_nav_command_Sse(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -1222,26 +1185,70 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RoutePayload
-  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-      deserializer,
-    ));
-  }
-
-  @protected
   AppAction sse_decode_box_autoadd_app_action(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_app_action(deserializer));
   }
 
   @protected
+  AppState sse_decode_box_autoadd_app_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_app_state(deserializer));
+  }
+
+  @protected
   bool sse_decode_box_autoadd_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_bool(deserializer));
+  }
+
+  @protected
+  ConfirmRoute sse_decode_box_autoadd_confirm_route(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_confirm_route(deserializer));
+  }
+
+  @protected
+  HomeRoute sse_decode_box_autoadd_home_route(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_home_route(deserializer));
+  }
+
+  @protected
+  RouteKind sse_decode_box_autoadd_route_kind(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_route_kind(deserializer));
+  }
+
+  @protected
+  RoutePayload sse_decode_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_route_payload(deserializer));
+  }
+
+  @protected
+  SplashRoute sse_decode_box_autoadd_splash_route(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_splash_route(deserializer));
+  }
+
+  @protected
+  ConfirmRoute sse_decode_confirm_route(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_title = sse_decode_String(deserializer);
+    return ConfirmRoute(title: var_title);
+  }
+
+  @protected
+  HomeRoute sse_decode_home_route(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return HomeRoute();
   }
 
   @protected
@@ -1272,6 +1279,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<RoutePayload> sse_decode_list_route_payload(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <RoutePayload>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_route_payload(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<TodoItem> sse_decode_list_todo_item(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1284,16 +1305,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RoutePayload?
-  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    SseDeserializer deserializer,
-  ) {
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-        deserializer,
-      ));
+      return (sse_decode_String(deserializer));
     } else {
       return null;
     }
@@ -1308,6 +1324,89 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
+  }
+
+  @protected
+  RouteKind? sse_decode_opt_box_autoadd_route_kind(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_route_kind(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  RoutePayload? sse_decode_opt_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_route_payload(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  OxideNavCommand sse_decode_oxide_nav_command(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_route = sse_decode_box_autoadd_route_payload(deserializer);
+        var var_ticket = sse_decode_opt_String(deserializer);
+        return OxideNavCommand_Push(route: var_route, ticket: var_ticket);
+      case 1:
+        var var_resultJson = sse_decode_opt_String(deserializer);
+        return OxideNavCommand_Pop(resultJson: var_resultJson);
+      case 2:
+        var var_kind = sse_decode_String(deserializer);
+        return OxideNavCommand_PopUntil(kind: var_kind);
+      case 3:
+        var var_routes = sse_decode_list_route_payload(deserializer);
+        return OxideNavCommand_Reset(routes: var_routes);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  RouteKind sse_decode_route_kind(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return RouteKind.values[inner];
+  }
+
+  @protected
+  RoutePayload sse_decode_route_payload(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_field0 = sse_decode_box_autoadd_confirm_route(deserializer);
+        return RoutePayload_Confirm(var_field0);
+      case 1:
+        var var_field0 = sse_decode_box_autoadd_home_route(deserializer);
+        return RoutePayload_Home(var_field0);
+      case 2:
+        var var_field0 = sse_decode_box_autoadd_splash_route(deserializer);
+        return RoutePayload_Splash(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  SplashRoute sse_decode_splash_route(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SplashRoute();
   }
 
   @protected
@@ -1366,19 +1465,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    CoreResult self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as CoreResultImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     OxideError self,
     SseSerializer serializer,
@@ -1386,32 +1472,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as OxideErrorImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    OxideNavCommand self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OxideNavCommandImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    RoutePayload self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as RoutePayloadImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
@@ -1444,19 +1504,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    CoreResult self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as CoreResultImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     OxideError self,
     SseSerializer serializer,
@@ -1464,68 +1511,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as OxideErrorImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    OxideNavCommand self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OxideNavCommandImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    RoutePayload self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as RoutePayloadImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_StreamSink_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand_Sse(
-    RustStreamSink<OxideNavCommand> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(
-      self.setupAndSerialize(
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-      ),
-      serializer,
-    );
-  }
-
-  @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(
-      self.setupAndSerialize(
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-      ),
       serializer,
     );
   }
@@ -1540,6 +1525,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       self.setupAndSerialize(
         codec: SseCodec(
           decodeSuccessData: sse_decode_app_state_snapshot,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void sse_encode_StreamSink_oxide_nav_command_Sse(
+    RustStreamSink<OxideNavCommand> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_oxide_nav_command,
           decodeErrorData: sse_decode_AnyhowException,
         ),
       ),
@@ -1613,19 +1615,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void
-  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    RoutePayload self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-      self,
-      serializer,
-    );
-  }
-
-  @protected
   void sse_encode_box_autoadd_app_action(
     AppAction self,
     SseSerializer serializer,
@@ -1635,9 +1624,74 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_app_state(
+    AppState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_app_state(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_bool(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_confirm_route(
+    ConfirmRoute self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_confirm_route(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_home_route(
+    HomeRoute self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_home_route(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_route_kind(
+    RouteKind self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_route_kind(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_route_payload(
+    RoutePayload self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_route_payload(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_splash_route(
+    SplashRoute self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_splash_route(self, serializer);
+  }
+
+  @protected
+  void sse_encode_confirm_route(ConfirmRoute self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.title, serializer);
+  }
+
+  @protected
+  void sse_encode_home_route(HomeRoute self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected
@@ -1669,6 +1723,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_route_payload(
+    List<RoutePayload> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_route_payload(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_todo_item(
     List<TodoItem> self,
     SseSerializer serializer,
@@ -1681,19 +1747,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void
-  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    RoutePayload? self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
     if (self != null) {
-      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-        self,
-        serializer,
-      );
+      sse_encode_String(self, serializer);
     }
   }
 
@@ -1705,6 +1764,82 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_box_autoadd_bool(self, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_route_kind(
+    RouteKind? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_route_kind(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_route_payload(
+    RoutePayload? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_route_payload(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_oxide_nav_command(
+    OxideNavCommand self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case OxideNavCommand_Push(route: final route, ticket: final ticket):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_route_payload(route, serializer);
+        sse_encode_opt_String(ticket, serializer);
+      case OxideNavCommand_Pop(resultJson: final resultJson):
+        sse_encode_i_32(1, serializer);
+        sse_encode_opt_String(resultJson, serializer);
+      case OxideNavCommand_PopUntil(kind: final kind):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(kind, serializer);
+      case OxideNavCommand_Reset(routes: final routes):
+        sse_encode_i_32(3, serializer);
+        sse_encode_list_route_payload(routes, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_route_kind(RouteKind self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_route_payload(RoutePayload self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case RoutePayload_Confirm(field0: final field0):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_confirm_route(field0, serializer);
+      case RoutePayload_Home(field0: final field0):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_home_route(field0, serializer);
+      case RoutePayload_Splash(field0: final field0):
+        sse_encode_i_32(2, serializer);
+        sse_encode_box_autoadd_splash_route(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_splash_route(SplashRoute self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected
@@ -1760,26 +1895,6 @@ class ArcAppEngineImpl extends RustOpaque implements ArcAppEngine {
 }
 
 @sealed
-class CoreResultImpl extends RustOpaque implements CoreResult {
-  // Not to be used by end users
-  CoreResultImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  CoreResultImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_CoreResult,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_CoreResult,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_CoreResultPtr,
-  );
-}
-
-@sealed
 class OxideErrorImpl extends RustOpaque implements OxideError {
   // Not to be used by end users
   OxideErrorImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -1796,45 +1911,5 @@ class OxideErrorImpl extends RustOpaque implements OxideError {
         RustLib.instance.api.rust_arc_decrement_strong_count_OxideError,
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_OxideErrorPtr,
-  );
-}
-
-@sealed
-class OxideNavCommandImpl extends RustOpaque implements OxideNavCommand {
-  // Not to be used by end users
-  OxideNavCommandImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  OxideNavCommandImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_OxideNavCommand,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_OxideNavCommand,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_OxideNavCommandPtr,
-  );
-}
-
-@sealed
-class RoutePayloadImpl extends RustOpaque implements RoutePayload {
-  // Not to be used by end users
-  RoutePayloadImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  RoutePayloadImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_RoutePayload,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_RoutePayload,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_RoutePayloadPtr,
   );
 }

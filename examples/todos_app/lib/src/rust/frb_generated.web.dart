@@ -7,11 +7,15 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api/bridge.dart';
-import 'api/navigation_bridge.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
+import 'routes.dart';
+import 'routes/confirm_route.dart';
+import 'routes/home_route.dart';
+import 'routes/oxide_navigation.dart';
+import 'routes/splash_route.dart';
 import 'state/app_action.dart';
 import 'state/app_state.dart';
 
@@ -28,20 +32,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine;
 
   CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_CoreResultPtr => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult;
-
-  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_OxideErrorPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_OxideNavCommandPtr => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_RoutePayloadPtr => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
@@ -53,26 +45,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  CoreResult
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    dynamic raw,
-  );
-
-  @protected
   OxideError
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
-    dynamic raw,
-  );
-
-  @protected
-  OxideNavCommand
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    dynamic raw,
-  );
-
-  @protected
-  RoutePayload
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
     dynamic raw,
   );
 
@@ -89,40 +63,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  CoreResult
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    dynamic raw,
-  );
-
-  @protected
   OxideError
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     dynamic raw,
   );
 
   @protected
-  OxideNavCommand
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    dynamic raw,
-  );
-
-  @protected
-  RoutePayload
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    dynamic raw,
-  );
-
-  @protected
-  RustStreamSink<OxideNavCommand>
-  dco_decode_StreamSink_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand_Sse(
-    dynamic raw,
-  );
-
-  @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw);
-
-  @protected
   RustStreamSink<AppStateSnapshot> dco_decode_StreamSink_app_state_snapshot_Sse(
+    dynamic raw,
+  );
+
+  @protected
+  RustStreamSink<OxideNavCommand> dco_decode_StreamSink_oxide_nav_command_Sse(
     dynamic raw,
   );
 
@@ -145,16 +97,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_bool(dynamic raw);
 
   @protected
-  RoutePayload
-  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    dynamic raw,
-  );
-
-  @protected
   AppAction dco_decode_box_autoadd_app_action(dynamic raw);
 
   @protected
+  AppState dco_decode_box_autoadd_app_state(dynamic raw);
+
+  @protected
   bool dco_decode_box_autoadd_bool(dynamic raw);
+
+  @protected
+  ConfirmRoute dco_decode_box_autoadd_confirm_route(dynamic raw);
+
+  @protected
+  HomeRoute dco_decode_box_autoadd_home_route(dynamic raw);
+
+  @protected
+  RouteKind dco_decode_box_autoadd_route_kind(dynamic raw);
+
+  @protected
+  RoutePayload dco_decode_box_autoadd_route_payload(dynamic raw);
+
+  @protected
+  SplashRoute dco_decode_box_autoadd_splash_route(dynamic raw);
+
+  @protected
+  ConfirmRoute dco_decode_confirm_route(dynamic raw);
+
+  @protected
+  HomeRoute dco_decode_home_route(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -166,16 +136,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<RoutePayload> dco_decode_list_route_payload(dynamic raw);
+
+  @protected
   List<TodoItem> dco_decode_list_todo_item(dynamic raw);
 
   @protected
-  RoutePayload?
-  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    dynamic raw,
-  );
+  String? dco_decode_opt_String(dynamic raw);
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  RouteKind? dco_decode_opt_box_autoadd_route_kind(dynamic raw);
+
+  @protected
+  RoutePayload? dco_decode_opt_box_autoadd_route_payload(dynamic raw);
+
+  @protected
+  OxideNavCommand dco_decode_oxide_nav_command(dynamic raw);
+
+  @protected
+  RouteKind dco_decode_route_kind(dynamic raw);
+
+  @protected
+  RoutePayload dco_decode_route_payload(dynamic raw);
+
+  @protected
+  SplashRoute dco_decode_splash_route(dynamic raw);
 
   @protected
   TodoItem dco_decode_todo_item(dynamic raw);
@@ -202,26 +190,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  CoreResult
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   OxideError
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  OxideNavCommand
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  RoutePayload
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
     SseDeserializer deserializer,
   );
 
@@ -238,42 +208,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  CoreResult
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   OxideError
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     SseDeserializer deserializer,
   );
 
   @protected
-  OxideNavCommand
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  RoutePayload
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  RustStreamSink<OxideNavCommand>
-  sse_decode_StreamSink_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand_Sse(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   RustStreamSink<AppStateSnapshot> sse_decode_StreamSink_app_state_snapshot_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<OxideNavCommand> sse_decode_StreamSink_oxide_nav_command_Sse(
     SseDeserializer deserializer,
   );
 
@@ -296,16 +242,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
-  RoutePayload
-  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
+  AppAction sse_decode_box_autoadd_app_action(SseDeserializer deserializer);
+
+  @protected
+  AppState sse_decode_box_autoadd_app_state(SseDeserializer deserializer);
+
+  @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  ConfirmRoute sse_decode_box_autoadd_confirm_route(
     SseDeserializer deserializer,
   );
 
   @protected
-  AppAction sse_decode_box_autoadd_app_action(SseDeserializer deserializer);
+  HomeRoute sse_decode_box_autoadd_home_route(SseDeserializer deserializer);
 
   @protected
-  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+  RouteKind sse_decode_box_autoadd_route_kind(SseDeserializer deserializer);
+
+  @protected
+  RoutePayload sse_decode_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SplashRoute sse_decode_box_autoadd_splash_route(SseDeserializer deserializer);
+
+  @protected
+  ConfirmRoute sse_decode_confirm_route(SseDeserializer deserializer);
+
+  @protected
+  HomeRoute sse_decode_home_route(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -319,16 +287,40 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
-  List<TodoItem> sse_decode_list_todo_item(SseDeserializer deserializer);
-
-  @protected
-  RoutePayload?
-  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
+  List<RoutePayload> sse_decode_list_route_payload(
     SseDeserializer deserializer,
   );
 
   @protected
+  List<TodoItem> sse_decode_list_todo_item(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  RouteKind? sse_decode_opt_box_autoadd_route_kind(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RoutePayload? sse_decode_opt_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  OxideNavCommand sse_decode_oxide_nav_command(SseDeserializer deserializer);
+
+  @protected
+  RouteKind sse_decode_route_kind(SseDeserializer deserializer);
+
+  @protected
+  RoutePayload sse_decode_route_payload(SseDeserializer deserializer);
+
+  @protected
+  SplashRoute sse_decode_splash_route(SseDeserializer deserializer);
 
   @protected
   TodoItem sse_decode_todo_item(SseDeserializer deserializer);
@@ -360,29 +352,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    CoreResult self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     OxideError self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    OxideNavCommand self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    RoutePayload self,
     SseSerializer serializer,
   );
 
@@ -402,48 +373,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    CoreResult self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     OxideError self,
     SseSerializer serializer,
   );
 
   @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    OxideNavCommand self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    RoutePayload self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_StreamSink_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand_Sse(
-    RustStreamSink<OxideNavCommand> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_StreamSink_app_state_snapshot_Sse(
     RustStreamSink<AppStateSnapshot> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_oxide_nav_command_Sse(
+    RustStreamSink<OxideNavCommand> self,
     SseSerializer serializer,
   );
 
@@ -469,20 +412,55 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
-  void
-  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    RoutePayload self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_box_autoadd_app_action(
     AppAction self,
     SseSerializer serializer,
   );
 
   @protected
+  void sse_encode_box_autoadd_app_state(
+    AppState self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_confirm_route(
+    ConfirmRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_home_route(
+    HomeRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_route_kind(
+    RouteKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_route_payload(
+    RoutePayload self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_splash_route(
+    SplashRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_confirm_route(ConfirmRoute self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_home_route(HomeRoute self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -500,17 +478,46 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_route_payload(
+    List<RoutePayload> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_todo_item(List<TodoItem> self, SseSerializer serializer);
 
   @protected
-  void
-  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_route_kind(
+    RouteKind? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_route_payload(
     RoutePayload? self,
     SseSerializer serializer,
   );
 
   @protected
-  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+  void sse_encode_oxide_nav_command(
+    OxideNavCommand self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_route_kind(RouteKind self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_route_payload(RoutePayload self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_splash_route(SplashRoute self, SseSerializer serializer);
 
   @protected
   void sse_encode_todo_item(TodoItem self, SseSerializer serializer);
@@ -550,22 +557,6 @@ class RustLibWire implements BaseWire {
       );
 
   void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-        ptr,
-      );
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-        ptr,
-      );
-
-  void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     int ptr,
   ) => wasmModule
@@ -578,38 +569,6 @@ class RustLibWire implements BaseWire {
     int ptr,
   ) => wasmModule
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
-        ptr,
-      );
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-        ptr,
-      );
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-        ptr,
-      );
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-        ptr,
-      );
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    int ptr,
-  ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
         ptr,
       );
 }
@@ -631,42 +590,12 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   );
 
   external void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    int ptr,
-  );
-
-  external void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCoreResult(
-    int ptr,
-  );
-
-  external void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
     int ptr,
   );
 
   external void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError(
-    int ptr,
-  );
-
-  external void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    int ptr,
-  );
-
-  external void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideNavCommand(
-    int ptr,
-  );
-
-  external void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
-    int ptr,
-  );
-
-  external void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRoutePayload(
     int ptr,
   );
 }

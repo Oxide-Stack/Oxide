@@ -1,8 +1,5 @@
 use oxide_generator_rs::reducer;
 
-/// Error type exposed across the FFI boundary.
-pub use oxide_core::OxideError;
-
 use crate::state::app_action::AppAction;
 use crate::state::app_state::AppState;
 use oxide_core::StateChange;

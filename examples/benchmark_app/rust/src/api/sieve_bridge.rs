@@ -1,10 +1,9 @@
 use flutter_rust_bridge::frb;
 use oxide_generator_rs::reducer;
 
-use crate::util::fnv1a_mix_u64;
 use crate::state::sieve_action::SieveAction;
 use crate::state::sieve_state::SieveState;
-pub use crate::OxideError;
+use crate::util::fnv1a_mix_u64;
 
 pub const SIEVE_LIMIT: usize = 50_000;
 
@@ -50,11 +49,11 @@ impl oxide_core::Reducer for SieveRootReducer {
 }
 #[frb(ignore)]
 
- enum SieveSideEffect {}
+enum SieveSideEffect {}
 
 #[frb(ignore)]
 #[derive(Default)]
- struct SieveRootReducer {}
+struct SieveRootReducer {}
 
 fn run_sieve(limit: usize) -> u64 {
     let mut is_prime = vec![true; limit.saturating_add(1)];

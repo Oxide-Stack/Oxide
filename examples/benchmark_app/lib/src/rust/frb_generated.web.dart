@@ -15,6 +15,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
+import 'routes.dart';
+import 'routes/bench_detail_route.dart';
+import 'routes/charts_route.dart';
+import 'routes/home_route.dart';
+import 'routes/oxide_navigation.dart';
+import 'routes/routing_bench_route.dart';
+import 'routes/splash_route.dart';
 import 'state/counter_action.dart';
 import 'state/counter_state.dart';
 import 'state/json_action.dart';
@@ -162,6 +169,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_StreamSink_json_state_snapshot_Sse(dynamic raw);
 
   @protected
+  RustStreamSink<OxideNavCommand> dco_decode_StreamSink_oxide_nav_command_Sse(
+    dynamic raw,
+  );
+
+  @protected
   RustStreamSink<SieveStateSnapshot>
   dco_decode_StreamSink_sieve_state_snapshot_Sse(dynamic raw);
 
@@ -169,13 +181,40 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  BenchDetailRoute dco_decode_bench_detail_route(dynamic raw);
+
+  @protected
+  BenchDetailRoute dco_decode_box_autoadd_bench_detail_route(dynamic raw);
+
+  @protected
+  ChartsRoute dco_decode_box_autoadd_charts_route(dynamic raw);
+
+  @protected
   CounterAction dco_decode_box_autoadd_counter_action(dynamic raw);
+
+  @protected
+  HomeRoute dco_decode_box_autoadd_home_route(dynamic raw);
 
   @protected
   JsonAction dco_decode_box_autoadd_json_action(dynamic raw);
 
   @protected
+  RouteKind dco_decode_box_autoadd_route_kind(dynamic raw);
+
+  @protected
+  RoutePayload dco_decode_box_autoadd_route_payload(dynamic raw);
+
+  @protected
+  RoutingBenchRoute dco_decode_box_autoadd_routing_bench_route(dynamic raw);
+
+  @protected
   SieveAction dco_decode_box_autoadd_sieve_action(dynamic raw);
+
+  @protected
+  SplashRoute dco_decode_box_autoadd_splash_route(dynamic raw);
+
+  @protected
+  ChartsRoute dco_decode_charts_route(dynamic raw);
 
   @protected
   CounterAction dco_decode_counter_action(dynamic raw);
@@ -185,6 +224,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CounterStateSnapshot dco_decode_counter_state_snapshot(dynamic raw);
+
+  @protected
+  HomeRoute dco_decode_home_route(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
 
   @protected
   JsonAction dco_decode_json_action(dynamic raw);
@@ -202,6 +247,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<RoutePayload> dco_decode_list_route_payload(dynamic raw);
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  RouteKind? dco_decode_opt_box_autoadd_route_kind(dynamic raw);
+
+  @protected
+  RoutePayload? dco_decode_opt_box_autoadd_route_payload(dynamic raw);
+
+  @protected
+  OxideNavCommand dco_decode_oxide_nav_command(dynamic raw);
+
+  @protected
+  RouteKind dco_decode_route_kind(dynamic raw);
+
+  @protected
+  RoutePayload dco_decode_route_payload(dynamic raw);
+
+  @protected
+  RoutingBenchRoute dco_decode_routing_bench_route(dynamic raw);
+
+  @protected
   SieveAction dco_decode_sieve_action(dynamic raw);
 
   @protected
@@ -209,6 +278,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SieveStateSnapshot dco_decode_sieve_state_snapshot(dynamic raw);
+
+  @protected
+  SplashRoute dco_decode_splash_route(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -335,6 +407,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   sse_decode_StreamSink_json_state_snapshot_Sse(SseDeserializer deserializer);
 
   @protected
+  RustStreamSink<OxideNavCommand> sse_decode_StreamSink_oxide_nav_command_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<SieveStateSnapshot>
   sse_decode_StreamSink_sieve_state_snapshot_Sse(SseDeserializer deserializer);
 
@@ -342,15 +419,48 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  BenchDetailRoute sse_decode_bench_detail_route(SseDeserializer deserializer);
+
+  @protected
+  BenchDetailRoute sse_decode_box_autoadd_bench_detail_route(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ChartsRoute sse_decode_box_autoadd_charts_route(SseDeserializer deserializer);
+
+  @protected
   CounterAction sse_decode_box_autoadd_counter_action(
     SseDeserializer deserializer,
   );
 
   @protected
+  HomeRoute sse_decode_box_autoadd_home_route(SseDeserializer deserializer);
+
+  @protected
   JsonAction sse_decode_box_autoadd_json_action(SseDeserializer deserializer);
 
   @protected
+  RouteKind sse_decode_box_autoadd_route_kind(SseDeserializer deserializer);
+
+  @protected
+  RoutePayload sse_decode_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RoutingBenchRoute sse_decode_box_autoadd_routing_bench_route(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SieveAction sse_decode_box_autoadd_sieve_action(SseDeserializer deserializer);
+
+  @protected
+  SplashRoute sse_decode_box_autoadd_splash_route(SseDeserializer deserializer);
+
+  @protected
+  ChartsRoute sse_decode_charts_route(SseDeserializer deserializer);
 
   @protected
   CounterAction sse_decode_counter_action(SseDeserializer deserializer);
@@ -362,6 +472,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CounterStateSnapshot sse_decode_counter_state_snapshot(
     SseDeserializer deserializer,
   );
+
+  @protected
+  HomeRoute sse_decode_home_route(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   JsonAction sse_decode_json_action(SseDeserializer deserializer);
@@ -381,6 +497,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<RoutePayload> sse_decode_list_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  RouteKind? sse_decode_opt_box_autoadd_route_kind(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RoutePayload? sse_decode_opt_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  OxideNavCommand sse_decode_oxide_nav_command(SseDeserializer deserializer);
+
+  @protected
+  RouteKind sse_decode_route_kind(SseDeserializer deserializer);
+
+  @protected
+  RoutePayload sse_decode_route_payload(SseDeserializer deserializer);
+
+  @protected
+  RoutingBenchRoute sse_decode_routing_bench_route(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SieveAction sse_decode_sieve_action(SseDeserializer deserializer);
 
   @protected
@@ -390,6 +538,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SieveStateSnapshot sse_decode_sieve_state_snapshot(
     SseDeserializer deserializer,
   );
+
+  @protected
+  SplashRoute sse_decode_splash_route(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -405,9 +556,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
-
-  @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
@@ -543,6 +691,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_oxide_nav_command_Sse(
+    RustStreamSink<OxideNavCommand> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_sieve_state_snapshot_Sse(
     RustStreamSink<SieveStateSnapshot> self,
     SseSerializer serializer,
@@ -552,8 +706,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_bench_detail_route(
+    BenchDetailRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_bench_detail_route(
+    BenchDetailRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_charts_route(
+    ChartsRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_counter_action(
     CounterAction self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_home_route(
+    HomeRoute self,
     SseSerializer serializer,
   );
 
@@ -564,10 +742,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_route_kind(
+    RouteKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_route_payload(
+    RoutePayload self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_routing_bench_route(
+    RoutingBenchRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_sieve_action(
     SieveAction self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_box_autoadd_splash_route(
+    SplashRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_charts_route(ChartsRoute self, SseSerializer serializer);
 
   @protected
   void sse_encode_counter_action(CounterAction self, SseSerializer serializer);
@@ -580,6 +785,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     CounterStateSnapshot self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_home_route(HomeRoute self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_json_action(JsonAction self, SseSerializer serializer);
@@ -603,6 +814,45 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_route_payload(
+    List<RoutePayload> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_route_kind(
+    RouteKind? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_route_payload(
+    RoutePayload? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_oxide_nav_command(
+    OxideNavCommand self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_route_kind(RouteKind self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_route_payload(RoutePayload self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_routing_bench_route(
+    RoutingBenchRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_sieve_action(SieveAction self, SseSerializer serializer);
 
   @protected
@@ -613,6 +863,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     SieveStateSnapshot self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_splash_route(SplashRoute self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
@@ -628,9 +881,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);

@@ -1,3 +1,4 @@
+import 'package:counter_app/oxide_generated/routes/route_models.g.dart' show CounterDetailRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,10 +18,7 @@ final class CounterDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Counter Detail'),
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.arrow_back),
-        ),
+        leading: IconButton(onPressed: () => Navigator.of(context).maybePop(), icon: const Icon(Icons.arrow_back)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -29,20 +27,11 @@ final class CounterDetailScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Text('Current state counter=${state?.counter ?? 'null'}'),
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: () => actions.pop(),
-            child: const Text('Pop (Rust-driven)'),
-          ),
+          FilledButton(onPressed: () => actions.pop(), child: const Text('Pop (Rust-driven)')),
           const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () => actions.popUntilHome(),
-            child: const Text('PopUntil Home (Rust-driven)'),
-          ),
+          OutlinedButton(onPressed: () => actions.popUntilHome(), child: const Text('PopUntil Home (Rust-driven)')),
           const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => actions.resetStack(),
-            child: const Text('Reset stack (Rust-driven)'),
-          ),
+          TextButton(onPressed: () => actions.resetStack(), child: const Text('Reset stack (Rust-driven)')),
         ],
       ),
     );

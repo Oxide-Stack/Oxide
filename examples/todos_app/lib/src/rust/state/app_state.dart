@@ -6,6 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `infer_slices`
+
 /// State for the todos example.
 ///oxide:state
 ///oxide:meta:{"kind":"state","name":"AppState","docs":["State for the todos example."],"fields":[{"name":"todos","ty":"Vec < TodoItem >"},{"name":"next_id","ty":"u64"},{"name":"last_confirmed","ty":"Option < bool >"}],"variants":null}
@@ -22,6 +24,22 @@ class AppState {
     required this.nextId,
     this.lastConfirmed,
   });
+
+  static Future<List<AppStateSlice>> inferSlicesImpl({
+    required AppState before,
+    required AppState after,
+  }) => RustLib.instance.api.crateStateAppStateAppStateInferSlicesImpl(
+    before: before,
+    after: after,
+  );
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  /// Creates an empty todos state.
+  ///
+  /// # Returns
+  /// A state with no todos and a starting ID counter.
+  static Future<AppState> newInstance() =>
+      RustLib.instance.api.crateStateAppStateAppStateNew();
 
   @override
   int get hashCode => todos.hashCode ^ nextId.hashCode ^ lastConfirmed.hashCode;

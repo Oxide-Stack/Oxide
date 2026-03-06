@@ -7,14 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:api_browser_app/src/app.dart';
+import 'package:api_browser_app/oxide.dart';
 import 'package:api_browser_app/src/rust/api/bridge.dart' as api;
-import 'package:api_browser_app/src/rust/frb_generated.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
-    await RustLib.init();
-    await api.initOxide();
+    await OxideStack.init();
   });
 
   testWidgets('Loads users, posts, and comments via local API server', (WidgetTester tester) async {

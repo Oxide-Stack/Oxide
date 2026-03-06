@@ -7,6 +7,7 @@ use quote::{ToTokens, quote};
 use serde::Serialize;
 use syn::{Item, ItemImpl, ItemMod, ItemStruct, Type};
 use syn::parse::{Parse, ParseStream};
+use syn::ext::IdentExt;
 use syn::{Attribute, LitStr, Token};
 
 #[derive(Debug, Clone, Serialize)]
@@ -42,7 +43,7 @@ impl Parse for OxideRouteArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut args = OxideRouteArgs::default();
         while !input.is_empty() {
-            let key: Ident = input.parse()?;
+            let key: Ident = input.call(Ident::parse_any)?;
             input.parse::<Token![=]>()?;
             match key.to_string().as_str() {
                 "path" => {
@@ -69,16 +70,17 @@ impl Parse for OxideRouteArgs {
 }
 
 pub fn expand_oxide_route_struct(args: OxideRouteArgs, mut item_struct: ItemStruct) -> syn::Result<TokenStream2> {
+    let path_value = args.path.as_ref().map(|p| p.value());
     let ident = item_struct.ident.clone();
     validate_oxide_route_struct(&item_struct)?;
     ensure_frb_non_opaque_attr(&mut item_struct);
     normalize_route_struct_fields(&mut item_struct);
     let return_ty: Type = args
         .return_type
-        .unwrap_or_else(|| syn::parse_quote!(::oxide_core::navigation::NoReturn));
+        .unwrap_or_else(|| syn::parse_quote!(oxide_core::navigation::NoReturn));
     let extra_ty: Type = args
         .extra_type
-        .unwrap_or_else(|| syn::parse_quote!(::oxide_core::navigation::NoExtra));
+        .unwrap_or_else(|| syn::parse_quote!(oxide_core::navigation::NoExtra));
 
     let path_fn = match args.path {
         Some(path) => quote! {
@@ -102,7 +104,20 @@ pub fn expand_oxide_route_struct(args: OxideRouteArgs, mut item_struct: ItemStru
                 .attrs
                 .iter()
                 .find(|a| a.path().segments.last().map(|s| s.ident.to_string()) == Some("route".to_string()))
-                .and_then(|a| a.parse_args::<RouteFieldArgs>().ok());
+                .and_then(|a| a.parse_args::<RouteFieldArgs>().ok())
+                .or_else(|| {
+                    let has_param_in_path = path_value
+                        .as_ref()
+                        .is_some_and(|p| p.contains(&format!(":{field_name}")));
+                    if has_param_in_path {
+                        Some(RouteFieldArgs {
+                            kind: Some("param".to_string()),
+                            key: None,
+                        })
+                    } else {
+                        None
+                    }
+                });
 
             let Some(route_args) = route_args else { continue };
             let Some(kind) = route_args.kind else { continue };
@@ -184,7 +199,7 @@ pub fn expand_oxide_route_struct(args: OxideRouteArgs, mut item_struct: ItemStru
     Ok(quote! {
         #item_struct
 
-        impl ::oxide_core::navigation::Route for #ident {
+        impl oxide_core::navigation::Route for #ident {
             #path_fn
             #params_fn
             #query_fn
@@ -403,8 +418,8 @@ fn generate_navigation_module() -> syn::Result<TokenStream2> {
                 /// must be able to subscribe to those commands.
                 ///
                 /// How: this sets up the global navigation runtime singleton used by Oxide.
-                pub fn init() -> ::oxide_core::CoreResult<()> {
-                    ::oxide_core::init_navigation()?;
+                pub(crate) fn init() -> oxide_core::CoreResult<()> {
+                    oxide_core::init_navigation()?;
                     Ok(())
                 }
             }
@@ -435,7 +450,7 @@ fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
             pub use crate::routes::{RouteKind, RoutePayload};
 
             #[flutter_rust_bridge::frb]
-            pub async fn init_navigation() -> Result<(), ::oxide_core::OxideError> {
+            pub async fn init_navigation() -> Result<(), oxide_core::OxideError> {
                 crate::navigation::runtime::init()?;
                 Ok(())
             }
@@ -443,9 +458,9 @@ fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
             #[flutter_rust_bridge::frb]
             pub async fn oxide_nav_commands_stream(
                 sink: crate::frb_generated::StreamSink<OxideNavCommand>,
-            ) -> Result<(), ::oxide_core::OxideError> {
+            ) -> Result<(), oxide_core::OxideError> {
                 crate::navigation::runtime::init()?;
-                let runtime = ::oxide_core::navigation_runtime()?;
+                let runtime = oxide_core::navigation_runtime()?;
                 let mut rx = runtime.subscribe_commands()?;
 
                 while let Some(cmd) = rx.recv().await {
@@ -460,11 +475,11 @@ fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
             pub async fn oxide_nav_emit_result(
                 ticket: String,
                 result_json: String,
-            ) -> Result<(), ::oxide_core::OxideError> {
+            ) -> Result<(), oxide_core::OxideError> {
                 crate::navigation::runtime::init()?;
-                let runtime = ::oxide_core::navigation_runtime()?;
+                let runtime = oxide_core::navigation_runtime()?;
                 let value: ::serde_json::Value = ::serde_json::from_str(&result_json).map_err(|e| {
-                    ::oxide_core::OxideError::Validation {
+                    oxide_core::OxideError::Validation {
                         message: format!("invalid navigation result JSON: {e}"),
                     }
                 })?;
@@ -473,9 +488,9 @@ fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
             }
 
             #[flutter_rust_bridge::frb]
-            pub fn oxide_nav_set_current_route(route: Option<RoutePayload>) -> Result<(), ::oxide_core::OxideError> {
+            pub fn oxide_nav_set_current_route(route: Option<RoutePayload>) -> Result<(), oxide_core::OxideError> {
                 crate::navigation::runtime::init()?;
-                let runtime = ::oxide_core::navigation_runtime()?;
+                let runtime = oxide_core::navigation_runtime()?;
                 let Some(route) = route else {
                     runtime.set_current_route(None);
                     return Ok(());
@@ -483,7 +498,7 @@ fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
 
                 let kind = route.kind().as_str().to_string();
                 let payload = route.payload_json()?;
-                runtime.set_current_route(Some(::oxide_core::navigation::NavRoute {
+                runtime.set_current_route(Some(oxide_core::navigation::NavRoute {
                     kind,
                     payload,
                     extras: None,
@@ -509,21 +524,21 @@ fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
                 },
             }
 
-            fn map_nav_command(cmd: ::oxide_core::navigation::NavCommand) -> ::oxide_core::CoreResult<OxideNavCommand> {
+            fn map_nav_command(cmd: oxide_core::navigation::NavCommand) -> oxide_core::CoreResult<OxideNavCommand> {
                 match cmd {
-                    ::oxide_core::navigation::NavCommand::Push { route, ticket } => {
+                    oxide_core::navigation::NavCommand::Push { route, ticket } => {
                         Ok(OxideNavCommand::Push {
                             route: nav_route_to_route_payload(route)?,
                             ticket,
                         })
                     }
-                    ::oxide_core::navigation::NavCommand::Pop { result } => Ok(OxideNavCommand::Pop {
+                    oxide_core::navigation::NavCommand::Pop { result } => Ok(OxideNavCommand::Pop {
                         result_json: result.map(|v| v.to_string()),
                     }),
-                    ::oxide_core::navigation::NavCommand::PopUntil { kind } => {
+                    oxide_core::navigation::NavCommand::PopUntil { kind } => {
                         Ok(OxideNavCommand::PopUntil { kind })
                     }
-                    ::oxide_core::navigation::NavCommand::Reset { routes } => {
+                    oxide_core::navigation::NavCommand::Reset { routes } => {
                         let mut out = Vec::with_capacity(routes.len());
                         for r in routes {
                             out.push(nav_route_to_route_payload(r)?);
@@ -820,24 +835,24 @@ fn generate_payload_helpers(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
                 }
             }
 
-            pub fn payload_json(&self) -> ::oxide_core::CoreResult<::serde_json::Value> {
+            pub(crate) fn payload_json(&self) -> oxide_core::CoreResult<::serde_json::Value> {
                 match self {
-                    #( Self::#variants(v) => ::serde_json::to_value(v).map_err(|e| ::oxide_core::OxideError::Internal {
+                    #( Self::#variants(v) => ::serde_json::to_value(v).map_err(|e| oxide_core::OxideError::Internal {
                         message: format!("failed to serialize route payload for kind {}: {e}", #kind_strings),
                     }), )*
                 }
             }
 
-            pub fn from_kind_and_payload(
+            pub(crate) fn from_kind_and_payload(
                 kind: &str,
                 payload: ::serde_json::Value,
-            ) -> ::oxide_core::CoreResult<Self> {
-                let kind = RouteKind::from_str(kind).ok_or_else(|| ::oxide_core::OxideError::Validation {
+            ) -> oxide_core::CoreResult<Self> {
+                let kind = RouteKind::from_str(kind).ok_or_else(|| oxide_core::OxideError::Validation {
                     message: format!("unknown route kind: {kind}"),
                 })?;
                 match kind {
                     #( RouteKind::#variants => {
-                        let v = ::serde_json::from_value::<#tys>(payload).map_err(|e| ::oxide_core::OxideError::Validation {
+                        let v = ::serde_json::from_value::<#tys>(payload).map_err(|e| oxide_core::OxideError::Validation {
                             message: format!("failed to decode route payload for kind {}: {e}", #kind_strings),
                         })?;
                         Ok(Self::#variants(v))
@@ -1005,9 +1020,8 @@ mod tests {
     }
 
     #[test]
-    fn navigation_module_contains_bindings() {
-        let routes_mod = Ident::new("routes", Span::call_site());
-        let tokens = generate_navigation_module(&routes_mod).unwrap().to_string();
+    fn navigation_bridge_module_contains_bindings() {
+        let tokens = generate_navigation_bridge_module().unwrap().to_string();
         assert!(tokens.contains("oxide_nav_commands_stream"));
         assert!(tokens.contains("oxide_nav_emit_result"));
         assert!(tokens.contains("oxide_nav_set_current_route"));

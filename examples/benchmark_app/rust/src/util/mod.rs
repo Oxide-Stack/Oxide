@@ -1,4 +1,4 @@
-use serde_json::Value;
+pub use serde_json::Value;
 
 pub const FNV_OFFSET_BASIS: u64 = 0xcbf29ce484222325u64;
 pub const FNV_PRIME: u64 = 0x00000100000001b3u64;
@@ -31,7 +31,9 @@ pub fn count_entries(value: &Value) -> u64 {
 pub fn canonicalize_json(value: &mut Value) {
     match value {
         Value::Object(map) => {
-            let mut entries = std::mem::take(map).into_iter().collect::<Vec<(String, Value)>>();
+            let mut entries = std::mem::take(map)
+                .into_iter()
+                .collect::<Vec<(String, Value)>>();
             entries.sort_by(|a, b| a.0.cmp(&b.0));
             let mut next = serde_json::Map::new();
             for (k, mut v) in entries {
@@ -48,4 +50,3 @@ pub fn canonicalize_json(value: &mut Value) {
         _ => {}
     }
 }
-

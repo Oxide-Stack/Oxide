@@ -31,10 +31,9 @@ pub struct ApiBrowserDemoDialogPendingRequest {
 
 #[flutter_rust_bridge::frb]
 /// Initializes the isolated channels demo runtime and installs the duplex handler.
-pub fn init_isolated_channels_demo() -> Result<(), oxide_core::OxideError> {
-    oxide_core::init_isolated_channels()?;
+pub fn init_isolated_channels_demo() {
+    let _ = oxide_core::init_isolated_channels();
     install_duplex_incoming_handler();
-    Ok(())
 }
 
 #[flutter_rust_bridge::frb]
@@ -72,18 +71,16 @@ pub async fn api_browser_demo_dialog_requests_stream(
 pub async fn api_browser_demo_dialog_respond(
     id: u64,
     response: ApiBrowserDemoDialogResponse,
-) -> Result<(), oxide_core::OxideChannelError> {
-    crate::isolated_channels_demo::__oxide_isolated_callback_api_browser_demo_dialog::runtime()
+) {
+    let _ = crate::isolated_channels_demo::__oxide_isolated_callback_api_browser_demo_dialog::runtime()
         .respond(id, response)
-        .await
+        .await;
 }
 
 #[flutter_rust_bridge::frb]
 /// Requests confirmation from Dart and returns the typed response payload.
-pub async fn api_browser_demo_dialog_confirm(
-    title: String,
-) -> Result<bool, oxide_core::OxideChannelError> {
-    ApiBrowserDemoDialog::confirm(title).await
+pub async fn api_browser_demo_dialog_confirm(title: String) -> bool {
+    ApiBrowserDemoDialog::confirm(title).await.unwrap_or(false)
 }
 
 #[flutter_rust_bridge::frb]
@@ -111,10 +108,8 @@ pub fn api_browser_demo_duplex_send(text: String) {
 
 #[flutter_rust_bridge::frb]
 /// Delivers a duplex incoming message from Dart to Rust.
-pub fn api_browser_demo_duplex_incoming(
-    event: ApiBrowserDemoIn,
-) -> Result<(), oxide_core::OxideChannelError> {
-    crate::isolated_channels_demo::__oxide_isolated_duplex_api_browser_demo_duplex::frb::oxide_api_browser_demo_duplex_incoming(event)
+pub fn api_browser_demo_duplex_incoming(event: ApiBrowserDemoIn) {
+    let _ = crate::isolated_channels_demo::__oxide_isolated_duplex_api_browser_demo_duplex::frb::oxide_api_browser_demo_duplex_incoming(event);
 }
 
 #[flutter_rust_bridge::frb]

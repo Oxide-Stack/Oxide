@@ -6,6 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `infer_slices`
+
 /// State for the ticker example.
 ///oxide:state
 ///oxide:meta:{"kind":"state","name":"AppState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","State for the ticker example."],"fields":[{"name":"control","ty":"TickerControlState"},{"name":"tick","ty":"TickState"}],"variants":null}
@@ -17,6 +19,22 @@ class AppState {
   final TickState tick;
 
   const AppState({required this.control, required this.tick});
+
+  static Future<List<AppStateSlice>> inferSlicesImpl({
+    required AppState before,
+    required AppState after,
+  }) => RustLib.instance.api.crateStateAppStateAppStateInferSlicesImpl(
+    before: before,
+    after: after,
+  );
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  /// Creates a new state instance.
+  ///
+  /// # Returns
+  /// A state with `ticks = 0`.
+  static Future<AppState> newInstance() =>
+      RustLib.instance.api.crateStateAppStateAppStateNew();
 
   @override
   int get hashCode => control.hashCode ^ tick.hashCode;

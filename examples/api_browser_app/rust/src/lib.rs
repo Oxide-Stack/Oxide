@@ -11,7 +11,8 @@ mod frb_generated;
 #[cfg(feature = "isolated-channels")]
 mod isolated_channels_demo;
 
-pub use oxide_core::OxideError;
+pub use oxide_core::{OxideError, OxideChannelError, CoreResult};
+pub use serde_json::Value;
 
 #[oxide_generator_rs::routes]
 pub mod routes {

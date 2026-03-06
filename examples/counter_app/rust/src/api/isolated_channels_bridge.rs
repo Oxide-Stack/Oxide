@@ -2,9 +2,6 @@
 //!
 //! This API is additive and feature-gated behind `isolated-channels`.
 
-/// Re-exported so FRB-generated glue code can refer to the type unqualified.
-pub use oxide_core::OxideChannelError;
-
 use flutter_rust_bridge::DartFnFuture;
 
 use crate::isolated_channels_demo::{
@@ -31,10 +28,9 @@ pub struct CounterDemoDialogPendingRequest {
 
 #[flutter_rust_bridge::frb]
 /// Initializes the isolated channels demo runtime and installs the duplex handler.
-pub fn init_isolated_channels_demo() -> Result<(), oxide_core::OxideError> {
-    oxide_core::init_isolated_channels()?;
+pub fn init_isolated_channels_demo() {
+    let _ = oxide_core::init_isolated_channels();
     install_duplex_incoming_handler();
-    Ok(())
 }
 
 #[flutter_rust_bridge::frb]
@@ -70,16 +66,16 @@ pub async fn counter_demo_dialog_requests_stream(
 pub async fn counter_demo_dialog_respond(
     id: u64,
     response: CounterDemoDialogResponse,
-) -> Result<(), oxide_core::OxideChannelError> {
-    crate::isolated_channels_demo::__oxide_isolated_callback_counter_demo_dialog::runtime()
+) {
+    let _ = crate::isolated_channels_demo::__oxide_isolated_callback_counter_demo_dialog::runtime()
         .respond(id, response)
-        .await
+        .await;
 }
 
 #[flutter_rust_bridge::frb]
 /// Requests confirmation from Dart and returns the typed response payload.
-pub async fn counter_demo_dialog_confirm(title: String) -> Result<bool, oxide_core::OxideChannelError> {
-    CounterDemoDialog::confirm(title).await
+pub async fn counter_demo_dialog_confirm(title: String) -> bool {
+    CounterDemoDialog::confirm(title).await.unwrap_or(false)
 }
 
 #[flutter_rust_bridge::frb]
@@ -107,8 +103,8 @@ pub fn counter_demo_duplex_send(text: String) {
 
 #[flutter_rust_bridge::frb]
 /// Delivers a duplex incoming message from Dart to Rust.
-pub fn counter_demo_duplex_incoming(event: CounterDemoIn) -> Result<(), oxide_core::OxideChannelError> {
-    crate::isolated_channels_demo::__oxide_isolated_duplex_counter_demo_duplex::frb::oxide_counter_demo_duplex_incoming(event)
+pub fn counter_demo_duplex_incoming(event: CounterDemoIn) {
+    let _ = crate::isolated_channels_demo::__oxide_isolated_duplex_counter_demo_duplex::frb::oxide_counter_demo_duplex_incoming(event);
 }
 
 #[flutter_rust_bridge::frb]
