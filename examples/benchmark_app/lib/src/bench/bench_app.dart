@@ -14,11 +14,21 @@ final class BenchApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final router = GoRouter(
+      initialLocation: '/',
       navigatorKey: OxideStack.navigatorKey,
       routes: <RouteBase>[
-        GoRoute(path: '/', builder: (context, state) => BenchHomeScreen(route: const HomeRoute())),
-        GoRoute(path: '/splash', builder: (context, state) => BenchSplashScreen(route: const SplashRoute())),
-        GoRoute(path: '/charts', builder: (context, state) => BenchChartsScreen(route: const ChartsRoute())),
+        GoRoute(
+          path: '/',
+          builder: (context, state) => BenchHomeScreen(route: const HomeRoute()),
+        ),
+        GoRoute(
+          path: '/splash',
+          builder: (context, state) => BenchSplashScreen(route: const SplashRoute()),
+        ),
+        GoRoute(
+          path: '/charts',
+          builder: (context, state) => BenchChartsScreen(route: const ChartsRoute()),
+        ),
         GoRoute(path: '/routing', builder: (context, state) => const RoutingBenchScreen()),
         GoRoute(
           path: '/bench/:id',

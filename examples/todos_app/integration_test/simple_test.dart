@@ -9,7 +9,8 @@ import 'package:todos_app/oxide.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
-    await OxideStack.init();
+    // don't start navigation; tests only drive CRUD flows
+    await OxideStack.init(startNavigation: false);
   });
 
   testWidgets('Todo CRUD updates Rust state', (WidgetTester tester) async {

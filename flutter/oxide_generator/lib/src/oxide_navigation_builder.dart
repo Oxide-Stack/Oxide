@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:build/build.dart';
 
 import 'oxide_navigation_codegen.dart';
@@ -19,6 +20,7 @@ final class OxideNavigationBuilder implements Builder {
   @override
   Future<void> build(BuildStep buildStep) async {
     final metadata = await readRustRouteMetadata();
+    final channelMeta = await readRustChannelMetadata();
     final routePages = await discoverRoutePages(buildStep);
 
     await buildStep.writeAsString(
@@ -39,11 +41,12 @@ final class OxideNavigationBuilder implements Builder {
     );
     await buildStep.writeAsString(
       AssetId(buildStep.inputId.package, 'lib/oxide_generated/oxide_stack.g.dart'),
-      generateOxideStackSource(),
+      generateOxideStackSource(channels: channelMeta),
     );
+    final includeHelpers = File('lib/src/oxide.dart').existsSync();
     await buildStep.writeAsString(
       AssetId(buildStep.inputId.package, 'lib/oxide.dart'),
-      generateOxideEntrypointSource(),
+      generateOxideEntrypointSource(includeSrcOxide: includeHelpers),
     );
   }
 }

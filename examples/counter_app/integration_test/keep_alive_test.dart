@@ -40,7 +40,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    await OxideStack.init();
+    // navigation not exercised by these state/bridge tests
+    await OxideStack.init(startNavigation: false);
   });
 
   testWidgets('Inherited controller survives widget interruptions when reused', (WidgetTester tester) async {

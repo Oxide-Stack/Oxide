@@ -12,10 +12,11 @@ void main() {
     final core = OxideStoreCore<int, int, int, _Snap>(
       createEngine: (initialState) async => initialState ?? 0,
       disposeEngine: (engine) => disposed = true,
-      dispatch: (engine, action) async => _Snap(engine + action),
-      current: (engine) async => _Snap(engine),
+      dispatch: (engine, action) async => _Snap(engine + action, revision: 0),
+      current: (engine) async => _Snap(engine, revision: 0),
       stateStream: (_) => const Stream<_Snap>.empty(),
       stateFromSnapshot: (snap) => snap.state,
+      revisionOf: (snap) => snap.revision,
     );
 
     await core.initialize(initialState: 10);
@@ -30,6 +31,7 @@ void main() {
 }
 
 final class _Snap {
-  _Snap(this.state);
+  _Snap(this.state, {required this.revision});
   final int state;
+  final int revision;
 }

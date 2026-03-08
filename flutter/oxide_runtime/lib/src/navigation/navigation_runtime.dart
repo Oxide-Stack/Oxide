@@ -109,9 +109,14 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
   Future<void> _handle(OxideNavigationCommand<RouteT, KindT> cmd) async {
     switch (cmd) {
       case OxideNavigationPush<RouteT, KindT>(:final route, :final ticket):
-        _pushRoute(route);
-        await _syncCurrentRoute();
-        unawaited(_completePush(route, ticket, cmd));
+        // ignore duplicate push if the top of our stack already matches the
+        // requested route. This prevents spurious startup duplicate pushes and
+        // other coalesces.
+        if (!(_stack.isNotEmpty && _stack.last == route)) {
+          _pushRoute(route);
+          await _syncCurrentRoute();
+          unawaited(_completePush(route, ticket, cmd));
+        }
       case OxideNavigationPop<RouteT, KindT>(:final result):
         handler.pop(result);
         _popRoute();
@@ -121,9 +126,13 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
         _popUntil(kind);
         await _syncCurrentRoute();
       case OxideNavigationReset<RouteT, KindT>(:final routes):
-        handler.reset(routes);
-        _reset(routes);
-        await _syncCurrentRoute();
+        // ignore redundant resets to avoid unnecessary navigator churn and
+        // flicker. equality is based on route sequence, preserving order.
+        if (!_routesEqual(_stack, routes)) {
+          handler.reset(routes);
+          _reset(routes);
+          await _syncCurrentRoute();
+        }
     }
   }
 
@@ -166,11 +175,15 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
     state.value = OxideNavigationState(stack: List.unmodifiable(_stack), current: current, kindOf: kindOf);
   }
 
-  Future<void> _completePush(
-    RouteT route,
-    String? ticket,
-    OxideNavigationCommand<RouteT, KindT> cmd,
-  ) async {
+  bool _routesEqual(List<RouteT> a, List<RouteT> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  Future<void> _completePush(RouteT route, String? ticket, OxideNavigationCommand<RouteT, KindT> cmd) async {
     Object? result;
     try {
       result = await handler.push(route, ticket: ticket);

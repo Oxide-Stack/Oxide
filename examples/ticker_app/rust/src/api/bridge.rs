@@ -22,9 +22,7 @@ impl oxide_core::Reducer for AppRootReducer {
 
     async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>) {
         self.sideeffect_tx = Some(ctx.sideeffect_tx);
-        if let Ok(runtime) = oxide_core::navigation_runtime() {
-            let _ = runtime.push(crate::routes::HomeRoute {});
-        }
+        // startup route now declared elsewhere, so omit manual push.
     }
 
     fn reduce(

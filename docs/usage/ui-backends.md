@@ -4,6 +4,12 @@ Oxide supports multiple generated UI wiring styles (“backends”). Choose the 
 
 At app startup, initialize FRB (your `frb_generated.dart` path may differ depending on your FRB config):
 
+> **Note:** if your Rust code defines isolated channels, the generated Dart
+> entrypoints (`OxideStack.init` and `runOxideApp`) take care of initializing
+> the channel runtime for you. **You no longer need to call any
+> `initIsolatedChannels…` helpers manually.**
+
+
 ```dart
 import 'package:flutter/widgets.dart';
 

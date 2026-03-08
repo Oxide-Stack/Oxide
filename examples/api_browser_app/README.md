@@ -15,7 +15,7 @@ This example uses Oxide's Navigator 1.0 integration for Rust-driven navigation, 
 
 ## Rust Surface
 
-- Intended FRB surface: `init_app`, `init_oxide`, and the three engine + state/action/snapshot type sets.
+- Intended FRB surface: no manual init functions (`init_app`/`init_oxide` are now generated). the crate simply exposes its engine and state/action/snapshot types.
 - Not part of the FRB surface: reducer implementation structs and side-effect sender plumbing.
 
 ## Isolated Channels Demo (Additive)
@@ -37,18 +37,19 @@ Generated Dart wrappers live at:
 Example usage (from Flutter code):
 
 ```dart
-import 'package:api_browser_app/src/rust/api/isolated_channels_bridge.dart' as ch;
-import 'package:api_browser_app/src/rust/isolated_channels_demo/channels.dart';
+import 'package:api_browser_app/src/oxide.dart';
 
 Future<void> startDemo() async {
-  await ch.initIsolatedChannelsDemo();
+  // channel initialization is now automatic; only `OxideStack.init()` is
+  // required to boot the runtime.
 
-  ch.apiBrowserDemoEventsStream().listen((event) {
+  // use the unified OxideStack surface for events/callbacks
+  OxideStack.events.apiBrowserDemoEvents.listen((event) {
     event.when(notify: (message) => print('notify: $message'));
   });
 
-  ch.apiBrowserDemoDialogRequestsStream().listen((pending) async {
-    await ch.apiBrowserDemoDialogRespond(
+  OxideStack.callbacks.apiBrowserDemoDialogRequests.listen((pending) async {
+    await OxideStack.callbacks.apiBrowserDemoDialogRespond(
       id: pending.id,
       response: ApiBrowserDemoDialogResponse.confirm(true),
     );

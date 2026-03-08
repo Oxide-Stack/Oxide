@@ -1,8 +1,13 @@
 use serde::{Deserialize, Serialize};
+// navigation actions were originally defined here, but chart navigation
+// is now executed directly in Dart rather than via Rust.  The reducer and
+// associated bridges are kept only for historical reference and could be
+// removed entirely in future cleanup.
 #[derive(Debug, Clone, Copy)]
 #[flutter_rust_bridge::frb(ignore)]
 pub enum BenchNavAction {
-    OpenCharts,
+    // no-op placeholder
+    _Unused,
 }
 
 #[derive(Clone, Default, Serialize, Deserialize)]
@@ -23,13 +28,10 @@ impl oxide_core::Reducer for BenchNavReducer {
         _state: &mut Self::State,
         ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
+        // no actions are currently handled; navigation is performed in
+        // Dart so we don't need to react to any Rust nav commands here.
         match ctx.input {
-            BenchNavAction::OpenCharts => {
-                if let Ok(runtime) = oxide_core::navigation_runtime() {
-                    let _ = runtime.push(crate::routes::ChartsRoute {});
-                }
-                Ok(oxide_core::StateChange::None)
-            }
+            _ => Ok(oxide_core::StateChange::None),
         }
     }
 

@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'oxide.dart';
 import 'src/app_shell.dart';
-import 'src/rust/api/bridge.dart' as api;
+// bridge import removed; use helpers exposed by `oxide.dart`
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await OxideStack.init();
-  api.resetApiBaseUrl();
-
-  runApp(const ProviderScope(child: ApiBrowserApp()));
+  // keep custom network configuration separate from boilerplate
+  // initialize network configuration via public API helper
+  resetApiBaseUrl();
+  await runOxideApp(const ProviderScope(child: ApiBrowserApp()));
 }

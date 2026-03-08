@@ -26,32 +26,50 @@ final class OxideStoreCore<S, A, E, Snap> {
     required this.stateFromSnapshot,
     this.initApp,
     this.encodeCurrentState,
+    this.revisionOf,
   });
 
   /// Creates the engine.
   final OxideCreateEngine<E, S> createEngine;
+
   /// Disposes the engine.
   final OxideDisposeEngine<E> disposeEngine;
+
   /// Dispatches an action and yields a snapshot.
   final OxideDispatch<E, A, Snap> dispatch;
+
   /// Reads the current snapshot.
   final OxideCurrent<E, Snap> current;
+
   /// Subscribes to the engine's snapshot stream.
   final OxideStateStream<E, Snap> stateStream;
+
   /// Converts a snapshot into a state value.
   final OxideStateFromSnapshot<S, Snap> stateFromSnapshot;
+
   /// Optional one-time initialization hook.
   ///
   /// If set, this hook is called at the start of [initialize]. It is invoked
   /// inside a try/catch and any thrown error is captured into [error].
   final OxideInitApp? initApp;
+
   /// Optional encoder for the engine's current state.
   final OxideEncodeCurrentState<E>? encodeCurrentState;
+
+  /// Extracts revision number from a snapshot for deduplication.
+  ///
+  /// Generated bindings should supply this to allow the core to drop
+  /// duplicate snapshots that share the same revision.
+  final int Function(Snap snap)? revisionOf;
 
   E? _engine;
   StreamSubscription<Snap>? _subscription;
   Snap? _snapshot;
   final StreamController<Snap> _snapshotsController = StreamController<Snap>.broadcast();
+
+  // instrumentation counters (debug only)
+  int _engineCreationCount = 0;
+  int _snapshotEmissionCount = 0;
 
   bool _isDisposed = false;
   bool _disposeRequested = false;
@@ -61,16 +79,29 @@ final class OxideStoreCore<S, A, E, Snap> {
   Object? _error;
   StackTrace? _errorStackTrace;
 
+  /// last revision that was delivered to listeners, if known.
+  int? _lastDeliveredRevision;
+
   /// Whether the store is currently initializing.
   bool get isLoading => _isLoading;
+
   /// The most recent error captured by the core runtime, if any.
   Object? get error => _error;
+
   /// Stack trace associated with [error], if available.
   StackTrace? get errorStackTrace => _errorStackTrace;
+
   /// The current engine instance, if initialized.
   E? get engine => _engine;
+
   /// The most recent snapshot received from the engine, if any.
   Snap? get snapshot => _snapshot;
+
+  /// Number of times the engine was created.
+  int get engineCreationCount => _engineCreationCount;
+
+  /// Number of snapshots emitted through [snapshots] stream.
+  int get snapshotEmissionCount => _snapshotEmissionCount;
 
   /// The derived state value from [snapshot], if available.
   S? get state {
@@ -102,7 +133,10 @@ final class OxideStoreCore<S, A, E, Snap> {
       initApp?.call();
       if (_isDisposed) return;
 
-      final engine = await _track(() => createEngine(initialState));
+      final engine = await _track(() {
+        _engineCreationCount++;
+        return createEngine(initialState);
+      });
       if (_isDisposed) {
         unawaited(Future<void>.value(disposeEngine(engine)));
         return;
@@ -111,14 +145,22 @@ final class OxideStoreCore<S, A, E, Snap> {
       _engine = engine;
       _snapshot = await _track(() => current(engine));
       final initialSnap = _snapshot;
-      if (initialSnap != null) _snapshotsController.add(initialSnap);
+      if (initialSnap != null) {
+        if (!_shouldEmit(initialSnap)) {
+          // drop duplicate initial snapshot
+        } else {
+          _emitSnapshot(initialSnap);
+        }
+      }
       if (_isDisposed) return;
 
       _subscription = stateStream(engine).listen(
         (snap) {
           if (_isDisposed) return;
           _snapshot = snap;
-          _snapshotsController.add(snap);
+          if (_shouldEmit(snap)) {
+            _emitSnapshot(snap);
+          }
         },
         onError: (Object err, StackTrace st) {
           if (_isDisposed) return;
@@ -157,7 +199,11 @@ final class OxideStoreCore<S, A, E, Snap> {
     try {
       _snapshot = await _track(() => dispatch(engine, action));
       final snap = _snapshot;
-      if (snap != null) _snapshotsController.add(snap);
+      if (snap != null) {
+        if (_shouldEmit(snap)) {
+          _emitSnapshot(snap);
+        }
+      }
     } catch (err, st) {
       _error = err;
       _errorStackTrace = st;
@@ -191,5 +237,21 @@ final class OxideStoreCore<S, A, E, Snap> {
     _engine = null;
     if (engine == null) return;
     await Future<void>.value(disposeEngine(engine));
+  }
+
+  bool _shouldEmit(Snap snap) {
+    if (revisionOf != null) {
+      final rev = revisionOf!(snap);
+      if (_lastDeliveredRevision != null && _lastDeliveredRevision == rev) {
+        return false;
+      }
+      _lastDeliveredRevision = rev;
+    }
+    return true;
+  }
+
+  void _emitSnapshot(Snap snap) {
+    _snapshotsController.add(snap);
+    _snapshotEmissionCount++;
   }
 }

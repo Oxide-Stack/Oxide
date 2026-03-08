@@ -15,7 +15,7 @@ This example uses Oxide's Navigator 1.0 integration by wiring the generated `oxi
 
 ## Rust Surface
 
-- Intended FRB surface: `init_app`, `init_oxide`, the engine type, and the state/action/snapshot types.
+- Intended FRB surface: no manual init functions required (the Rust init hook is generated). you still expose the engine type and the state/action/snapshot types.
 - Not part of the FRB surface: reducer implementation structs and any internal side-effect wiring.
 
 ## Isolated Channels Demo (Additive)
@@ -37,18 +37,19 @@ Generated Dart wrappers live at:
 Example usage (from Flutter code):
 
 ```dart
-import 'package:counter_app/src/rust/api/isolated_channels_bridge.dart' as ch;
-import 'package:counter_app/src/rust/isolated_channels_demo/channels.dart';
+import 'package:counter_app/src/oxide.dart';
 
 Future<void> startDemo() async {
-  await ch.initIsolatedChannelsDemo();
+  // channel initialization is now automatic; only `OxideStack.init()` is
+  // required to boot the runtime.
 
-  ch.counterDemoEventsStream().listen((event) {
+  // prefer the central OxideStack surface for events and callbacks
+  OxideStack.events.counterDemoEvents.listen((event) {
     event.when(notify: (message) => print('notify: $message'));
   });
 
-  ch.counterDemoDialogRequestsStream().listen((pending) async {
-    await ch.counterDemoDialogRespond(
+  OxideStack.callbacks.counterDemoDialogRequests.listen((pending) async {
+    await OxideStack.callbacks.counterDemoDialogRespond(
       id: pending.id,
       response: CounterDemoDialogResponse.confirm(true),
     );

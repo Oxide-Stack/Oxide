@@ -10,19 +10,22 @@ import 'package:benchmark_app/src/oxide.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
-    await OxideStack.init();
+    // navigation not needed for bench app smoke test
+    await OxideStack.init(startNavigation: false);
   });
 
   testWidgets('App boots and renders dashboard', (WidgetTester tester) async {
-    await tester.pumpWidget(ProviderScope(
-      child: BenchCounterHooksOxideScope(
-        child: BenchJsonHooksOxideScope(
-          child: BenchSieveHooksOxideScope(
-            child: MaterialApp(home: BenchHomeScreen(route: const HomeRoute())),
+    await tester.pumpWidget(
+      ProviderScope(
+        child: BenchCounterHooksOxideScope(
+          child: BenchJsonHooksOxideScope(
+            child: BenchSieveHooksOxideScope(
+              child: MaterialApp(home: BenchHomeScreen(route: const HomeRoute())),
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Benchmark Dashboard'), findsOneWidget);

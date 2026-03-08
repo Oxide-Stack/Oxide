@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../oxide.dart';
 
 import 'memory_probe.dart';
 
@@ -43,7 +44,11 @@ final class _RoutingBenchScreenState extends State<RoutingBenchScreen> {
         title: const Text('Routing Benchmark'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
+          // avoid touching the navigation runtime directly from the UI;
+          // just ask GoRouter to pop. this keeps app code solely using
+          // Flutter navigation APIs and prevents mixed imperative calls
+          // alongside Rust-driven commands.
+          onPressed: () => context.pop(),
         ),
       ),
       body: Padding(
@@ -167,4 +172,3 @@ final class _ResultView extends StatelessWidget {
     );
   }
 }
-

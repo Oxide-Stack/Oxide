@@ -10,7 +10,8 @@ import 'package:oxide_runtime/oxide_runtime.dart';
 
 import '../../oxide.dart';
 import '../oxide.dart';
-import '../rust/api/bridge.dart' show openCharts;
+// navigation to charts is now performed directly in Dart; the Rust bridge helper is no longer needed
+
 import 'bench_detail.dart';
 import 'bench_charts.dart';
 import 'bench_models.dart';
@@ -101,6 +102,11 @@ final class _BenchChartsArgs {
   final int iterations;
   final int samples;
   final int warmup;
+
+  @override
+  String toString() {
+    return 'BenchChartsArgs(samplesByVariant: \\$samplesByVariant, iterations: \\$iterations, samples: \\$samples, warmup: \\$warmup)';
+  }
 }
 
 _BenchChartsArgs? _benchChartsArgs;
@@ -116,10 +122,7 @@ final class BenchSplashScreen extends ConsumerWidget {
     ref.watch(benchCounterRiverpodOxideProvider);
     return Scaffold(
       body: Center(
-        child: Semantics(
-          label: 'Loading',
-          child: const CircularProgressIndicator(),
-        ),
+        child: Semantics(label: 'Loading', child: const CircularProgressIndicator()),
       ),
     );
   }
@@ -131,10 +134,7 @@ class _LoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Semantics(
-        label: 'Loading',
-        child: const CircularProgressIndicator(),
-      ),
+      child: Semantics(label: 'Loading', child: const CircularProgressIndicator()),
     );
   }
 }
@@ -184,7 +184,15 @@ final class BenchChartsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final args = _benchChartsArgs;
+    // debug log each build of charts screen
+    // ignore: avoid_print
+    print('[Bench] BenchChartsScreen.build args=$args');
     if (args == null) {
+      // if navigation somehow ended up here without parameters, bounce back
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // safe to call even if already on '/'
+        context.go('/');
+      });
       return const Scaffold(body: Center(child: Text('Missing chart args')));
     }
     return _ChartsView(samplesByVariant: args.samplesByVariant, iterations: args.iterations, samples: args.samples, warmup: args.warmup);
@@ -211,13 +219,17 @@ final class BenchDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final raw = route.id;
-    final id = switch (raw) {
-      int() => raw,
-      BigInt() => raw.toInt(),
-      String() => int.tryParse(raw) ?? 0,
-      _ => 0,
-    };
+    final Object? raw = route.id;
+    // convert value to integer safely regardless of underlying type
+    final int id;
+    if (raw is int) {
+      id = raw;
+    } else if (raw is BigInt) {
+      id = raw.toInt();
+    } else {
+      // fallback: stringify and parse
+      id = int.tryParse(raw?.toString() ?? '') ?? 0;
+    }
     return BenchDetailScreen(id: id);
   }
 }
@@ -257,12 +269,7 @@ final class _BenchScreenState extends State<_BenchScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Benchmark Dashboard'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.route),
-              onPressed: () => context.go('/routing'),
-            ),
-          ],
+          actions: [IconButton(icon: const Icon(Icons.route), onPressed: () => context.go('/routing'))],
         ),
         body: FutureBuilder(
           future: _inputs,
@@ -490,8 +497,17 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
             alignment: Alignment.centerLeft,
             child: FilledButton.tonal(
               onPressed: () {
+                // debug: log args before navigation
+                // ignore: avoid_print
+                print('[Bench] setting charts args before navigation: iterations=$_iterations, samples=$_samples, warmup=$_warmup');
                 _benchChartsArgs = _BenchChartsArgs(samplesByVariant: _samplesByVariant, iterations: _iterations, samples: _samples, warmup: _warmup);
-                unawaited(openCharts());
+                // log value immediately after assignment
+                // ignore: avoid_print
+                print('[Bench] _benchChartsArgs set = $_benchChartsArgs');
+                // perform navigation locally; no need to ask Rust to push the route
+                // ignore: avoid_print
+                print('[Bench] navigating to /charts');
+                context.go('/charts');
               },
               child: const Text('View Charts'),
             ),

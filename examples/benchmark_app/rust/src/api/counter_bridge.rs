@@ -16,9 +16,7 @@ impl oxide_core::Reducer for CounterRootReducer {
     type SideEffect = CounterSideEffect;
 
     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {
-        if let Ok(runtime) = oxide_core::navigation_runtime() {
-            let _ = runtime.push(crate::routes::HomeRoute {});
-        }
+        // startup navigation is now driven by generated metadata; manual push removed
     }
 
     fn reduce(

@@ -8,10 +8,10 @@ String buildInheritedBackend(OxideCodegenConfig c, String coreInstantiation) {
   final snapshotsStream = (c.slices == null || c.slices!.isEmpty)
       ? '_core.snapshots'
       : 'filterSnapshotsBySlices<${c.snapshotType}, ${c.sliceType!}>('
-          '_core.snapshots, '
-          'const [${c.slices!.join(', ')}], '
-          '(snap) => snap.slices'
-          ')';
+            '_core.snapshots, '
+            'const [${c.slices!.join(', ')}], '
+            '(snap) => snap.slices'
+            ')';
   return '''
 class ${c.prefix}Controller extends ChangeNotifier {
   ${c.prefix}Controller() {
@@ -55,12 +55,15 @@ $coreInstantiation
 
   Future<void> _initialize() async {
     await _core.initialize();
-    _notify();
+    // notifications will be delivered via the snapshots stream; explicit
+    // notify call removed to avoid duplicates when the stream emits the
+    // initial snapshot or post-dispatch updates.
   }
 
   Future<void> _dispatch(${c.actionsType} action) async {
     await _core.dispatchAction(action);
-    _notify();
+    // no explicit notify; stream subscription will trigger when the core
+    // emits the updated snapshot (deduped by revision).
   }
 }
 

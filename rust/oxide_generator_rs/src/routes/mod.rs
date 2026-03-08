@@ -5,10 +5,10 @@ use std::path::{Path, PathBuf};
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::{ToTokens, quote};
 use serde::Serialize;
-use syn::{Item, ItemImpl, ItemMod, ItemStruct, Type};
-use syn::parse::{Parse, ParseStream};
 use syn::ext::IdentExt;
+use syn::parse::{Parse, ParseStream};
 use syn::{Attribute, LitStr, Token};
+use syn::{Item, ItemImpl, ItemMod, ItemStruct, Type};
 
 #[derive(Debug, Clone, Serialize)]
 struct RouteFieldMeta {
@@ -56,7 +56,10 @@ impl Parse for OxideRouteArgs {
                     args.extra_type = Some(input.parse()?);
                 }
                 _ => {
-                    return Err(syn::Error::new_spanned(key, "unknown #[oxide_route] argument"));
+                    return Err(syn::Error::new_spanned(
+                        key,
+                        "unknown #[oxide_route] argument",
+                    ));
                 }
             }
 
@@ -69,7 +72,10 @@ impl Parse for OxideRouteArgs {
     }
 }
 
-pub fn expand_oxide_route_struct(args: OxideRouteArgs, mut item_struct: ItemStruct) -> syn::Result<TokenStream2> {
+pub fn expand_oxide_route_struct(
+    args: OxideRouteArgs,
+    mut item_struct: ItemStruct,
+) -> syn::Result<TokenStream2> {
     let path_value = args.path.as_ref().map(|p| p.value());
     let ident = item_struct.ident.clone();
     validate_oxide_route_struct(&item_struct)?;
@@ -96,14 +102,19 @@ pub fn expand_oxide_route_struct(args: OxideRouteArgs, mut item_struct: ItemStru
 
     if let syn::Fields::Named(named) = &item_struct.fields {
         for field in &named.named {
-            let Some(field_ident) = field.ident.clone() else { continue };
+            let Some(field_ident) = field.ident.clone() else {
+                continue;
+            };
             let field_name = field_ident.to_string();
             let key_lit = LitStr::new(&field_name, Span::call_site());
 
             let route_args = field
                 .attrs
                 .iter()
-                .find(|a| a.path().segments.last().map(|s| s.ident.to_string()) == Some("route".to_string()))
+                .find(|a| {
+                    a.path().segments.last().map(|s| s.ident.to_string())
+                        == Some("route".to_string())
+                })
                 .and_then(|a| a.parse_args::<RouteFieldArgs>().ok())
                 .or_else(|| {
                     let has_param_in_path = path_value
@@ -119,8 +130,12 @@ pub fn expand_oxide_route_struct(args: OxideRouteArgs, mut item_struct: ItemStru
                     }
                 });
 
-            let Some(route_args) = route_args else { continue };
-            let Some(kind) = route_args.kind else { continue };
+            let Some(route_args) = route_args else {
+                continue;
+            };
+            let Some(kind) = route_args.kind else {
+                continue;
+            };
             let key_lit = route_args.key.unwrap_or(key_lit);
 
             let is_option = is_option_type(&field.ty);
@@ -166,10 +181,16 @@ pub fn expand_oxide_route_struct(args: OxideRouteArgs, mut item_struct: ItemStru
     }
 
     if args_fields > 1 {
-        return Err(syn::Error::new_spanned(&ident, "route supports at most one #[route(kind = \"args\")] field"));
+        return Err(syn::Error::new_spanned(
+            &ident,
+            "route supports at most one #[route(kind = \"args\")] field",
+        ));
     }
     if extra_fields > 1 {
-        return Err(syn::Error::new_spanned(&ident, "route supports at most one #[route(kind = \"extra\")] field"));
+        return Err(syn::Error::new_spanned(
+            &ident,
+            "route supports at most one #[route(kind = \"extra\")] field",
+        ));
     }
 
     let params_fn = if param_inserts.is_empty() {
@@ -240,7 +261,9 @@ impl Parse for RouteFieldArgs {
 
 fn is_option_type(ty: &Type) -> bool {
     let Type::Path(p) = ty else { return false };
-    let Some(seg) = p.path.segments.last() else { return false };
+    let Some(seg) = p.path.segments.last() else {
+        return false;
+    };
     if seg.ident != "Option" {
         return false;
     }
@@ -306,7 +329,9 @@ fn validate_oxide_route_struct(item_struct: &ItemStruct) -> syn::Result<()> {
 fn has_derive_named(attrs: &[Attribute], needle: &str) -> bool {
     for attr in attrs {
         if attr.path().is_ident("derive") {
-            let Ok(list) = attr.parse_args_with(syn::punctuated::Punctuated::<syn::Path, Token![,]>::parse_terminated) else {
+            let Ok(list) = attr.parse_args_with(
+                syn::punctuated::Punctuated::<syn::Path, Token![,]>::parse_terminated,
+            ) else {
                 continue;
             };
             for p in list {
@@ -375,7 +400,8 @@ pub fn expand_routes_module(item_mod: ItemMod) -> syn::Result<TokenStream2> {
     let kind_enum = generate_route_kind_enum(&routes)?;
     let payload_enum = generate_route_payload_enum(&routes)?;
     let payload_helpers = generate_payload_helpers(&routes)?;
-    let navigation_module = generate_navigation_module()?;
+    // pass routes list to generation functions that may need metadata
+    let navigation_module = generate_navigation_module(&routes)?;
     let init_module = generate_oxide_init_module()?;
     let navigation_bridge_module = generate_navigation_bridge_module()?;
 
@@ -408,19 +434,54 @@ pub fn expand_routes_module(item_mod: ItemMod) -> syn::Result<TokenStream2> {
     })
 }
 
-fn generate_navigation_module() -> syn::Result<TokenStream2> {
+fn generate_navigation_module(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
+    // determine a candidate initial route (first route with no fields)
+    let initial_route = routes.iter().find(|r| r.fields.is_empty()).map(|route| {
+        let ident = syn::Ident::new(&route.rust_type, Span::call_site());
+        quote! {
+            crate::routes::#ident {}
+        }
+    });
+
+    let start_body = if let Some(initial_route) = initial_route {
+        quote! {
+            static STARTED: ::std::sync::OnceLock<()> = ::std::sync::OnceLock::new();
+            STARTED.get_or_init(|| {
+                if let Ok(runtime) = oxide_core::navigation_runtime() {
+                    let _ = runtime.push(#initial_route);
+                }
+            });
+            Ok(())
+        }
+    } else {
+        quote! {
+            Ok(())
+        }
+    };
+
     Ok(quote! {
         pub mod navigation {
             pub mod runtime {
-                /// Initializes the Oxide navigation runtime.
+                /// Initializes the Oxide navigation runtime singleton.
                 ///
                 /// Why: reducers/effects may emit navigation intents, and the Dart runtime
                 /// must be able to subscribe to those commands.
                 ///
-                /// How: this sets up the global navigation runtime singleton used by Oxide.
+                /// How: this only ensures the global navigation runtime exists.
                 pub(crate) fn init() -> oxide_core::CoreResult<()> {
                     oxide_core::init_navigation()?;
                     Ok(())
+                }
+
+                /// Starts navigation bootstrap exactly once.
+                ///
+                /// Why: initial-route emission must be explicit and idempotent so route
+                /// synchronization from Dart does not re-trigger startup pushes.
+                ///
+                /// How: guards the generated initial push behind a process-local `OnceLock`.
+                pub(crate) fn start() -> oxide_core::CoreResult<()> {
+                    init()?;
+                    #start_body
                 }
             }
         }
@@ -451,7 +512,7 @@ fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
 
             #[flutter_rust_bridge::frb]
             pub async fn init_navigation() -> Result<(), oxide_core::OxideError> {
-                crate::navigation::runtime::init()?;
+                crate::navigation::runtime::start()?;
                 Ok(())
             }
 
@@ -595,7 +656,9 @@ fn collect_routes(items: &[Item]) -> syn::Result<Vec<RouteMeta>> {
                 }
             }
             Item::Impl(item_impl) => {
-                let Some((_, trait_path, _)) = &item_impl.trait_ else { continue };
+                let Some((_, trait_path, _)) = &item_impl.trait_ else {
+                    continue;
+                };
                 let trait_ident = trait_path.segments.last().map(|s| s.ident.to_string());
                 if trait_ident.as_deref() != Some("Route") {
                     continue;
@@ -619,7 +682,9 @@ fn collect_routes(items: &[Item]) -> syn::Result<Vec<RouteMeta>> {
 
     let mut struct_fields: BTreeMap<String, Vec<RouteFieldMeta>> = BTreeMap::new();
     for item in items {
-        let Item::Struct(item_struct) = item else { continue };
+        let Item::Struct(item_struct) = item else {
+            continue;
+        };
         let ident = item_struct.ident.to_string();
         let fields = extract_struct_fields(item_struct);
         struct_fields.insert(ident, fields);
@@ -668,7 +733,9 @@ fn collect_routes(items: &[Item]) -> syn::Result<Vec<RouteMeta>> {
 }
 
 fn find_oxide_route_attr(attrs: &[Attribute]) -> Option<&Attribute> {
-    attrs.iter().find(|a| a.path().segments.last().map(|s| s.ident.to_string()) == Some("oxide_route".to_string()))
+    attrs.iter().find(|a| {
+        a.path().segments.last().map(|s| s.ident.to_string()) == Some("oxide_route".to_string())
+    })
 }
 
 fn impl_self_ident(ty: &Type) -> Option<String> {
@@ -683,7 +750,9 @@ fn extract_associated_types(item_impl: &ItemImpl) -> (String, String) {
     let mut extra_type = "oxide_core::navigation::NoExtra".to_string();
 
     for it in &item_impl.items {
-        let syn::ImplItem::Type(ty) = it else { continue };
+        let syn::ImplItem::Type(ty) = it else {
+            continue;
+        };
         let name = ty.ident.to_string();
         if name == "Return" {
             return_type = ty.ty.to_token_stream().to_string();
@@ -705,7 +774,9 @@ fn extract_path(item_impl: &ItemImpl) -> Option<String> {
         if block.stmts.len() != 1 {
             continue;
         }
-        let syn::Stmt::Expr(expr, _) = &block.stmts[0] else { continue };
+        let syn::Stmt::Expr(expr, _) = &block.stmts[0] else {
+            continue;
+        };
 
         match expr {
             syn::Expr::Call(call) => {
@@ -716,8 +787,10 @@ fn extract_path(item_impl: &ItemImpl) -> Option<String> {
                     if call.args.len() != 1 {
                         continue;
                     }
-                    if let Some(syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(s), .. })) =
-                        call.args.first()
+                    if let Some(syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Str(s),
+                        ..
+                    })) = call.args.first()
                     {
                         return Some(s.value());
                     }
@@ -883,7 +956,11 @@ fn generate_payload_helpers(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
     })
 }
 
-fn emit_metadata_json(crate_name: &str, routes: &[RouteMeta], manifest_dir: &Path) -> syn::Result<()> {
+fn emit_metadata_json(
+    crate_name: &str,
+    routes: &[RouteMeta],
+    manifest_dir: &Path,
+) -> syn::Result<()> {
     let target_dir = manifest_dir.join("target").join("oxide_routes");
     fs::create_dir_all(&target_dir)
         .map_err(|e| syn::Error::new(manifest_dir.span(), e.to_string()))?;
@@ -1029,7 +1106,10 @@ mod tests {
 
     #[test]
     fn expand_routes_module_writes_metadata_file() {
-        let _guard = TEST_ENV_LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap();
+        let _guard = TEST_ENV_LOCK
+            .get_or_init(|| std::sync::Mutex::new(()))
+            .lock()
+            .unwrap();
         let dir = temp_dir("oxide_routes_expand");
         let prev_manifest = std::env::var("CARGO_MANIFEST_DIR").ok();
         let prev_pkg = std::env::var("CARGO_PKG_NAME").ok();

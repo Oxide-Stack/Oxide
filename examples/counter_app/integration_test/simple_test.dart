@@ -10,7 +10,9 @@ import 'package:counter_app/src/rust/frb_generated.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
-    await OxideStack.init();
+    // navigation isn't needed for these widget-focused tests and the harness
+    // doesn't wire up the generated navigator key, so keep startup quiet.
+    await OxideStack.init(startNavigation: false);
   });
 
   testWidgets('Counter dispatch updates Rust state', (WidgetTester tester) async {

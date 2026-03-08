@@ -32,7 +32,8 @@ void main() {
 
   setUpAll(() async {
     await deletePersistenceFiles();
-    await OxideStack.init();
+    // navigation not used during persistence checks
+    await OxideStack.init(startNavigation: false);
   });
 
   tearDownAll(() async {
