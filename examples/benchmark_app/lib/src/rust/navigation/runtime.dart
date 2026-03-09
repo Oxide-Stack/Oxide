@@ -12,7 +12,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// must be able to subscribe to those commands.
 ///
 /// How: this sets up the global navigation runtime singleton used by Oxide.
-Future<void> init() => RustLib.instance.api.crateRoutesOxideNavigationInitNavigation();
+Future<void> init() =>
+    RustLib.instance.api.crateRoutesOxideNavigationInitNavigation();
 
 // the previous incarnation of this helper returned a CoreResult, but the
 // modern Rust API simply returns void. keep the type around for any code

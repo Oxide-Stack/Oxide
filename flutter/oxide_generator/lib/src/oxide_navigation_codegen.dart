@@ -651,7 +651,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     )
     ..writeln('  // debug incoming commands from Rust')
     ..writeln('  // ignore: avoid_print')
-    ..writeln('  print([Oxide] received nav command: \$cmd);')
+    ..writeln('  print("[Oxide] received nav command: \$cmd");')
     ..writeln('  return cmd.when(')
     ..writeln('    push: (route, ticket) {')
     ..writeln('      final decoded = _fromRustRoutePayload(route);')
