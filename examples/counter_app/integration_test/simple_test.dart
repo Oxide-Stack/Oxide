@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:counter_app/src/features/counter/counter_home_screen.dart';
-import 'package:counter_app/src/rust/frb_generated.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -15,8 +14,12 @@ void main() {
     await OxideStack.init(startNavigation: false);
   });
 
-  testWidgets('Counter dispatch updates Rust state', (WidgetTester tester) async {
-    await tester.pumpWidget(ProviderScope(child: MaterialApp(home: const CounterHomeScreen())));
+  testWidgets('Counter dispatch updates Rust state', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(child: MaterialApp(home: const CounterHomeScreen())),
+    );
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
     expect(find.text('Counter: 0'), findsOneWidget);

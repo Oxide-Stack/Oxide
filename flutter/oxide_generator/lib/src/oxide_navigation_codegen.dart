@@ -753,8 +753,8 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     // are defined in the same file but we'd like to expose them unprefixed in
     // the public APIs below. import them explicitly with `show` so the class
     // names are available without `_ch.` qualifiers.
-    if (channels?.callbacks.isNotEmpty == true) {
-      final pendingNames = channels!.callbacks
+    if (channels.callbacks.isNotEmpty == true) {
+      final pendingNames = channels.callbacks
           .map((c) => '${c.name}PendingRequest')
           .toSet()
           .join(', ');
@@ -1001,20 +1001,6 @@ String _snakeCase(String s) {
     (m) => '_${m[1]}',
   );
   return withUnderscores.toLowerCase();
-}
-
-String _upperCamel(String s) {
-  // similar to _lowerCamel but ensure first letter is uppercase
-  if (s.isEmpty) return s;
-  final parts = s
-      .split(RegExp(r'[_\-\s]+'))
-      .where((p) => p.isNotEmpty)
-      .toList(growable: false);
-  if (parts.isEmpty) return s;
-  final transformed = parts
-      .map((p) => p[0].toUpperCase() + p.substring(1))
-      .join();
-  return transformed;
 }
 
 String _dartTypeFromRust(String rustType) {
