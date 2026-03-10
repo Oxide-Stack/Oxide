@@ -2,9 +2,9 @@
 //!
 //! # Examples
 //! ```
-//! use rust_lib_counter_app::api::bridge;
+//! use rust_lib_todos_app::api::bridge;
 //!
-//! bridge::init_app();
+//! let _ = bridge::create_shared_engine();
 //! ```
 
 pub mod bridge;

@@ -18,6 +18,17 @@ Future<void> main() async {
 
 `OxideStack.init()` calls `RustLib.init()` and (by default) starts the generated navigation runtime.
 
+## Dart: Or Use `runOxideApp`
+
+```dart
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await runOxideApp(const MyApp());
+}
+```
+
+`runOxideApp` wraps `OxideStack.init()` and `runApp(...)`, and supports the same `startNavigation` flag.
+
 ## Best Practices
 
 - Call `OxideStack.init()` once per app startup.

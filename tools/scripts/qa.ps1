@@ -115,6 +115,15 @@ foreach ($dir in $exampleDirs) {
       }
     }
     Run "flutter" @("pub", "get")
+    if (Test-Path "flutter_rust_bridge.yaml") {
+      Run "flutter_rust_bridge_codegen" @("generate", "--config-file", "flutter_rust_bridge.yaml")
+      $diff = git diff --name-only | Select-String -Pattern '(^|/)frb_generated\.'
+      if ($diff) {
+        Write-Host "FRB generated outputs are out of date in ${dir}:"
+        $diff | ForEach-Object { Write-Host $_ }
+        throw "FRB generated outputs are out of date."
+      }
+    }
     Run "dart" @("run", "build_runner", "build", "-d")
     Run "flutter" @("test")
 

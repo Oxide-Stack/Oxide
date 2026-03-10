@@ -4,7 +4,7 @@
 //! ```
 //! use rust_lib_ticker_app::api::bridge;
 //!
-//! bridge::init_app();
+//! let _ = bridge::create_shared_engine();
 //! ```
 
 pub mod bridge;

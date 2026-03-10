@@ -35,6 +35,8 @@ migrate_working_dir/
 *.freezed.dart
 *.oxide.dart
 **/lib/oxide_generated/
+!lib/oxide_generated/
+!lib/oxide_generated/oxide_stack.g.dart
 
 # Lock files
 pubspec.lock

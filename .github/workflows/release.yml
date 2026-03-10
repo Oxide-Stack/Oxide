@@ -111,11 +111,18 @@ jobs:
             "examples/todos_app"
             "examples/ticker_app"
             "examples/benchmark_app"
+            "examples/api_browser_app"
           )
           for dir in "${examples[@]}"; do
             (
               cd "$dir"
               flutter pub get
+              flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+              if git diff --name-only | grep -E '(^|/)frb_generated\.' >/dev/null; then
+                echo "FRB generated outputs are out of date in $dir:"
+                git diff --name-only | grep -E '(^|/)frb_generated\.'
+                exit 1
+              fi
               dart run build_runner build -d
               flutter test
             )
@@ -141,6 +148,13 @@ jobs:
           flutter config --enable-windows-desktop
           flutter doctor -v
           flutter devices
+      - name: Install flutter_rust_bridge_codegen
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Set-StrictMode -Version Latest
+          dart pub global activate flutter_rust_bridge_codegen
+          $env:PATH = "$env:PATH;$env:LOCALAPPDATA\Pub\Cache\bin"
       - name: Test examples (Windows integration tests)
         shell: pwsh
         run: |
@@ -161,12 +175,22 @@ jobs:
             "examples\counter_app",
             "examples\todos_app",
             "examples\ticker_app",
-            "examples\benchmark_app"
+            "examples\benchmark_app",
+            "examples\api_browser_app"
           )
           foreach ($dir in $exampleDirs) {
             Push-Location $dir
             try {
               Invoke-Native -Command flutter -Args @("pub", "get")
+              if (Test-Path "flutter_rust_bridge.yaml") {
+                Invoke-Native -Command flutter_rust_bridge_codegen -Args @("generate", "--config-file", "flutter_rust_bridge.yaml")
+                $diff = git diff --name-only | Select-String -Pattern '(^|/)frb_generated\.'
+                if ($diff) {
+                  Write-Host "FRB generated outputs are out of date in ${dir}:"
+                  $diff | ForEach-Object { Write-Host $_ }
+                  throw "FRB generated outputs are out of date."
+                }
+              }
               if (Test-Path "rust") {
                 Push-Location "rust"
                 try {
@@ -255,6 +279,12 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+      - name: Install flutter_rust_bridge_codegen
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart pub global activate flutter_rust_bridge_codegen
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
 
       - name: Publish oxide_annotations
         working-directory: flutter/oxide_annotations

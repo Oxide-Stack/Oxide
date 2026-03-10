@@ -101,7 +101,7 @@ void main() {
     expect(src, isNot(contains('_decodeOxideNavCommand')));
     expect(src, isNot(contains('jsonDecode(json)')));
     // debug incoming command logging must be present
-    expect(src, contains("print('[Oxide] received nav command"));
+    expect(src, contains('print("[Oxide] received nav command'));
     // guard variable prevents repeated runtime starts
     expect(src, contains('bool _oxideNavStarted = false'));
     expect(src, contains('if (_oxideNavStarted) return;'));

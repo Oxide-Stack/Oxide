@@ -15,7 +15,7 @@ This example uses Oxide's Navigator 1.0 integration by wiring the generated `oxi
 
 ## Rust Surface
 
-- Intended FRB surface: `init_app`, `init_oxide`, the engine type, and the state/action/snapshot types.
+- Intended FRB surface: generated init hook, the engine type, and the state/action/snapshot types.
 - Not part of the FRB surface: reducer implementation structs and internal persistence/side-effect wiring details.
 
 ## Sliced Updates

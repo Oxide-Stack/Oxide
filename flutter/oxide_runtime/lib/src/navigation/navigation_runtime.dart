@@ -157,7 +157,9 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
   }
 
   void _popUntil(KindT kind) {
-    while (_stack.length > 1 && kindOf(_stack.last) != kind) {
+    final targetIndex = _stack.lastIndexWhere((route) => kindOf(route) == kind);
+    if (targetIndex == -1) return;
+    while (_stack.length - 1 > targetIndex) {
       _stack.removeLast();
     }
     _updateState();

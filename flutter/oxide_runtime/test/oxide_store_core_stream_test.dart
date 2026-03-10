@@ -31,7 +31,7 @@ void main() {
     expect(core.state, 0);
     expect(seen, [0]);
 
-    controller.add(_Snap(7, revision: 0));
+    controller.add(_Snap(7, revision: 1));
     await pumpEventQueue();
     expect(core.state, 7);
     expect(seen, [0, 7]);

@@ -50,6 +50,14 @@ for dir in "${examples[@]}"; do
   cd "$dir"
   rm -rf build
   flutter pub get
+  if [[ -f "flutter_rust_bridge.yaml" ]]; then
+    flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+    if git diff --name-only | grep -E '(^|/)frb_generated\.' >/dev/null; then
+      echo "FRB generated outputs are out of date in $dir:"
+      git diff --name-only | grep -E '(^|/)frb_generated\.'
+      exit 1
+    fi
+  fi
   dart run build_runner build -d
   flutter test
 
