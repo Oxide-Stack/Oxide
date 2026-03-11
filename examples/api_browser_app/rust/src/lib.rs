@@ -4,14 +4,15 @@
 
 /// FFI-facing API surface for the Flutter example.
 pub mod api;
+mod frb_generated;
 mod state;
 mod util;
-mod frb_generated;
 
 #[cfg(feature = "isolated-channels")]
 mod isolated_channels_demo;
 
-pub use oxide_core::OxideError;
+pub use oxide_core::{OxideError, OxideChannelError, CoreResult};
+pub use serde_json::Value;
 
 #[oxide_generator_rs::routes]
 pub mod routes {

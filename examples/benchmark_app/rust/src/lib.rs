@@ -4,11 +4,12 @@
 
 /// FFI-facing API surface for the Flutter example.
 pub mod api;
+mod frb_generated;
 mod state;
 mod util;
-mod frb_generated;
 
-pub use oxide_core::OxideError;
+pub use oxide_core::{CoreResult, OxideError};
+pub use serde_json::Value;
 
 #[oxide_generator_rs::routes]
 pub mod routes {

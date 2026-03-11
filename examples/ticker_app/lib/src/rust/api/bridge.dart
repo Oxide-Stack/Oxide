@@ -32,21 +32,6 @@ Future<AppStateSnapshot> current({required ArcAppEngine engine}) =>
 Stream<AppStateSnapshot> stateStream({required ArcAppEngine engine}) =>
     RustLib.instance.api.crateApiBridgeStateStream(engine: engine);
 
-/// Initializes the Oxide runtime for this example.
-///
-/// Call this once during app startup (after `RustLib.init()` on the Dart side)
-/// before creating any engines.
-///
-/// # Examples
-/// ```
-/// use rust_lib_ticker_app::api::bridge::init_oxide;
-///
-/// tokio::runtime::Runtime::new()
-///     .unwrap()
-///     .block_on(async { init_oxide().await.unwrap() });
-/// ```
-Future<void> initOxide() => RustLib.instance.api.crateApiBridgeInitOxide();
-
 Future<ArcAppEngine> createSharedEngine() =>
     RustLib.instance.api.crateApiBridgeCreateSharedEngine();
 

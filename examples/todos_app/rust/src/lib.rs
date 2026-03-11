@@ -5,9 +5,9 @@
 //!
 //! # Examples
 //! ```
-//! use rust_lib_counter_app::api::bridge;
+//! use rust_lib_todos_app::api::bridge;
 //!
-//! bridge::init_app();
+//! let _ = bridge::create_shared_engine();
 //! ```
 
 /// FFI-facing API surface for the Flutter example.
@@ -19,7 +19,7 @@ mod frb_generated;
 ///
 /// # Examples
 /// ```
-/// use rust_lib_counter_app::OxideError;
+/// use rust_lib_todos_app::OxideError;
 ///
 /// let _ = OxideError::Validation {
 ///     message: "example".to_string(),

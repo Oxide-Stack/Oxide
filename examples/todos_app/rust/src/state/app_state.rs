@@ -18,6 +18,7 @@ pub struct AppState {
     pub todos: Vec<TodoItem>,
     /// Monotonically increasing ID source.
     pub next_id: u64,
+    pub last_confirmed: Option<bool>,
 }
 
 impl AppState {
@@ -29,6 +30,7 @@ impl AppState {
         Self {
             todos: Vec::new(),
             next_id: 1,
+            last_confirmed: None,
         }
     }
 }

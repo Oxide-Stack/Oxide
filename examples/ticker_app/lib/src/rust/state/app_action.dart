@@ -8,6 +8,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'app_action.freezed.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `clone`, `eq`, `fmt`
+
 @freezed
 sealed class AppAction with _$AppAction {
   const AppAction._();
@@ -30,4 +32,9 @@ sealed class AppAction with _$AppAction {
 
   /// Reset the tick counter back to zero.
   const factory AppAction.reset() = AppAction_Reset;
+  const factory AppAction.openConfirm({required String title}) =
+      AppAction_OpenConfirm;
+  const factory AppAction.pop() = AppAction_Pop;
+  const factory AppAction.popUntilHome() = AppAction_PopUntilHome;
+  const factory AppAction.resetStack() = AppAction_ResetStack;
 }

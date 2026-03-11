@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'rust/api/isolated_channels_bridge.dart' as ch;
-import 'rust/isolated_channels_demo/channels.dart';
+import 'package:api_browser_app/src/oxide.dart';
 
 /// Demonstrates Oxide isolated channels by exercising the FRB bridge from UI.
 ///
@@ -26,7 +25,7 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
 
   StreamSubscription<ApiBrowserDemoEvent>? _eventsSub;
   StreamSubscription<ApiBrowserDemoOut>? _duplexOutSub;
-  StreamSubscription<ch.ApiBrowserDemoDialogPendingRequest>? _dialogReqSub;
+  StreamSubscription<ApiBrowserDemoDialogPendingRequest>? _dialogReqSub;
 
   bool _started = false;
   bool _starting = false;
@@ -50,19 +49,16 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
     });
 
     try {
-      await ch.initIsolatedChannelsDemo();
-
-      _eventsSub = ch.apiBrowserDemoEventsStream().listen((event) {
-        event.when(
-          notify: (message) => _append('event.notify: $message'),
-        );
+      // initialization is now performed automatically by OxideStack.init()
+      _eventsSub = OxideStack.events.apiBrowserDemoEvents.listen((ApiBrowserDemoEvent event) {
+        event.when(notify: (message) => _append('event.notify: $message'));
       });
 
-      _duplexOutSub = ch.apiBrowserDemoDuplexOutgoingStream().listen((event) {
+      _duplexOutSub = apiBrowserDemoDuplexOutgoingStream().listen((ApiBrowserDemoOut event) {
         event.when(send: (text) => _append('duplex.out: $text'));
       });
 
-      _dialogReqSub = ch.apiBrowserDemoDialogRequestsStream().listen((pending) {
+      _dialogReqSub = OxideStack.callbacks.apiBrowserDemoDialogRequests.listen((pending) {
         unawaited(_handleDialogRequest(pending));
       });
 
@@ -83,10 +79,13 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
     }
   }
 
-  Future<void> _handleDialogRequest(ch.ApiBrowserDemoDialogPendingRequest pending) async {
-    final request = pending.request;
-    final response = await request.when<Future<ApiBrowserDemoDialogResponse>>(
-      confirm: (title) async {
+  Future<void> _handleDialogRequest(ApiBrowserDemoDialogPendingRequest pending) async {
+    // manually pattern-match because analyzer sometimes thinks `.when` is a static
+    // method on `Type` when the receiver is inferred nullable.
+    final response = () async {
+      final req = pending.request;
+      if (req is ApiBrowserDemoDialogRequest_Confirm) {
+        final title = req.title;
         final result = await showDialog<bool>(
           context: context,
           builder: (context) {
@@ -102,10 +101,11 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
         );
         _append('callback.confirm answered: ${result ?? false}');
         return ApiBrowserDemoDialogResponse.confirm(result ?? false);
-      },
-    );
+      }
+      throw StateError('unexpected request type: $req');
+    }();
 
-    await ch.apiBrowserDemoDialogRespond(id: pending.id, response: response);
+    await OxideStack.callbacks.apiBrowserDemoDialogRespond(id: pending.id, response: await response);
   }
 
   void _append(String line) {
@@ -129,16 +129,13 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
               spacing: 8,
               runSpacing: 8,
               children: [
-                FilledButton(
-                  onPressed: _starting ? null : _start,
-                  child: Text(_started ? 'Started' : (_starting ? 'Starting…' : 'Start Demo')),
-                ),
+                FilledButton(onPressed: _starting ? null : _start, child: Text(_started ? 'Started' : (_starting ? 'Starting…' : 'Start Demo'))),
                 FilledButton(
                   onPressed: !_started
                       ? null
                       : () async {
                           final message = _messageController.text.trim();
-                          await ch.emitApiBrowserDemoNotification(message: message.isEmpty ? 'Hello' : message);
+                          await emitApiBrowserDemoNotification(message: message.isEmpty ? 'Hello' : message);
                         },
                   child: const Text('Emit Event'),
                 ),
@@ -147,11 +144,9 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
                       ? null
                       : () async {
                           final title = _confirmTitleController.text.trim();
-                          final ok = await ch.apiBrowserDemoDialogConfirm(title: title.isEmpty ? 'Confirm?' : title);
+                          final ok = await apiBrowserDemoDialogConfirm(title: title.isEmpty ? 'Confirm?' : title);
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Rust confirm result: $ok')),
-                          );
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Rust confirm result: $ok')));
                         },
                   child: const Text('Request Confirm'),
                 ),
@@ -160,7 +155,7 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
                       ? null
                       : () async {
                           final title = _confirmTitleController.text.trim();
-                          final ok = await ch.apiBrowserDemoDialogConfirmViaFrbCallback(
+                          final ok = await apiBrowserDemoDialogConfirmViaFrbCallback(
                             title: title.isEmpty ? 'Confirm?' : title,
                             dartConfirm: (t) async {
                               final result = await showDialog<bool>(
@@ -170,14 +165,8 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
                                     title: const Text('Direct FRB callback'),
                                     content: Text(t),
                                     actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(context).pop(false),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      FilledButton(
-                                        onPressed: () => Navigator.of(context).pop(true),
-                                        child: const Text('Confirm'),
-                                      ),
+                                      TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                                      FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Confirm')),
                                     ],
                                   );
                                 },
@@ -187,9 +176,7 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
                             },
                           );
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Direct FRB callback result: $ok')),
-                          );
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Direct FRB callback result: $ok')));
                         },
                   child: const Text('Direct FRB Callback'),
                 ),
@@ -198,7 +185,7 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
                       ? null
                       : () async {
                           final message = _messageController.text.trim();
-                          await ch.apiBrowserDemoDuplexSend(text: message.isEmpty ? 'Hello' : message);
+                          await apiBrowserDemoDuplexSend(text: message.isEmpty ? 'Hello' : message);
                         },
                   child: const Text('Send Duplex Out'),
                 ),
@@ -207,8 +194,8 @@ final class _ApiBrowserIsolatedChannelsDemoPageState extends State<ApiBrowserIso
                       ? null
                       : () async {
                           final message = _messageController.text.trim();
-                          await ch.apiBrowserDemoDuplexIncoming(event: ApiBrowserDemoIn.receive(text: message.isEmpty ? 'Hello' : message));
-                          final last = await ch.apiBrowserDemoLastIncomingText();
+                          await apiBrowserDemoDuplexIncoming(event: ApiBrowserDemoIn.receive(text: message.isEmpty ? 'Hello' : message));
+                          final last = await apiBrowserDemoLastIncomingText();
                           _append('duplex.in stored in Rust: ${last ?? "null"}');
                         },
                   child: const Text('Send Duplex In'),

@@ -16,10 +16,11 @@ void main() {
     final core = OxideStoreCore<int, int, int, _Snap>(
       createEngine: (_) async => 0,
       disposeEngine: (_) {},
-      dispatch: (engine, action) async => _Snap(engine + action),
-      current: (engine) async => _Snap(engine),
+      dispatch: (engine, action) async => _Snap(engine + action, revision: 0),
+      current: (engine) async => _Snap(engine, revision: 0),
       stateStream: (_) => controller.stream,
       stateFromSnapshot: (snap) => snap.state,
+      revisionOf: (snap) => snap.revision,
     );
 
     final sub = core.snapshots.listen((snap) => seen.add(snap.state));
@@ -30,7 +31,7 @@ void main() {
     expect(core.state, 0);
     expect(seen, [0]);
 
-    controller.add(_Snap(7));
+    controller.add(_Snap(7, revision: 1));
     await pumpEventQueue();
     expect(core.state, 7);
     expect(seen, [0, 7]);
@@ -44,10 +45,11 @@ void main() {
     final core = OxideStoreCore<int, int, int, _Snap>(
       createEngine: (_) async => 0,
       disposeEngine: (_) => disposed = true,
-      dispatch: (engine, action) async => _Snap(engine + action),
-      current: (engine) async => _Snap(engine),
+      dispatch: (engine, action) async => _Snap(engine + action, revision: 0),
+      current: (engine) async => _Snap(engine, revision: 0),
       stateStream: (_) => controller.stream,
       stateFromSnapshot: (snap) => snap.state,
+      revisionOf: (snap) => snap.revision,
     );
 
     await core.initialize();
@@ -62,7 +64,7 @@ void main() {
     expect(disposed, true);
     expect(controller.hasListener, false);
 
-    controller.add(_Snap(123));
+    controller.add(_Snap(123, revision: 0));
     await pumpEventQueue();
     expect(core.state, 0);
   });
@@ -78,7 +80,7 @@ void main() {
       createEngine: (_) async => 0,
       disposeEngine: (_) => disposed = true,
       dispatch: (_, __) => dispatchCompleter.future,
-      current: (engine) async => _Snap(engine),
+      current: (engine) async => _Snap(engine, revision: 0),
       stateStream: (_) => controller.stream,
       stateFromSnapshot: (snap) => snap.state,
     );
@@ -93,14 +95,44 @@ void main() {
     await pumpEventQueue();
     expect(disposed, false);
 
-    dispatchCompleter.complete(_Snap(1));
+    dispatchCompleter.complete(_Snap(1, revision: 0));
     await dispatchFuture;
     await disposeFuture;
     expect(disposed, true);
   });
+
+  test('core drops duplicate revision snapshots', () async {
+    final controller = StreamController<_Snap>.broadcast();
+    addTearDown(controller.close);
+
+    final core = OxideStoreCore<int, int, int, _Snap>(
+      createEngine: (_) async => 0,
+      disposeEngine: (_) {},
+      dispatch: (engine, action) async => _Snap(engine + action, revision: 1),
+      current: (engine) async => _Snap(engine, revision: 1),
+      stateStream: (_) => controller.stream,
+      stateFromSnapshot: (snap) => snap.state,
+      revisionOf: (snap) => snap.revision,
+    );
+
+    // subscribe to trigger notifications
+    final seen = <int>[];
+    final sub = core.snapshots.listen((snap) => seen.add(snap.revision));
+    addTearDown(sub.cancel);
+
+    await core.initialize();
+    expect(core.snapshotEmissionCount, 1);
+
+    // emit duplicate revision on stream - should be dropped
+    controller.add(_Snap(999, revision: 1));
+    await Future<void>.delayed(Duration.zero);
+    expect(core.snapshotEmissionCount, 1);
+    expect(seen, [1]);
+  });
 }
 
 final class _Snap {
-  _Snap(this.state);
+  _Snap(this.state, {required this.revision});
   final int state;
+  final int revision;
 }

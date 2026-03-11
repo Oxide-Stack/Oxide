@@ -109,7 +109,7 @@ pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> sy
                 pub async fn #respond_fn_ident(
                     id: u64,
                     response: #response_ty,
-                ) -> Result<(), ::oxide_core::OxideChannelError> {
+                ) -> Result<(), oxide_core::OxideChannelError> {
                     super::runtime().respond(id, response).await
                 }
             }
@@ -184,11 +184,11 @@ fn generate_callback_methods(
         let (ret_ty, match_arm) = response_match_arm(response_ty, resp_variant)?;
 
         out.push(quote! {
-            pub async fn #method_ident(#args) -> Result<#ret_ty, ::oxide_core::OxideChannelError> {
+            pub async fn #method_ident(#args) -> Result<#ret_ty, oxide_core::OxideChannelError> {
                 let response = #runtime_mod_ident::runtime().invoke(#req_ctor).await?;
                 match response {
                     #match_arm,
-                    _ => Err(::oxide_core::OxideChannelError::UnexpectedResponse),
+                    _ => Err(oxide_core::OxideChannelError::UnexpectedResponse),
                 }
             }
         });

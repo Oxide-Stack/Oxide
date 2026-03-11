@@ -43,7 +43,11 @@ final class _RoutingBenchScreenState extends State<RoutingBenchScreen> {
         title: const Text('Routing Benchmark'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
+          // avoid touching the navigation runtime directly from the UI;
+          // just ask GoRouter to pop. this keeps app code solely using
+          // Flutter navigation APIs and prevents mixed imperative calls
+          // alongside Rust-driven commands.
+          onPressed: () => context.pop(),
         ),
       ),
       body: Padding(
@@ -69,7 +73,9 @@ final class _RoutingBenchScreenState extends State<RoutingBenchScreen> {
                 const SizedBox(width: 12),
                 FilledButton(
                   onPressed: () {
-                    setState(() => _run = _runBench(GoRouter.of(context), _iterations));
+                    setState(
+                      () => _run = _runBench(GoRouter.of(context), _iterations),
+                    );
                   },
                   child: const Text('Run'),
                 ),
@@ -81,7 +87,9 @@ final class _RoutingBenchScreenState extends State<RoutingBenchScreen> {
                 future: _run,
                 builder: (context, snapshot) {
                   if (_run == null) {
-                    return const Text('Press Run to execute the routing benchmark.');
+                    return const Text(
+                      'Press Run to execute the routing benchmark.',
+                    );
                   }
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
@@ -118,7 +126,9 @@ final class _RoutingBenchScreenState extends State<RoutingBenchScreen> {
     final parser = router.routeInformationParser;
     for (var i = 0; i < iterations; i++) {
       final sw = Stopwatch()..start();
-      await parser.parseRouteInformation(RouteInformation(uri: Uri.parse('/bench/$i')));
+      await parser.parseRouteInformation(
+        RouteInformation(uri: Uri.parse('/bench/$i')),
+      );
       sw.stop();
       parseTotalMicros += sw.elapsedMicroseconds;
     }
@@ -148,7 +158,9 @@ final class _ResultView extends StatelessWidget {
   Widget build(BuildContext context) {
     final rssBefore = result.rssBeforeBytes;
     final rssAfter = result.rssAfterBytes;
-    final rssDelta = (rssBefore != null && rssAfter != null) ? (rssAfter - rssBefore) : null;
+    final rssDelta = (rssBefore != null && rssAfter != null)
+        ? (rssAfter - rssBefore)
+        : null;
 
     return ListView(
       children: [
@@ -167,4 +179,3 @@ final class _ResultView extends StatelessWidget {
     );
   }
 }
-

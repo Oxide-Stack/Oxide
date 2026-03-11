@@ -6,14 +6,14 @@
 
 /// FFI-facing API surface for the Flutter example.
 pub mod api;
-mod state;
 mod frb_generated;
+mod state; /* AUTO INJECTED BY flutter_rust_bridge. This line may not be accurate, and you can change it according to your needs. */
 
 #[cfg(feature = "isolated-channels")]
 mod isolated_channels_demo;
 
-/// Error type exposed across the FFI boundary.
-pub use oxide_core::OxideError;
+pub use oxide_core::{CoreResult, OxideChannelError, OxideError};
+pub use serde_json::Value;
 
 #[oxide_generator_rs::routes]
 pub mod routes {

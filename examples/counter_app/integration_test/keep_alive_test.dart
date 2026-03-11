@@ -1,11 +1,10 @@
+import 'package:counter_app/oxide.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:counter_app/src/oxide.dart';
-import 'package:counter_app/src/rust/api/bridge.dart' show initOxide;
-import 'package:counter_app/src/rust/frb_generated.dart';
 
 Future<void> _pumpUntil(
   WidgetTester tester, {
@@ -40,8 +39,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    await RustLib.init();
-    await initOxide();
+    // navigation not exercised by these state/bridge tests
+    await OxideStack.init(startNavigation: false);
   });
 
   testWidgets(
@@ -67,10 +66,16 @@ void main() {
       }
 
       await tester.pumpWidget(buildWithScope());
-      await _pumpUntil(tester, condition: () => !controller.isLoading && controller.state != null);
+      await _pumpUntil(
+        tester,
+        condition: () => !controller.isLoading && controller.state != null,
+      );
 
       await controller.actions.increment();
-      await _pumpUntil(tester, condition: () => controller.state?.counter == BigInt.one);
+      await _pumpUntil(
+        tester,
+        condition: () => controller.state?.counter == BigInt.one,
+      );
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();
@@ -88,7 +93,11 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final sub = container.listen(stateBridgeRiverpodOxideProvider, (prev, next) {}, fireImmediately: true);
+      final sub = container.listen(
+        stateBridgeRiverpodOxideProvider,
+        (prev, next) {},
+        fireImmediately: true,
+      );
       addTearDown(sub.close);
 
       await _waitUntil(() {
@@ -96,7 +105,10 @@ void main() {
         return !view.isLoading && view.state != null;
       });
 
-      await container.read(stateBridgeRiverpodOxideProvider).actions.increment();
+      await container
+          .read(stateBridgeRiverpodOxideProvider)
+          .actions
+          .increment();
 
       await _waitUntil(() {
         final view = container.read(stateBridgeRiverpodOxideProvider);
@@ -105,12 +117,21 @@ void main() {
 
       sub.close();
 
-      final viewAfterUnlisten = container.read(stateBridgeRiverpodOxideProvider);
+      final viewAfterUnlisten = container.read(
+        stateBridgeRiverpodOxideProvider,
+      );
       expect(viewAfterUnlisten.state?.counter, BigInt.one);
 
-      final sub2 = container.listen(stateBridgeRiverpodOxideProvider, (prev, next) {}, fireImmediately: true);
+      final sub2 = container.listen(
+        stateBridgeRiverpodOxideProvider,
+        (prev, next) {},
+        fireImmediately: true,
+      );
       addTearDown(sub2.close);
-      expect(container.read(stateBridgeRiverpodOxideProvider).state?.counter, BigInt.one);
+      expect(
+        container.read(stateBridgeRiverpodOxideProvider).state?.counter,
+        BigInt.one,
+      );
 
       await tester.pump();
     },

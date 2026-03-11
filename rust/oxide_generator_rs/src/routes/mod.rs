@@ -5,6 +5,9 @@ use std::path::{Path, PathBuf};
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::{ToTokens, quote};
 use serde::Serialize;
+use syn::ext::IdentExt;
+use syn::parse::{Parse, ParseStream};
+use syn::{Attribute, LitStr, Token};
 use syn::{Item, ItemImpl, ItemMod, ItemStruct, Type};
 
 #[derive(Debug, Clone, Serialize)]
@@ -27,6 +30,336 @@ struct RouteMeta {
 struct RouteMetadataFile {
     crate_name: String,
     routes: Vec<RouteMeta>,
+}
+
+#[derive(Default)]
+pub struct OxideRouteArgs {
+    path: Option<LitStr>,
+    return_type: Option<Type>,
+    extra_type: Option<Type>,
+}
+
+impl Parse for OxideRouteArgs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut args = OxideRouteArgs::default();
+        while !input.is_empty() {
+            let key: Ident = input.call(Ident::parse_any)?;
+            input.parse::<Token![=]>()?;
+            match key.to_string().as_str() {
+                "path" => {
+                    args.path = Some(input.parse()?);
+                }
+                "return" => {
+                    args.return_type = Some(input.parse()?);
+                }
+                "extra" => {
+                    args.extra_type = Some(input.parse()?);
+                }
+                _ => {
+                    return Err(syn::Error::new_spanned(
+                        key,
+                        "unknown #[oxide_route] argument",
+                    ));
+                }
+            }
+
+            if input.is_empty() {
+                break;
+            }
+            input.parse::<Token![,]>()?;
+        }
+        Ok(args)
+    }
+}
+
+pub fn expand_oxide_route_struct(
+    args: OxideRouteArgs,
+    mut item_struct: ItemStruct,
+) -> syn::Result<TokenStream2> {
+    let path_value = args.path.as_ref().map(|p| p.value());
+    let ident = item_struct.ident.clone();
+    validate_oxide_route_struct(&item_struct)?;
+    ensure_frb_non_opaque_attr(&mut item_struct);
+    normalize_route_struct_fields(&mut item_struct);
+    let return_ty: Type = args
+        .return_type
+        .unwrap_or_else(|| syn::parse_quote!(oxide_core::navigation::NoReturn));
+    let extra_ty: Type = args
+        .extra_type
+        .unwrap_or_else(|| syn::parse_quote!(oxide_core::navigation::NoExtra));
+
+    let path_fn = match args.path {
+        Some(path) => quote! {
+            fn path() -> Option<&'static str> { Some(#path) }
+        },
+        None => quote! {},
+    };
+
+    let mut param_inserts = Vec::<TokenStream2>::new();
+    let mut query_inserts = Vec::<TokenStream2>::new();
+    let mut args_fields = 0usize;
+    let mut extra_fields = 0usize;
+
+    if let syn::Fields::Named(named) = &item_struct.fields {
+        for field in &named.named {
+            let Some(field_ident) = field.ident.clone() else {
+                continue;
+            };
+            let field_name = field_ident.to_string();
+            let key_lit = LitStr::new(&field_name, Span::call_site());
+
+            let route_args = field
+                .attrs
+                .iter()
+                .find(|a| {
+                    a.path().segments.last().map(|s| s.ident.to_string())
+                        == Some("route".to_string())
+                })
+                .and_then(|a| a.parse_args::<RouteFieldArgs>().ok())
+                .or_else(|| {
+                    let has_param_in_path = path_value
+                        .as_ref()
+                        .is_some_and(|p| p.contains(&format!(":{field_name}")));
+                    if has_param_in_path {
+                        Some(RouteFieldArgs {
+                            kind: Some("param".to_string()),
+                            key: None,
+                        })
+                    } else {
+                        None
+                    }
+                });
+
+            let Some(route_args) = route_args else {
+                continue;
+            };
+            let Some(kind) = route_args.kind else {
+                continue;
+            };
+            let key_lit = route_args.key.unwrap_or(key_lit);
+
+            let is_option = is_option_type(&field.ty);
+            match kind.as_str() {
+                "param" => {
+                    let insert = if is_option {
+                        quote! {
+                            if let Some(v) = &self.#field_ident {
+                                map.insert(#key_lit, v.to_string());
+                            }
+                        }
+                    } else {
+                        quote! { map.insert(#key_lit, self.#field_ident.to_string()); }
+                    };
+                    param_inserts.push(insert);
+                }
+                "query" => {
+                    let insert = if is_option {
+                        quote! {
+                            if let Some(v) = &self.#field_ident {
+                                map.insert(#key_lit, v.to_string());
+                            }
+                        }
+                    } else {
+                        quote! { map.insert(#key_lit, self.#field_ident.to_string()); }
+                    };
+                    query_inserts.push(insert);
+                }
+                "args" => {
+                    args_fields += 1;
+                }
+                "extra" => {
+                    extra_fields += 1;
+                }
+                _ => {
+                    return Err(syn::Error::new_spanned(
+                        field,
+                        "unknown #[route(kind = \"...\")] value; expected param|query|args|extra",
+                    ));
+                }
+            }
+        }
+    }
+
+    if args_fields > 1 {
+        return Err(syn::Error::new_spanned(
+            &ident,
+            "route supports at most one #[route(kind = \"args\")] field",
+        ));
+    }
+    if extra_fields > 1 {
+        return Err(syn::Error::new_spanned(
+            &ident,
+            "route supports at most one #[route(kind = \"extra\")] field",
+        ));
+    }
+
+    let params_fn = if param_inserts.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            fn params(&self) -> ::std::collections::HashMap<&'static str, String> {
+                let mut map = ::std::collections::HashMap::new();
+                #( #param_inserts )*
+                map
+            }
+        }
+    };
+
+    let query_fn = if query_inserts.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            fn query(&self) -> ::std::collections::HashMap<&'static str, String> {
+                let mut map = ::std::collections::HashMap::new();
+                #( #query_inserts )*
+                map
+            }
+        }
+    };
+
+    Ok(quote! {
+        #item_struct
+
+        impl oxide_core::navigation::Route for #ident {
+            #path_fn
+            #params_fn
+            #query_fn
+            type Return = #return_ty;
+            type Extra = #extra_ty;
+        }
+    })
+}
+
+#[derive(Default)]
+struct RouteFieldArgs {
+    kind: Option<String>,
+    key: Option<LitStr>,
+}
+
+impl Parse for RouteFieldArgs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let mut args = RouteFieldArgs::default();
+        while !input.is_empty() {
+            let key: Ident = input.parse()?;
+            input.parse::<Token![=]>()?;
+            if key == "kind" {
+                let v: LitStr = input.parse()?;
+                args.kind = Some(v.value());
+            } else if key == "key" {
+                args.key = Some(input.parse()?);
+            } else {
+                return Err(syn::Error::new_spanned(key, "unknown #[route] argument"));
+            }
+            if input.is_empty() {
+                break;
+            }
+            input.parse::<Token![,]>()?;
+        }
+        Ok(args)
+    }
+}
+
+fn is_option_type(ty: &Type) -> bool {
+    let Type::Path(p) = ty else { return false };
+    let Some(seg) = p.path.segments.last() else {
+        return false;
+    };
+    if seg.ident != "Option" {
+        return false;
+    }
+    matches!(&seg.arguments, syn::PathArguments::AngleBracketed(args) if args.args.len() == 1)
+}
+
+fn ensure_frb_non_opaque_attr(item_struct: &mut ItemStruct) {
+    let already_has_frb = item_struct
+        .attrs
+        .iter()
+        .any(|a| a.path().segments.last().map(|s| s.ident.to_string()) == Some("frb".to_string()));
+    if already_has_frb {
+        return;
+    }
+    item_struct
+        .attrs
+        .push(syn::parse_quote!(#[flutter_rust_bridge::frb(non_opaque)]));
+}
+
+fn normalize_route_struct_fields(item_struct: &mut ItemStruct) {
+    if matches!(&item_struct.fields, syn::Fields::Unit) {
+        item_struct.fields = syn::Fields::Named(syn::FieldsNamed {
+            brace_token: syn::token::Brace::default(),
+            named: syn::punctuated::Punctuated::new(),
+        });
+    }
+}
+
+fn validate_oxide_route_struct(item_struct: &ItemStruct) -> syn::Result<()> {
+    if !item_struct.generics.params.is_empty() || item_struct.generics.where_clause.is_some() {
+        return Err(syn::Error::new_spanned(
+            &item_struct.generics,
+            "route structs cannot be generic; remove type parameters and where-clauses",
+        ));
+    }
+
+    let has_clone = has_derive_named(&item_struct.attrs, "Clone");
+    if !has_clone {
+        return Err(syn::Error::new_spanned(
+            &item_struct.ident,
+            "route structs must derive Clone (e.g. #[derive(Clone, ...)])",
+        ));
+    }
+
+    let has_serialize = has_derive_named(&item_struct.attrs, "Serialize");
+    let has_deserialize = has_derive_named(&item_struct.attrs, "Deserialize");
+    if !has_serialize || !has_deserialize {
+        return Err(syn::Error::new_spanned(
+            &item_struct.ident,
+            "route structs must derive serde::Serialize and serde::Deserialize (required for RoutePayload encoding)",
+        ));
+    }
+
+    if let syn::Fields::Named(named) = &item_struct.fields {
+        for field in &named.named {
+            validate_route_field_type(&field.ty, field)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn has_derive_named(attrs: &[Attribute], needle: &str) -> bool {
+    for attr in attrs {
+        if attr.path().is_ident("derive") {
+            let Ok(list) = attr.parse_args_with(
+                syn::punctuated::Punctuated::<syn::Path, Token![,]>::parse_terminated,
+            ) else {
+                continue;
+            };
+            for p in list {
+                if p.segments.last().map(|s| s.ident.to_string()) == Some(needle.to_string()) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+fn validate_route_field_type(ty: &Type, span: impl ToTokens) -> syn::Result<()> {
+    match ty {
+        Type::Reference(_)
+        | Type::Ptr(_)
+        | Type::BareFn(_)
+        | Type::ImplTrait(_)
+        | Type::TraitObject(_)
+        | Type::Infer(_)
+        | Type::Macro(_)
+        | Type::Verbatim(_)
+        | Type::Never(_) => Err(syn::Error::new_spanned(
+            span,
+            "route fields must use concrete, owned types supported by FRB (no references, pointers, impl Trait, trait objects, or macros)",
+        )),
+        _ => Ok(()),
+    }
 }
 
 pub fn expand_routes_module(item_mod: ItemMod) -> syn::Result<TokenStream2> {
@@ -67,7 +400,10 @@ pub fn expand_routes_module(item_mod: ItemMod) -> syn::Result<TokenStream2> {
     let kind_enum = generate_route_kind_enum(&routes)?;
     let payload_enum = generate_route_payload_enum(&routes)?;
     let payload_helpers = generate_payload_helpers(&routes)?;
-    let navigation_module = generate_navigation_module()?;
+    // pass routes list to generation functions that may need metadata
+    let navigation_module = generate_navigation_module(&routes)?;
+    let init_module = generate_oxide_init_module()?;
+    let navigation_bridge_module = generate_navigation_bridge_module()?;
 
     if item_mod.content.is_none() {
         return Ok(quote! {
@@ -76,6 +412,8 @@ pub fn expand_routes_module(item_mod: ItemMod) -> syn::Result<TokenStream2> {
             #payload_enum
             #payload_helpers
             #navigation_module
+            #init_module
+            #navigation_bridge_module
         });
     }
 
@@ -87,93 +425,195 @@ pub fn expand_routes_module(item_mod: ItemMod) -> syn::Result<TokenStream2> {
     mod_items.push(Item::Verbatim(kind_enum));
     mod_items.push(Item::Verbatim(payload_enum));
     mod_items.push(Item::Verbatim(payload_helpers));
+    mod_items.push(Item::Verbatim(navigation_bridge_module));
 
     Ok(quote! {
         #out_mod
         #navigation_module
+        #init_module
     })
 }
 
-fn generate_navigation_module() -> syn::Result<TokenStream2> {
+fn generate_navigation_module(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
+    // determine a candidate initial route (first route with no fields)
+    let initial_route = routes.iter().find(|r| r.fields.is_empty()).map(|route| {
+        let ident = syn::Ident::new(&route.rust_type, Span::call_site());
+        quote! {
+            crate::routes::#ident {}
+        }
+    });
+
+    let start_body = if let Some(initial_route) = initial_route {
+        quote! {
+            static STARTED: ::std::sync::OnceLock<()> = ::std::sync::OnceLock::new();
+            STARTED.get_or_init(|| {
+                if let Ok(runtime) = oxide_core::navigation_runtime() {
+                    let _ = runtime.push(#initial_route);
+                }
+            });
+            Ok(())
+        }
+    } else {
+        quote! {
+            Ok(())
+        }
+    };
+
     Ok(quote! {
         pub mod navigation {
             pub mod runtime {
-                /// Initializes the Oxide navigation runtime.
+                /// Initializes the Oxide navigation runtime singleton.
                 ///
                 /// Why: reducers/effects may emit navigation intents, and the Dart runtime
                 /// must be able to subscribe to those commands.
                 ///
-                /// How: this sets up the global navigation runtime singleton used by Oxide.
-                pub fn init() -> ::oxide_core::CoreResult<()> {
-                    ::oxide_core::init_navigation()?;
+                /// How: this only ensures the global navigation runtime exists.
+                pub(crate) fn init() -> oxide_core::CoreResult<()> {
+                    oxide_core::init_navigation()?;
                     Ok(())
+                }
+
+                /// Starts navigation bootstrap exactly once.
+                ///
+                /// Why: initial-route emission must be explicit and idempotent so route
+                /// synchronization from Dart does not re-trigger startup pushes.
+                ///
+                /// How: guards the generated initial push behind a process-local `OnceLock`.
+                pub(crate) fn start() -> oxide_core::CoreResult<()> {
+                    init()?;
+                    #start_body
+                }
+            }
+        }
+    })
+}
+
+fn generate_oxide_init_module() -> syn::Result<TokenStream2> {
+    Ok(quote! {
+        pub mod oxide {
+            pub mod init {
+                #[flutter_rust_bridge::frb(init)]
+                pub fn init_oxide() {
+                    flutter_rust_bridge::setup_default_user_utils();
+                    fn thread_pool() -> oxide_core::runtime::ThreadPool {
+                        crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
+                    }
+                    oxide_core::init_from_frb(thread_pool).expect("oxide init failed during FRB init");
+                }
+            }
+        }
+    })
+}
+
+fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
+    Ok(quote! {
+        pub mod oxide_navigation {
+            pub use crate::routes::{RouteKind, RoutePayload};
+
+            #[flutter_rust_bridge::frb]
+            pub async fn init_navigation() -> Result<(), oxide_core::OxideError> {
+                crate::navigation::runtime::start()?;
+                Ok(())
+            }
+
+            #[flutter_rust_bridge::frb]
+            pub async fn oxide_nav_commands_stream(
+                sink: crate::frb_generated::StreamSink<OxideNavCommand>,
+            ) -> Result<(), oxide_core::OxideError> {
+                crate::navigation::runtime::init()?;
+                let runtime = oxide_core::navigation_runtime()?;
+                let mut rx = runtime.subscribe_commands()?;
+
+                while let Some(cmd) = rx.recv().await {
+                    let out = map_nav_command(cmd)?;
+                    let _ = sink.add(out);
+                }
+
+                Ok(())
+            }
+
+            #[flutter_rust_bridge::frb]
+            pub async fn oxide_nav_emit_result(
+                ticket: String,
+                result_json: String,
+            ) -> Result<(), oxide_core::OxideError> {
+                crate::navigation::runtime::init()?;
+                let runtime = oxide_core::navigation_runtime()?;
+                let value: ::serde_json::Value = ::serde_json::from_str(&result_json).map_err(|e| {
+                    oxide_core::OxideError::Validation {
+                        message: format!("invalid navigation result JSON: {e}"),
+                    }
+                })?;
+                let _ = runtime.emit_result(&ticket, value).await;
+                Ok(())
+            }
+
+            #[flutter_rust_bridge::frb]
+            pub fn oxide_nav_set_current_route(route: Option<RoutePayload>) -> Result<(), oxide_core::OxideError> {
+                crate::navigation::runtime::init()?;
+                let runtime = oxide_core::navigation_runtime()?;
+                let Some(route) = route else {
+                    runtime.set_current_route(None);
+                    return Ok(());
+                };
+
+                let kind = route.kind().as_str().to_string();
+                let payload = route.payload_json()?;
+                runtime.set_current_route(Some(oxide_core::navigation::NavRoute {
+                    kind,
+                    payload,
+                    extras: None,
+                }));
+                Ok(())
+            }
+
+            #[flutter_rust_bridge::frb(non_opaque)]
+            #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+            pub enum OxideNavCommand {
+                Push {
+                    route: RoutePayload,
+                    ticket: Option<String>,
+                },
+                Pop {
+                    result_json: Option<String>,
+                },
+                PopUntil {
+                    kind: String,
+                },
+                Reset {
+                    routes: Vec<RoutePayload>,
+                },
+            }
+
+            fn map_nav_command(cmd: oxide_core::navigation::NavCommand) -> oxide_core::CoreResult<OxideNavCommand> {
+                match cmd {
+                    oxide_core::navigation::NavCommand::Push { route, ticket } => {
+                        Ok(OxideNavCommand::Push {
+                            route: nav_route_to_route_payload(route)?,
+                            ticket,
+                        })
+                    }
+                    oxide_core::navigation::NavCommand::Pop { result } => Ok(OxideNavCommand::Pop {
+                        result_json: result.map(|v| v.to_string()),
+                    }),
+                    oxide_core::navigation::NavCommand::PopUntil { kind } => {
+                        Ok(OxideNavCommand::PopUntil { kind })
+                    }
+                    oxide_core::navigation::NavCommand::Reset { routes } => {
+                        let mut out = Vec::with_capacity(routes.len());
+                        for r in routes {
+                            out.push(nav_route_to_route_payload(r)?);
+                        }
+                        Ok(OxideNavCommand::Reset { routes: out })
+                    }
                 }
             }
 
-            pub mod frb {
-                #[flutter_rust_bridge::frb]
-                pub async fn init_navigation() -> ::oxide_core::CoreResult<()> {
-                    super::runtime::init()
-                }
-
-                /// Stream of navigation commands emitted by Rust reducers/effects.
-                #[flutter_rust_bridge::frb]
-                pub async fn oxide_nav_commands_stream(
-                    sink: crate::frb_generated::StreamSink<String>,
-                ) {
-                    let _ = super::runtime::init();
-                    let runtime =
-                        ::oxide_core::navigation_runtime().expect("navigation initialized");
-                    let mut rx = runtime.subscribe_commands();
-
-                    loop {
-                        match rx.recv().await {
-                            Ok(cmd) => {
-                                if let Ok(json) = ::serde_json::to_string(&cmd) {
-                                    let _ = sink.add(json);
-                                }
-                            }
-                            Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Lagged(
-                                _,
-                            )) => continue,
-                            Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Closed) => {
-                                break
-                            }
-                        }
-                    }
-                }
-
-                /// Emits a result payload for a previously-issued ticket.
-                #[flutter_rust_bridge::frb]
-                pub async fn oxide_nav_emit_result(
-                    ticket: String,
-                    result_json: String,
-                ) -> ::oxide_core::CoreResult<()> {
-                    super::runtime::init()?;
-                    let runtime = ::oxide_core::navigation_runtime()?;
-                    let value: ::serde_json::Value =
-                        ::serde_json::from_str(&result_json).unwrap_or(::serde_json::Value::Null);
-                    let _ = runtime.emit_result(&ticket, value).await;
-                    Ok(())
-                }
-
-                /// Updates the current route snapshot reported by Dart.
-                #[flutter_rust_bridge::frb]
-                pub fn oxide_nav_set_current_route(
-                    kind: String,
-                    payload_json: String,
-                ) -> ::oxide_core::CoreResult<()> {
-                    super::runtime::init()?;
-                    let runtime = ::oxide_core::navigation_runtime()?;
-                    let payload: ::serde_json::Value =
-                        ::serde_json::from_str(&payload_json).unwrap_or(::serde_json::Value::Null);
-                    runtime.set_current_route(Some(::oxide_core::navigation::NavRoute {
-                        kind,
-                        payload,
-                        extras: None,
-                    }));
-                    Ok(())
-                }
+            fn nav_route_to_route_payload(
+                route: ::oxide_core::navigation::NavRoute,
+            ) -> ::oxide_core::CoreResult<RoutePayload> {
+                let ::oxide_core::navigation::NavRoute { kind, payload, .. } = route;
+                RoutePayload::from_kind_and_payload(&kind, payload)
             }
         }
     })
@@ -203,38 +643,80 @@ fn parse_items_from_file(path: &Path) -> syn::Result<Vec<Item>> {
 fn collect_routes(items: &[Item]) -> syn::Result<Vec<RouteMeta>> {
     let mut impls_by_type: BTreeMap<String, (&ItemImpl, String, String, Option<String>)> =
         BTreeMap::new();
+    let mut annotated: BTreeMap<String, (OxideRouteArgs, Vec<RouteFieldMeta>)> = BTreeMap::new();
 
     for item in items {
-        let Item::Impl(item_impl) = item else { continue };
-        let Some((_, trait_path, _)) = &item_impl.trait_ else { continue };
-        let trait_ident = trait_path.segments.last().map(|s| s.ident.to_string());
-        if trait_ident.as_deref() != Some("Route") {
-            continue;
+        match item {
+            Item::Struct(item_struct) => {
+                if let Some(attr) = find_oxide_route_attr(&item_struct.attrs) {
+                    let args: OxideRouteArgs = attr.parse_args()?;
+                    let ident = item_struct.ident.to_string();
+                    let fields = extract_struct_fields(item_struct);
+                    annotated.insert(ident, (args, fields));
+                }
+            }
+            Item::Impl(item_impl) => {
+                let Some((_, trait_path, _)) = &item_impl.trait_ else {
+                    continue;
+                };
+                let trait_ident = trait_path.segments.last().map(|s| s.ident.to_string());
+                if trait_ident.as_deref() != Some("Route") {
+                    continue;
+                }
+
+                let Some(type_ident) = impl_self_ident(&item_impl.self_ty) else {
+                    continue;
+                };
+
+                let (return_type, extra_type) = extract_associated_types(item_impl);
+                let path = extract_path(item_impl);
+
+                impls_by_type.insert(
+                    type_ident.clone(),
+                    (item_impl, return_type, extra_type, path),
+                );
+            }
+            _ => {}
         }
-
-        let Some(type_ident) = impl_self_ident(&item_impl.self_ty) else {
-            continue;
-        };
-
-        let (return_type, extra_type) = extract_associated_types(item_impl);
-        let path = extract_path(item_impl);
-
-        impls_by_type.insert(
-            type_ident.clone(),
-            (item_impl, return_type, extra_type, path),
-        );
     }
 
     let mut struct_fields: BTreeMap<String, Vec<RouteFieldMeta>> = BTreeMap::new();
     for item in items {
-        let Item::Struct(item_struct) = item else { continue };
+        let Item::Struct(item_struct) = item else {
+            continue;
+        };
         let ident = item_struct.ident.to_string();
         let fields = extract_struct_fields(item_struct);
         struct_fields.insert(ident, fields);
     }
 
     let mut routes = Vec::new();
+    for (type_name, (args, fields)) in annotated {
+        let kind = type_to_kind(&type_name);
+        let return_type = args
+            .return_type
+            .map(|t| t.to_token_stream().to_string())
+            .unwrap_or_else(|| "oxide_core::navigation::NoReturn".to_string());
+        let extra_type = args
+            .extra_type
+            .map(|t| t.to_token_stream().to_string())
+            .unwrap_or_else(|| "oxide_core::navigation::NoExtra".to_string());
+        let path = args.path.as_ref().map(|s| s.value());
+        routes.push(RouteMeta {
+            kind,
+            rust_type: type_name.clone(),
+            path,
+            return_type,
+            extra_type,
+            fields,
+        });
+        struct_fields.remove(&type_name);
+    }
+
     for (type_name, (_impl_item, return_type, extra_type, path)) in impls_by_type {
+        if routes.iter().any(|r| r.rust_type == type_name) {
+            continue;
+        }
         let kind = type_to_kind(&type_name);
         let fields = struct_fields.remove(&type_name).unwrap_or_default();
         routes.push(RouteMeta {
@@ -250,6 +732,12 @@ fn collect_routes(items: &[Item]) -> syn::Result<Vec<RouteMeta>> {
     Ok(routes)
 }
 
+fn find_oxide_route_attr(attrs: &[Attribute]) -> Option<&Attribute> {
+    attrs.iter().find(|a| {
+        a.path().segments.last().map(|s| s.ident.to_string()) == Some("oxide_route".to_string())
+    })
+}
+
 fn impl_self_ident(ty: &Type) -> Option<String> {
     match ty {
         Type::Path(p) => p.path.segments.last().map(|s| s.ident.to_string()),
@@ -262,7 +750,9 @@ fn extract_associated_types(item_impl: &ItemImpl) -> (String, String) {
     let mut extra_type = "oxide_core::navigation::NoExtra".to_string();
 
     for it in &item_impl.items {
-        let syn::ImplItem::Type(ty) = it else { continue };
+        let syn::ImplItem::Type(ty) = it else {
+            continue;
+        };
         let name = ty.ident.to_string();
         if name == "Return" {
             return_type = ty.ty.to_token_stream().to_string();
@@ -284,7 +774,9 @@ fn extract_path(item_impl: &ItemImpl) -> Option<String> {
         if block.stmts.len() != 1 {
             continue;
         }
-        let syn::Stmt::Expr(expr, _) = &block.stmts[0] else { continue };
+        let syn::Stmt::Expr(expr, _) = &block.stmts[0] else {
+            continue;
+        };
 
         match expr {
             syn::Expr::Call(call) => {
@@ -295,8 +787,10 @@ fn extract_path(item_impl: &ItemImpl) -> Option<String> {
                     if call.args.len() != 1 {
                         continue;
                     }
-                    if let Some(syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(s), .. })) =
-                        call.args.first()
+                    if let Some(syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Str(s),
+                        ..
+                    })) = call.args.first()
                     {
                         return Some(s.value());
                     }
@@ -344,6 +838,7 @@ fn generate_route_kind_enum(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
     let kind_strings: Vec<String> = routes.iter().map(|r| r.kind.clone()).collect();
 
     Ok(quote! {
+        #[flutter_rust_bridge::frb(non_opaque)]
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
         pub enum RouteKind {
             #( #variants, )*
@@ -353,6 +848,13 @@ fn generate_route_kind_enum(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
             pub fn as_str(&self) -> &'static str {
                 match self {
                     #( Self::#variants => #kind_strings, )*
+                }
+            }
+
+            pub fn from_str(s: &str) -> Option<Self> {
+                match s {
+                    #( #kind_strings => Some(Self::#variants), )*
+                    _ => None,
                 }
             }
         }
@@ -376,8 +878,8 @@ fn generate_route_payload_enum(routes: &[RouteMeta]) -> syn::Result<TokenStream2
         .collect();
 
     Ok(quote! {
+        #[flutter_rust_bridge::frb(non_opaque)]
         #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-        #[serde(tag = "kind", content = "payload")]
         pub enum RoutePayload {
             #( #variants(#tys), )*
         }
@@ -393,12 +895,41 @@ fn generate_payload_helpers(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
         .iter()
         .map(|r| Ident::new(&r.rust_type, Span::call_site()))
         .collect();
+    let kind_strings: Vec<LitStr> = routes
+        .iter()
+        .map(|r| LitStr::new(&r.kind, Span::call_site()))
+        .collect();
 
     Ok(quote! {
         impl RoutePayload {
             pub fn kind(&self) -> RouteKind {
                 match self {
                     #( Self::#variants(_) => RouteKind::#variants, )*
+                }
+            }
+
+            pub(crate) fn payload_json(&self) -> oxide_core::CoreResult<::serde_json::Value> {
+                match self {
+                    #( Self::#variants(v) => ::serde_json::to_value(v).map_err(|e| oxide_core::OxideError::Internal {
+                        message: format!("failed to serialize route payload for kind {}: {e}", #kind_strings),
+                    }), )*
+                }
+            }
+
+            pub(crate) fn from_kind_and_payload(
+                kind: &str,
+                payload: ::serde_json::Value,
+            ) -> oxide_core::CoreResult<Self> {
+                let kind = RouteKind::from_str(kind).ok_or_else(|| oxide_core::OxideError::Validation {
+                    message: format!("unknown route kind: {kind}"),
+                })?;
+                match kind {
+                    #( RouteKind::#variants => {
+                        let v = ::serde_json::from_value::<#tys>(payload).map_err(|e| oxide_core::OxideError::Validation {
+                            message: format!("failed to decode route payload for kind {}: {e}", #kind_strings),
+                        })?;
+                        Ok(Self::#variants(v))
+                    } )*
                 }
             }
         }
@@ -425,7 +956,11 @@ fn generate_payload_helpers(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
     })
 }
 
-fn emit_metadata_json(crate_name: &str, routes: &[RouteMeta], manifest_dir: &Path) -> syn::Result<()> {
+fn emit_metadata_json(
+    crate_name: &str,
+    routes: &[RouteMeta],
+    manifest_dir: &Path,
+) -> syn::Result<()> {
     let target_dir = manifest_dir.join("target").join("oxide_routes");
     fs::create_dir_all(&target_dir)
         .map_err(|e| syn::Error::new(manifest_dir.span(), e.to_string()))?;
@@ -562,8 +1097,8 @@ mod tests {
     }
 
     #[test]
-    fn navigation_module_contains_bindings() {
-        let tokens = generate_navigation_module().unwrap().to_string();
+    fn navigation_bridge_module_contains_bindings() {
+        let tokens = generate_navigation_bridge_module().unwrap().to_string();
         assert!(tokens.contains("oxide_nav_commands_stream"));
         assert!(tokens.contains("oxide_nav_emit_result"));
         assert!(tokens.contains("oxide_nav_set_current_route"));
@@ -571,7 +1106,10 @@ mod tests {
 
     #[test]
     fn expand_routes_module_writes_metadata_file() {
-        let _guard = TEST_ENV_LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap();
+        let _guard = TEST_ENV_LOCK
+            .get_or_init(|| std::sync::Mutex::new(()))
+            .lock()
+            .unwrap();
         let dir = temp_dir("oxide_routes_expand");
         let prev_manifest = std::env::var("CARGO_MANIFEST_DIR").ok();
         let prev_pkg = std::env::var("CARGO_PKG_NAME").ok();

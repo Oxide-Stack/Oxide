@@ -8,9 +8,32 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+if command -v pwsh >/dev/null 2>&1; then
+  pwsh -NoProfile -File "$ROOT_DIR/tools/scripts/version_sync.ps1" -Verify
+else
+  bash "$ROOT_DIR/tools/scripts/version_sync.sh" --verify
+fi
+
 cd "$ROOT_DIR/rust"
 cargo test --workspace
+cargo test -p oxide_generator_rs --test compile
 cargo test -p oxide_core --features "navigation-binding,isolated-channels"
+
+rustup target add wasm32-unknown-unknown wasm32-wasip1
+cargo check -p oxide_core --target wasm32-unknown-unknown --all-features
+cargo check -p oxide_core --target wasm32-wasip1 --all-features
+cargo test -p oxide_core --target wasm32-unknown-unknown --all-features --no-run --test wasm_web_compat
+cargo test -p oxide_core --target wasm32-wasip1 --all-features --no-run --test wasm_wasi_compat
+
+if [[ "${QA_SKIP_COVERAGE:-}" != "1" ]]; then
+  if command -v cargo-llvm-cov >/dev/null 2>&1; then
+    rustup component add llvm-tools-preview
+    cargo llvm-cov --workspace --all-features --fail-under-lines 62 --fail-under-regions 65 --summary-only
+  elif [[ "${QA_REQUIRE_COVERAGE:-}" == "1" ]]; then
+    echo "cargo-llvm-cov is not installed (set QA_SKIP_COVERAGE=1 to skip)." >&2
+    exit 1
+  fi
+fi
 
 cd "$ROOT_DIR/flutter/oxide_runtime"
 flutter test
@@ -20,6 +43,10 @@ dart test
 
 cd "$ROOT_DIR/flutter/oxide_annotations"
 dart analyze
+
+if ! command -v flutter_rust_bridge_codegen >/dev/null 2>&1; then
+  cargo install flutter_rust_bridge_codegen --locked
+fi
 
 examples=(
   "$ROOT_DIR/examples/counter_app"
@@ -42,14 +69,26 @@ else
 fi
 
 for dir in "${examples[@]}"; do
-  if [[ -f "$dir/rust/Cargo.toml" ]]; then
-    cd "$dir/rust"
-    cargo test
-  fi
-
   cd "$dir"
   rm -rf build
   flutter pub get
+  if [[ -f "flutter_rust_bridge.yaml" ]]; then
+    flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+    if git diff --name-only -- . | grep -E '(^|/)frb_generated\.' >/dev/null; then
+      echo "FRB generated outputs are out of date in $dir:"
+      git diff --name-only -- . | grep -E '(^|/)frb_generated\.'
+      if [[ "${QA_SKIP_FRB_DIFF_CHECK:-}" != "1" ]]; then
+        exit 1
+      fi
+    fi
+  fi
+
+  if [[ -f "$dir/rust/Cargo.toml" ]]; then
+    cd "$dir/rust"
+    cargo test
+    cd "$dir"
+  fi
+
   dart run build_runner build -d
   flutter test
 

@@ -4,10 +4,14 @@ use oxide_generator_rs::state;
 #[state]
 pub struct AppState {
     pub counter: u64,
+    pub last_confirmed: Option<bool>,
 }
 
 impl AppState {
     pub fn new() -> Self {
-        Self { counter: 0 }
+        Self {
+            counter: 0,
+            last_confirmed: None,
+        }
     }
 }

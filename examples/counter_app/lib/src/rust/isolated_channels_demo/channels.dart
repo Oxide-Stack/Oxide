@@ -8,6 +8,33 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'channels.freezed.dart';
 
+// These functions are ignored because they are not marked as `pub`: `__oxide_send_event`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These functions have error during generation (see debug logs or enable `stop_on_error: true` for more details): `register_incoming`
+
+/// Installs the duplex incoming handler for the demo.
+Future<void> installDuplexIncomingHandler() => RustLib.instance.api
+    .crateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandler();
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< OxideChannelError>>
+abstract class OxideChannelError implements RustOpaqueInterface {}
+
+/// Demo callback service used to request user confirmation from Dart.
+class CounterDemoDialog {
+  const CounterDemoDialog();
+
+  static Future<bool> confirm({required String title}) => RustLib.instance.api
+      .crateIsolatedChannelsDemoChannelsCounterDemoDialogConfirm(title: title);
+
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CounterDemoDialog && runtimeType == other.runtimeType;
+}
+
 @freezed
 sealed class CounterDemoDialogRequest with _$CounterDemoDialogRequest {
   const CounterDemoDialogRequest._();
@@ -26,6 +53,24 @@ sealed class CounterDemoDialogResponse with _$CounterDemoDialogResponse {
       CounterDemoDialogResponse_Confirm;
 }
 
+/// Demo duplex channel.
+class CounterDemoDuplex {
+  const CounterDemoDuplex();
+
+  static Future<void> send({required CounterDemoOut event}) => RustLib
+      .instance
+      .api
+      .crateIsolatedChannelsDemoChannelsCounterDemoDuplexSend(event: event);
+
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CounterDemoDuplex && runtimeType == other.runtimeType;
+}
+
 @freezed
 sealed class CounterDemoEvent with _$CounterDemoEvent {
   const CounterDemoEvent._();
@@ -33,6 +78,24 @@ sealed class CounterDemoEvent with _$CounterDemoEvent {
   /// A human-readable notification message (shown by Flutter in the demo).
   const factory CounterDemoEvent.notify({required String message}) =
       CounterDemoEvent_Notify;
+}
+
+/// Demo event channel emitting user-facing notifications.
+class CounterDemoEvents {
+  const CounterDemoEvents();
+
+  static Future<void> notify({required String message}) => RustLib.instance.api
+      .crateIsolatedChannelsDemoChannelsCounterDemoEventsNotify(
+        message: message,
+      );
+
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CounterDemoEvents && runtimeType == other.runtimeType;
 }
 
 @freezed

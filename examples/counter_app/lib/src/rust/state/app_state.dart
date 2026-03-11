@@ -6,20 +6,38 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`
+
 ///oxide:state
-///oxide:meta:{"kind":"state","name":"AppState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)"],"fields":[{"name":"counter","ty":"u64"}],"variants":null}
+///oxide:meta:{"kind":"state","name":"AppState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)"],"fields":[{"name":"counter","ty":"u64"},{"name":"last_confirmed","ty":"Option < bool >"}],"variants":null}
 class AppState {
   final BigInt counter;
+  final bool? lastConfirmed;
 
-  const AppState({required this.counter});
+  const AppState({required this.counter, this.lastConfirmed});
+
+  static Future<List<AppStateSlice>> inferSlicesImpl({
+    required AppState before,
+    required AppState after,
+  }) => RustLib.instance.api.crateStateAppStateAppStateInferSlicesImpl(
+    before: before,
+    after: after,
+  );
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  static Future<AppState> newInstance() =>
+      RustLib.instance.api.crateStateAppStateAppStateNew();
 
   @override
-  int get hashCode => counter.hashCode;
+  int get hashCode => counter.hashCode ^ lastConfirmed.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is AppState &&
           runtimeType == other.runtimeType &&
-          counter == other.counter;
+          counter == other.counter &&
+          lastConfirmed == other.lastConfirmed;
 }
+
+enum AppStateSlice { oxideUnused }

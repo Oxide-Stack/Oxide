@@ -7,25 +7,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:api_browser_app/src/app.dart';
-import 'package:api_browser_app/src/rust/api/bridge.dart' as api;
-import 'package:api_browser_app/src/rust/frb_generated.dart';
+import 'package:api_browser_app/oxide.dart';
+// import 'package:api_browser_app/src/rust/api/bridge.dart' as api;  // no longer needed
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
-    await RustLib.init();
-    await api.initOxide();
+    // disable navigation so runtime doesn't log errors during testing
+    await OxideStack.init(startNavigation: false);
   });
 
   testWidgets('Loads users, posts, and comments via local API server', (WidgetTester tester) async {
-    const usersJson =
-        '[{"id":1,"name":"Leanne Graham","username":"Bret"},{"id":2,"name":"Ervin Howell","username":"Antonette"}]';
-    const postsUser1Json =
-        '[{"id":10,"userId":1,"title":"hello world"},{"id":11,"userId":1,"title":"second post"}]';
-    const postsUser2Json =
-        '[{"id":20,"userId":2,"title":"user two post"}]';
-    const commentsPost10Json =
-        '[{"id":100,"postId":10,"name":"comment one"},{"id":101,"postId":10,"name":"comment two"}]';
+    const usersJson = '[{"id":1,"name":"Leanne Graham","username":"Bret"},{"id":2,"name":"Ervin Howell","username":"Antonette"}]';
+    const postsUser1Json = '[{"id":10,"userId":1,"title":"hello world"},{"id":11,"userId":1,"title":"second post"}]';
+    const postsUser2Json = '[{"id":20,"userId":2,"title":"user two post"}]';
+    const commentsPost10Json = '[{"id":100,"postId":10,"name":"comment one"},{"id":101,"postId":10,"name":"comment two"}]';
     const commentsPost20Json = '[{"id":200,"postId":20,"name":"user two comment"}]';
 
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
@@ -56,7 +52,8 @@ void main() {
       }
     }());
 
-    api.setApiBaseUrl(url: 'http://127.0.0.1:${server.port}');
+    // use the public helper instead of importing the bridge directly
+    setApiBaseUrl(url: 'http://127.0.0.1:${server.port}');
 
     await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: ApiBrowserHome())));
     await tester.pumpAndSettle(const Duration(seconds: 5));

@@ -7,7 +7,7 @@ import '../frb_generated.dart';
 import '../state/common.dart';
 import '../state/posts_action.dart';
 import '../state/posts_state.dart';
-import 'bridge.dart';
+import 'comments_bridge.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `PostsReducer`, `PostsSideEffect`, `__OxideReducerMarker_PostsReducer`

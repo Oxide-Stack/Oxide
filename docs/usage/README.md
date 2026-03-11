@@ -21,17 +21,17 @@ Start from an FRB-integrated Flutter app/template (or copy one of this repo’s 
 
 - building Rust
 - generating bindings
-- initializing `RustLib` in Flutter
+- initializing Rust from Flutter
 
 FRB docs: https://fzyzcjy.github.io/flutter_rust_bridge/
 
-Before creating any Oxide engine, call `initOxide()` after `RustLib.init()` (see [init-oxide.md](./init-oxide.md)).
+Before using any Oxide APIs, call `OxideStack.init()` from `main()` (see [init-oxide.md](./init-oxide.md)).
 
 ## Topics
 
 - Reducer pattern (Rust state/actions/reducer): [reducer-pattern.md](./reducer-pattern.md)
 - Generate FRB bindings (Rust ↔ Dart): [frb-bindings.md](./frb-bindings.md)
-- Unified async initialization (`initOxide`): [init-oxide.md](./init-oxide.md)
+- Unified async initialization (`OxideStack.init`): [init-oxide.md](./init-oxide.md)
 - Flutter deps + codegen (`build_runner`): [flutter-codegen.md](./flutter-codegen.md)
 - Declare a store (`@OxideStore`): [declare-store.md](./declare-store.md)
 - Use the generated adapter in UI: [ui-backends.md](./ui-backends.md)

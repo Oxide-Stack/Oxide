@@ -77,6 +77,13 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Install flutter_rust_bridge_codegen
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Install via cargo (preferred). Ensure cargo's bin dir is on PATH for subsequent steps.
+          cargo install flutter_rust_bridge_codegen || true
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
       - name: Test (Rust workspace)
         working-directory: rust
         run: cargo test --workspace
@@ -91,7 +98,14 @@ jobs:
             "examples/benchmark_app/rust"
           )
           for dir in "${examples[@]}"; do
-            (cd "$dir" && cargo test)
+            example_root="$(dirname "$dir")"
+            (
+              cd "$example_root"
+              flutter pub get
+              flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+              cd "rust"
+              cargo test
+            )
           done
       - name: Test oxide_runtime
         working-directory: flutter/oxide_runtime
@@ -111,11 +125,24 @@ jobs:
             "examples/todos_app"
             "examples/ticker_app"
             "examples/benchmark_app"
+            "examples/api_browser_app"
           )
           for dir in "${examples[@]}"; do
             (
               cd "$dir"
               flutter pub get
+              # Use cargo-installed tool
+              if command -v flutter_rust_bridge_codegen >/dev/null 2>&1; then
+                flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+              else
+                echo "flutter_rust_bridge_codegen not found; make sure cargo installed it" >&2
+                exit 1
+              fi
+              if git diff --name-only | grep -E '(^|/)frb_generated\.' >/dev/null; then
+                echo "FRB generated outputs are out of date in $dir:"
+                git diff --name-only | grep -E '(^|/)frb_generated\.'
+                exit 1
+              fi
               dart run build_runner build -d
               flutter test
             )
@@ -141,6 +168,20 @@ jobs:
           flutter config --enable-windows-desktop
           flutter doctor -v
           flutter devices
+      - name: Install flutter_rust_bridge_codegen
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Set-StrictMode -Version Latest
+          # Install via cargo on Windows. Ensure cargo's bin dir is available to subsequent steps in this job step.
+          try {
+            # If the binary is already available this will succeed quickly
+            flutter_rust_bridge_codegen --version | Out-Null
+          } catch {
+            & cargo install flutter_rust_bridge_codegen -q || true
+          }
+          # Add cargo bin to PATH for the remainder of this step (and subsequent steps in the job).
+          $env:PATH = "$env:PATH;$env:USERPROFILE\.cargo\bin"
       - name: Test examples (Windows integration tests)
         shell: pwsh
         run: |
@@ -161,12 +202,22 @@ jobs:
             "examples\counter_app",
             "examples\todos_app",
             "examples\ticker_app",
-            "examples\benchmark_app"
+            "examples\benchmark_app",
+            "examples\api_browser_app"
           )
           foreach ($dir in $exampleDirs) {
             Push-Location $dir
             try {
               Invoke-Native -Command flutter -Args @("pub", "get")
+              if (Test-Path "flutter_rust_bridge.yaml") {
+                Invoke-Native -Command flutter_rust_bridge_codegen -Args @("generate", "--config-file", "flutter_rust_bridge.yaml")
+                $diff = git diff --name-only | Select-String -Pattern '(^|/)frb_generated\.'
+                if ($diff) {
+                  Write-Host "FRB generated outputs are out of date in ${dir}:"
+                  $diff | ForEach-Object { Write-Host $_ }
+                  throw "FRB generated outputs are out of date."
+                }
+              }
               if (Test-Path "rust") {
                 Push-Location "rust"
                 try {
@@ -241,7 +292,7 @@ jobs:
     env:
       VERSION: ${{ needs.validate.outputs.version }}
     permissions:
-      id-token: write 
+      id-token: write
       contents: read
     steps:
       - name: Checkout repository
@@ -253,8 +304,16 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: "stable"
           cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install flutter_rust_bridge_codegen
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Install via cargo (preferred). Ensure cargo's bin dir is on PATH for subsequent steps.
+          cargo install flutter_rust_bridge_codegen || true
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
       - name: Publish oxide_annotations
         working-directory: flutter/oxide_annotations

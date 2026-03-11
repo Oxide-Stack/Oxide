@@ -9,6 +9,8 @@
 
 use oxide_generator_rs::{oxide_callback, oxide_event_channel};
 
+pub use oxide_core::OxideChannelError;
+
 use crate::isolated_channels_demo::set_last_incoming_text;
 
 /// Demo event channel emitting user-facing notifications.

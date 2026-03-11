@@ -36,6 +36,39 @@ pub use engine::Context;
 pub type ReducerCtx<'a, Input, State, StateSlice = ()> =
     engine::Context<'a, Input, State, StateSlice>;
 
+/// Initializes global runtimes used by optional Oxide features.
+///
+/// Why: some features (navigation, isolated channels) use explicit global singletons for
+/// generated glue code. This helper provides a single, idempotent entry point to initialize
+/// all enabled globals consistently.
+pub fn init_engine_globals() -> CoreResult<()> {
+    #[cfg(feature = "navigation-binding")]
+    {
+        engine::init_navigation()?;
+    }
+
+    #[cfg(feature = "isolated-channels")]
+    {
+        isolated_channels::init_isolated_channels()?;
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "frb-spawn")]
+pub fn init_from_frb(thread_pool_provider: fn() -> runtime::ThreadPool) -> CoreResult<()> {
+    let _ = runtime::init(thread_pool_provider);
+    init_engine_globals()?;
+    Ok(())
+}
+
+#[cfg(not(feature = "frb-spawn"))]
+pub fn init_from_frb(_thread_pool_provider: fn() -> ()) -> CoreResult<()> {
+    runtime::ensure_initialized()?;
+    init_engine_globals()?;
+    Ok(())
+}
+
 #[cfg(feature = "navigation-binding")]
 pub use engine::{
     NavigationCtx, NavigationRuntime, init_navigation, navigation_runtime,

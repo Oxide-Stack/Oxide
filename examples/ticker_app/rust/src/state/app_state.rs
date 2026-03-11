@@ -28,6 +28,7 @@ pub struct TickState {
     pub ticks: u64,
     /// Most recent tick source (`auto`, `manual`, or `side_effect`).
     pub last_tick_source: String,
+    pub last_confirmed: Option<bool>,
 }
 
 impl AppState {
@@ -44,6 +45,7 @@ impl AppState {
             tick: TickState {
                 ticks: 0,
                 last_tick_source: "manual".to_string(),
+                last_confirmed: None,
             },
         }
     }

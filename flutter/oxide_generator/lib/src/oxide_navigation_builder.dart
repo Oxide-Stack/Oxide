@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:build/build.dart';
 
 import 'oxide_navigation_codegen.dart';
@@ -11,13 +12,16 @@ final class OxideNavigationBuilder implements Builder {
       'lib/oxide_generated/routes/route_models.g.dart',
       'lib/oxide_generated/navigation/route_builders.g.dart',
       'lib/oxide_generated/navigation/navigation_runtime.g.dart',
+      'lib/oxide_generated/oxide_stack.g.dart',
+      'lib/oxide.dart',
     ],
   };
 
   @override
   Future<void> build(BuildStep buildStep) async {
     final metadata = await readRustRouteMetadata();
-    final routePages = await discoverRoutePages(buildStep.resolver);
+    final channelMeta = await readRustChannelMetadata();
+    final routePages = await discoverRoutePages(buildStep);
 
     await buildStep.writeAsString(
       AssetId(buildStep.inputId.package, 'lib/oxide_generated/routes/route_kind.g.dart'),
@@ -34,6 +38,15 @@ final class OxideNavigationBuilder implements Builder {
     await buildStep.writeAsString(
       AssetId(buildStep.inputId.package, 'lib/oxide_generated/navigation/navigation_runtime.g.dart'),
       generateNavigationRuntimeSource(metadata),
+    );
+    await buildStep.writeAsString(
+      AssetId(buildStep.inputId.package, 'lib/oxide_generated/oxide_stack.g.dart'),
+      generateOxideStackSource(channels: channelMeta),
+    );
+    final includeHelpers = File('lib/src/oxide.dart').existsSync();
+    await buildStep.writeAsString(
+      AssetId(buildStep.inputId.package, 'lib/oxide.dart'),
+      generateOxideEntrypointSource(includeSrcOxide: includeHelpers),
     );
   }
 }

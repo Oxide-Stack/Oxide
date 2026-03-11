@@ -9,9 +9,13 @@ Minimal example showing basic state management with Oxide + Flutter Rust Bridge 
 - Flutter receives state updates as a typed stream of snapshots (`AppStateSnapshot`).
 - Four Flutter adapters for the same store idea (Inherited, Hooks, Riverpod, BLoC) shown as tabs.
 
+## Navigation Choice
+
+This example uses Oxide's Navigator 1.0 integration by wiring the generated `oxideNavigatorKey` into `MaterialApp`. Rust emits navigation commands, and Flutter executes them through the Navigator-backed handler.
+
 ## Rust Surface
 
-- Intended FRB surface: `init_app`, `init_oxide`, the engine type, and the state/action/snapshot types.
+- Intended FRB surface: no manual init functions required (the Rust init hook is generated). you still expose the engine type and the state/action/snapshot types.
 - Not part of the FRB surface: reducer implementation structs and any internal side-effect wiring.
 
 ## Isolated Channels Demo (Additive)
@@ -33,18 +37,19 @@ Generated Dart wrappers live at:
 Example usage (from Flutter code):
 
 ```dart
-import 'package:counter_app/src/rust/api/isolated_channels_bridge.dart' as ch;
-import 'package:counter_app/src/rust/isolated_channels_demo/channels.dart';
+import 'package:counter_app/src/oxide.dart';
 
 Future<void> startDemo() async {
-  await ch.initIsolatedChannelsDemo();
+  // channel initialization is now automatic; only `OxideStack.init()` is
+  // required to boot the runtime.
 
-  ch.counterDemoEventsStream().listen((event) {
+  // prefer the central OxideStack surface for events and callbacks
+  OxideStack.events.counterDemoEvents.listen((event) {
     event.when(notify: (message) => print('notify: $message'));
   });
 
-  ch.counterDemoDialogRequestsStream().listen((pending) async {
-    await ch.counterDemoDialogRespond(
+  OxideStack.callbacks.counterDemoDialogRequests.listen((pending) async {
+    await OxideStack.callbacks.counterDemoDialogRespond(
       id: pending.id,
       response: CounterDemoDialogResponse.confirm(true),
     );
@@ -73,7 +78,9 @@ dart run build_runner build -d
 flutter run
 ```
 
-## Regenerate FRB bindings (if Rust API changes)
+## Generate FRB bindings
+
+This repo does not commit the Rust FRB glue (`rust/src/frb_generated.rs`). Run this on a fresh checkout and whenever the Rust API changes:
 
 ```bash
 flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml

@@ -6,6 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `infer_slices`
+
 /// State for the ticker example.
 ///oxide:state
 ///oxide:meta:{"kind":"state","name":"AppState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","State for the ticker example."],"fields":[{"name":"control","ty":"TickerControlState"},{"name":"tick","ty":"TickState"}],"variants":null}
@@ -17,6 +19,22 @@ class AppState {
   final TickState tick;
 
   const AppState({required this.control, required this.tick});
+
+  static Future<List<AppStateSlice>> inferSlicesImpl({
+    required AppState before,
+    required AppState after,
+  }) => RustLib.instance.api.crateStateAppStateAppStateInferSlicesImpl(
+    before: before,
+    after: after,
+  );
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  /// Creates a new state instance.
+  ///
+  /// # Returns
+  /// A state with `ticks = 0`.
+  static Future<AppState> newInstance() =>
+      RustLib.instance.api.crateStateAppStateAppStateNew();
 
   @override
   int get hashCode => control.hashCode ^ tick.hashCode;
@@ -37,18 +55,32 @@ enum AppStateSlice { control, tick }
 
 /// Tick counter and metadata updated by ticking actions.
 ///oxide:state
-///oxide:meta:{"kind":"state","name":"TickState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","Tick counter and metadata updated by ticking actions."],"fields":[{"name":"ticks","ty":"u64"},{"name":"last_tick_source","ty":"String"}],"variants":null}
+///oxide:meta:{"kind":"state","name":"TickState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","Tick counter and metadata updated by ticking actions."],"fields":[{"name":"ticks","ty":"u64"},{"name":"last_tick_source","ty":"String"},{"name":"last_confirmed","ty":"Option < bool >"}],"variants":null}
 class TickState {
   /// Number of ticks observed so far.
   final BigInt ticks;
 
   /// Most recent tick source (`auto`, `manual`, or `side_effect`).
   final String lastTickSource;
+  final bool? lastConfirmed;
 
-  const TickState({required this.ticks, required this.lastTickSource});
+  const TickState({
+    required this.ticks,
+    required this.lastTickSource,
+    this.lastConfirmed,
+  });
+
+  static Future<List<TickStateSlice>> inferSlicesImpl({
+    required TickState before,
+    required TickState after,
+  }) => RustLib.instance.api.crateStateAppStateTickStateInferSlicesImpl(
+    before: before,
+    after: after,
+  );
 
   @override
-  int get hashCode => ticks.hashCode ^ lastTickSource.hashCode;
+  int get hashCode =>
+      ticks.hashCode ^ lastTickSource.hashCode ^ lastConfirmed.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -56,8 +88,11 @@ class TickState {
       other is TickState &&
           runtimeType == other.runtimeType &&
           ticks == other.ticks &&
-          lastTickSource == other.lastTickSource;
+          lastTickSource == other.lastTickSource &&
+          lastConfirmed == other.lastConfirmed;
 }
+
+enum TickStateSlice { oxideUnused }
 
 /// Runtime control settings for the ticker.
 ///oxide:state
@@ -71,6 +106,15 @@ class TickerControlState {
 
   const TickerControlState({required this.isRunning, required this.intervalMs});
 
+  static Future<List<TickerControlStateSlice>> inferSlicesImpl({
+    required TickerControlState before,
+    required TickerControlState after,
+  }) =>
+      RustLib.instance.api.crateStateAppStateTickerControlStateInferSlicesImpl(
+        before: before,
+        after: after,
+      );
+
   @override
   int get hashCode => isRunning.hashCode ^ intervalMs.hashCode;
 
@@ -82,3 +126,5 @@ class TickerControlState {
           isRunning == other.isRunning &&
           intervalMs == other.intervalMs;
 }
+
+enum TickerControlStateSlice { oxideUnused }

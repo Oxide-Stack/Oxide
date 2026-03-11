@@ -1,10 +1,9 @@
 use flutter_rust_bridge::frb;
 use oxide_generator_rs::reducer;
 
-use crate::util::{canonicalize_json, count_entries, fnv1a64, fnv1a_mix_u64};
 use crate::state::json_action::JsonAction;
 use crate::state::json_state::JsonState;
-pub use crate::OxideError;
+use crate::util::{canonicalize_json, count_entries, fnv1a64, fnv1a_mix_u64};
 
 const LIGHT_JSON: &str = include_str!("../../assets/light.json");
 const HEAVY_JSON: &str = include_str!("../../assets/heavy.json");
@@ -53,21 +52,24 @@ impl oxide_core::Reducer for JsonRootReducer {
 
 #[frb(ignore)]
 
- enum JsonSideEffect {}
+enum JsonSideEffect {}
 
 #[frb(ignore)]
-
- #[derive(Default)]
- struct JsonRootReducer {}
+#[derive(Default)]
+struct JsonRootReducer {}
 
 fn run_json_once(state: &mut JsonState, json: &str) -> oxide_core::CoreResult<()> {
-    let mut value: serde_json::Value = serde_json::from_str(json)
-        .map_err(|e| oxide_core::OxideError::Validation { message: e.to_string() })?;
+    let mut value: serde_json::Value =
+        serde_json::from_str(json).map_err(|e| oxide_core::OxideError::Validation {
+            message: e.to_string(),
+        })?;
 
     canonicalize_json(&mut value);
     let entries = count_entries(&value);
-    let serialized = serde_json::to_string(&value)
-        .map_err(|e| oxide_core::OxideError::Validation { message: e.to_string() })?;
+    let serialized =
+        serde_json::to_string(&value).map_err(|e| oxide_core::OxideError::Validation {
+            message: e.to_string(),
+        })?;
     let json_len = serialized.len() as u64;
     let hash = fnv1a64(serialized.as_bytes());
 

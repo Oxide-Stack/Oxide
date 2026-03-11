@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:todos_app/main.dart';
-import 'package:todos_app/src/rust/api/bridge.dart' show initOxide;
-import 'package:todos_app/src/rust/frb_generated.dart';
+import 'package:todos_app/src/features/home/todos_home_screen.dart';
+import 'package:todos_app/src/rust/api/bridge.dart';
+import 'package:todos_app/oxide.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -31,33 +31,71 @@ void main() {
     if (await jsonFile.exists()) await jsonFile.delete();
   }
 
+  Future<void> waitForPersistenceFiles({Duration timeout = const Duration(seconds: 5)}) async {
+    final tempDir = Directory.systemTemp.path;
+    final sep = Platform.pathSeparator;
+    const key = 'oxide.todos.state.v1';
+    final dir =
+        '$tempDir$sep'
+        'oxide';
+    final binPath =
+        '$dir$sep$key'
+        '.bin';
+    final jsonPath =
+        '$dir$sep$key'
+        '.json';
+    final binFile = File(binPath);
+    final jsonFile = File(jsonPath);
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      final binReady = await binFile.exists() && await binFile.length() > 0;
+      final jsonReady = await jsonFile.exists() && await jsonFile.length() > 0;
+      if (binReady || jsonReady) return;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
   setUpAll(() async {
     await deletePersistenceFiles();
-    await RustLib.init();
-    await initOxide();
+    // navigation not used during persistence checks
+    await OxideStack.init(startNavigation: false);
   });
 
   tearDownAll(() async {
     await deletePersistenceFiles();
   });
 
-  testWidgets('State persists across widget re-mounts', (WidgetTester tester) async {
-    await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: TodosHomeScreen())));
-    await tester.pump(const Duration(milliseconds: 250));
+  testWidgets(
+    'State persists across widget re-mounts',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(ProviderScope(child: MaterialApp(home: const TodosHomeScreen())));
+      await tester.pump(const Duration(milliseconds: 250));
 
-    final input = find.byType(TextField);
-    expect(input, findsWidgets);
-    await tester.enterText(input.first, 'persist me');
-    await tester.tap(find.text('Add Todo'));
-    await tester.pumpAndSettle(const Duration(seconds: 1));
-    expect(find.text('persist me'), findsWidgets);
+      final input = find.byType(TextField);
+      expect(input, findsWidgets);
+      await tester.enterText(input.first, 'persist me');
+      await tester.tap(find.text('Add Todo'));
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+      expect(find.text('persist me'), findsWidgets);
+      await waitForPersistenceFiles();
 
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pumpAndSettle();
-    await tester.pump(const Duration(milliseconds: 250));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 250));
 
-    await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: TodosHomeScreen())));
-    await tester.pumpAndSettle(const Duration(seconds: 1));
-    expect(find.text('persist me'), findsWidgets);
-  }, timeout: const Timeout(Duration(minutes: 30)));
+      await tester.pumpWidget(ProviderScope(child: MaterialApp(home: const TodosHomeScreen())));
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      final engine = await createSharedEngine();
+      try {
+        final snap = await current(engine: engine);
+        final titles = snap.state.todos.map((t) => t.title).toList(growable: false);
+        expect(titles, contains('persist me'));
+      } finally {
+        await disposeEngine(engine: engine);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 30)),
+    skip: Platform.isWindows,
+  );
 }

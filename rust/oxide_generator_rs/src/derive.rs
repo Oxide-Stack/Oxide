@@ -247,6 +247,8 @@ pub(crate) fn expand_state_struct(
                     #(#slice_checks)*
                     slices
                 }
+
+                pub(crate) const __OXIDE_SLICED_STATE: bool = true;
             }
 
             impl ::oxide_core::SlicedState for #ident {
@@ -270,6 +272,7 @@ pub(crate) fn expand_state_struct(
         );
     }
 
+    let slice_enum_ident = quote::format_ident!("{}Slice", item.ident);
     let name = item.ident.to_string();
     let ident = item.ident.clone();
     ensure_required_derives(&mut item.attrs);
@@ -297,6 +300,23 @@ pub(crate) fn expand_state_struct(
 
     quote!(
         #item
+
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        pub enum #slice_enum_ident {
+            __OxideUnused,
+        }
+
+        impl #ident {
+            pub fn infer_slices_impl(
+                _before: &Self,
+                _after: &Self,
+            ) -> Vec<#slice_enum_ident> {
+                Vec::new()
+            }
+
+            pub(crate) const __OXIDE_SLICED_STATE: bool = false;
+        }
+
         const _: () = {
             fn _oxide_require_state_traits<T>()
             where
@@ -317,6 +337,7 @@ pub(crate) fn expand_state_enum(args: StateArgs, mut item: ItemEnum) -> proc_mac
         .to_compile_error();
     }
 
+    let slice_enum_ident = quote::format_ident!("{}Slice", item.ident);
     let name = item.ident.to_string();
     let ident = item.ident.clone();
     ensure_required_derives(&mut item.attrs);
@@ -344,6 +365,23 @@ pub(crate) fn expand_state_enum(args: StateArgs, mut item: ItemEnum) -> proc_mac
 
     quote!(
         #item
+
+        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+        pub enum #slice_enum_ident {
+            __OxideUnused,
+        }
+
+        impl #ident {
+            pub fn infer_slices_impl(
+                _before: &Self,
+                _after: &Self,
+            ) -> Vec<#slice_enum_ident> {
+                Vec::new()
+            }
+
+            pub(crate) const __OXIDE_SLICED_STATE: bool = false;
+        }
+
         const _: () = {
             fn _oxide_require_state_traits<T>()
             where

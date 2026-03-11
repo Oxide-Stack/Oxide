@@ -21,7 +21,11 @@ impl oxide_core::Reducer for MyReducer {
     type Action = MyAction;
     type SideEffect = MySideEffect;
 
-    async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
+    async fn init(
+        &mut self,
+        _ctx: oxide_core::InitContext<Self::SideEffect>,
+    ) {
+    }
 
     fn reduce(
         &mut self,
@@ -30,7 +34,7 @@ impl oxide_core::Reducer for MyReducer {
             '_,
             Self::Action,
             Self::State,
-            <Self::State as oxide_core::SlicedState>::StateSlice,
+            MyStateSlice,
         >,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         // Why: This mirrors real usage where people import variants.
@@ -52,7 +56,7 @@ impl oxide_core::Reducer for MyReducer {
             '_,
             Self::SideEffect,
             Self::State,
-            <Self::State as oxide_core::SlicedState>::StateSlice,
+            MyStateSlice,
         >,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
         Ok(oxide_core::StateChange::None)

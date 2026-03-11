@@ -1,4 +1,5 @@
 use crate::engine::navigation_runtime::NavigationRuntime;
+use crate::engine::CoreResult;
 use crate::navigation::{OxideRoute, OxideRouteKind, RouteContext};
 
 /// Navigation capability surface injected into reducer/effect contexts.
@@ -22,17 +23,17 @@ impl<'a> NavigationCtx<'a> {
     }
 
     /// Pushes a route without expecting a result.
-    pub fn push<R: OxideRoute>(&self, route: R) {
-        self.runtime.push(route);
+    pub fn push<R: OxideRoute>(&self, route: R) -> CoreResult<()> {
+        self.runtime.push(route)
     }
 
     /// Pops the current route without a result.
-    pub fn pop(&self) {
-        self.runtime.pop();
+    pub fn pop(&self) -> CoreResult<()> {
+        self.runtime.pop()
     }
 
     /// Pops routes until the given kind becomes active.
-    pub fn pop_until<K: OxideRouteKind>(&self, kind: K) {
-        self.runtime.pop_until(kind);
+    pub fn pop_until<K: OxideRouteKind>(&self, kind: K) -> CoreResult<()> {
+        self.runtime.pop_until(kind)
     }
 }

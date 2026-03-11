@@ -127,6 +127,10 @@ switch ($Action) {
     break
   }
   "run" {
+    # Ensure web codegen / wasm pkg is always generated before running.
+    # This prevents the native IO variant from being used accidentally during
+    # a web build (which imports `dart:ffi` and breaks dart2wasm).
+    Run-CodegenBuildWeb $targetDir $Release
     Run-FlutterWebChrome $targetDir $Release
     break
   }

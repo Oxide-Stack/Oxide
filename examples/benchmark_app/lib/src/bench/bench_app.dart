@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import '../../oxide_generated/navigation/navigation_runtime.g.dart';
+import '../../oxide.dart';
 import 'bench_detail.dart';
 import 'bench_screen.dart';
 import 'routing_bench_screen.dart';
@@ -14,11 +14,21 @@ final class BenchApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final router = GoRouter(
-      navigatorKey: oxideNavigatorKey,
+      initialLocation: '/',
+      navigatorKey: OxideStack.navigatorKey,
       routes: <RouteBase>[
-        GoRoute(path: '/', builder: (context, state) => const BenchHomeScreen()),
-        GoRoute(path: '/splash', builder: (context, state) => const BenchSplashScreen()),
-        GoRoute(path: '/charts', builder: (context, state) => const BenchChartsScreen()),
+        GoRoute(
+          path: '/',
+          builder: (context, state) => BenchHomeScreen(route: const HomeRoute()),
+        ),
+        GoRoute(
+          path: '/splash',
+          builder: (context, state) => BenchSplashScreen(route: const SplashRoute()),
+        ),
+        GoRoute(
+          path: '/charts',
+          builder: (context, state) => BenchChartsScreen(route: const ChartsRoute()),
+        ),
         GoRoute(path: '/routing', builder: (context, state) => const RoutingBenchScreen()),
         GoRoute(
           path: '/bench/:id',

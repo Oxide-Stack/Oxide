@@ -216,7 +216,8 @@ final class OxideApp {
 
 /// Annotation applied to a widget class to bind it to a generated `RouteKind`.
 ///
-/// The `kind` must be one of the generated `RouteKind` enum values.
+/// Prefer passing the generated `RouteKind` enum value. A string kind is also
+/// supported as a fallback and must match the Rust route kind (e.g. `Home`).
 ///
 /// ## Example
 /// ```dart

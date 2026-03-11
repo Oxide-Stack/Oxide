@@ -7,3 +7,30 @@
 /build
 /captures
 .cxx
+
+# Generated Dart files
+*.g.dart
+*.freezed.dart
+*.oxide.dart
+**/lib/oxide_generated/
+
+# Lock files
+pubspec.lock
+
+# Coverage
+coverage/
+lcov.info
+
+# Documentation
+doc/api/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Others
+.DS_Store
+*.log

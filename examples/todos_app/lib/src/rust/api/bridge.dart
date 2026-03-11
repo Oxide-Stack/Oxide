@@ -9,25 +9,10 @@ import '../state/app_state.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `allocate_id`, `delete_todo`, `toggle_todo`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppRootReducer`, `__OxideReducerMarker_AppRootReducer`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppRootReducer`, `AppSideEffect`, `__OxideReducerMarker_AppRootReducer`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `effect`, `from`, `infer_slices`, `init`, `reduce`
 // These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `decode_state_value`, `dispatch`, `encode_current_state`, `encode_state_value`, `new`, `subscribe`
 // These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
-
-/// Initializes the Oxide runtime for this example.
-///
-/// Call this once during app startup (after `RustLib.init()` on the Dart side)
-/// before creating any engines.
-///
-/// # Examples
-/// ```
-/// use rust_lib_counter_app::api::bridge::init_oxide;
-///
-/// tokio::runtime::Runtime::new()
-///     .unwrap()
-///     .block_on(async { init_oxide().await.unwrap() });
-/// ```
-Future<void> initOxide() => RustLib.instance.api.crateApiBridgeInitOxide();
 
 Future<ArcAppEngine> createSharedEngine() =>
     RustLib.instance.api.crateApiBridgeCreateSharedEngine();

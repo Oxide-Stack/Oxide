@@ -8,10 +8,10 @@ String buildBlocBackend(OxideCodegenConfig c, String coreInstantiation) {
   final snapshotsStream = (c.slices == null || c.slices!.isEmpty)
       ? '_core.snapshots'
       : 'filterSnapshotsBySlices<${c.snapshotType}, ${c.sliceType!}>('
-          '_core.snapshots, '
-          'const [${c.slices!.join(', ')}], '
-          '(snap) => snap.slices'
-          ')';
+            '_core.snapshots, '
+            'const [${c.slices!.join(', ')}], '
+            '(snap) => snap.slices'
+            ')';
   return '''
 class ${c.prefix}Cubit extends Cubit<OxideView<${c.stateType}, ${c.prefix}Actions>> {
   ${c.prefix}Cubit()
@@ -36,7 +36,8 @@ $coreInstantiation
 
   Future<void> _initialize() async {
     await _core.initialize();
-    _emit();
+    // emission will come through subscription; explicit emit removed to
+    // avoid duplicate events after initialization.
   }
 
   void _emit() {
@@ -50,7 +51,8 @@ $coreInstantiation
 
   Future<void> _dispatch(${c.actionsType} action) async {
     await _core.dispatchAction(action);
-    _emit();
+    // subscription listener will call _emit when snapshot changes; no manual
+    // emit here.
   }
 
   @override

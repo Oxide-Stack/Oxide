@@ -126,8 +126,7 @@ pub(crate) fn expand_reducer_impl(
     let sliced_state_assert = if uses_sliced_updates {
         quote! {
             const _: () = {
-                fn _oxide_require_sliced_state<T: ::oxide_core::SlicedState>() {}
-                let _ = _oxide_require_sliced_state::<#state_ty>;
+                assert!(#state_ty::__OXIDE_SLICED_STATE);
             };
         }
     } else {
@@ -135,19 +134,19 @@ pub(crate) fn expand_reducer_impl(
     };
 
     let state_slice_ty: Option<syn::Type> = if uses_sliced_updates {
-        if include_frb {
-            let Some(state_name) = type_path_last_segment(&state_ty) else {
-                return syn::Error::new_spanned(
-                    &state_ty,
-                    "state type must be a path type to enable sliced updates",
-                )
-                .to_compile_error();
-            };
-            let slice_ident = quote::format_ident!("{state_name}Slice");
-            Some(syn::parse_quote!(#slice_ident))
-        } else {
-            Some(syn::parse_quote!(<#state_ty as ::oxide_core::SlicedState>::StateSlice))
+        let syn::Type::Path(state_path) = &state_ty else {
+            return syn::Error::new_spanned(
+                &state_ty,
+                "state type must be a path type to enable sliced updates",
+            )
+            .to_compile_error();
+        };
+        let mut slice_path = state_path.clone();
+        if let Some(last) = slice_path.path.segments.last_mut() {
+            last.ident = format_ident!("{}Slice", last.ident);
+            last.arguments = syn::PathArguments::None;
         }
+        Some(syn::Type::Path(slice_path))
     } else {
         None
     };
@@ -172,11 +171,7 @@ pub(crate) fn expand_reducer_impl(
     });
     if let (true, Some(state_slice_ty)) = (uses_sliced_updates, state_slice_ty.as_ref()) {
         if !has_infer_slices {
-            let body: syn::Expr = if include_frb {
-                syn::parse_quote!(Self::State::infer_slices_impl(before, after))
-            } else {
-                syn::parse_quote!(<Self::State as ::oxide_core::SlicedState>::infer_slices(before, after))
-            };
+            let body: syn::Expr = syn::parse_quote!(Self::State::infer_slices_impl(before, after));
             item_impl.items.push(syn::parse_quote!(
                 fn infer_slices(
                     &self,
@@ -268,6 +263,9 @@ pub(crate) fn expand_reducer_impl(
 
     let frb_tokens = if cfg!(feature = "frb") && include_frb {
         quote! {
+            #[allow(unused_imports)]
+            pub use oxide_core::OxideError;
+
             #[flutter_rust_bridge::frb]
             pub async fn create_engine() -> Result<std::sync::Arc<#engine_ident>, oxide_core::OxideError> {
                 Ok(std::sync::Arc::new(#engine_ident::new().await?))

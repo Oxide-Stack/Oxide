@@ -6,7 +6,7 @@
 //! ```
 //! use rust_lib_ticker_app::api::bridge;
 //!
-//! bridge::init_app();
+//! let _ = bridge::create_shared_engine();
 //! ```
 
 /// FFI-facing API surface for the Flutter example.

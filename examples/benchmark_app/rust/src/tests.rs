@@ -10,7 +10,7 @@ const EXPECTED_JSON_HEAVY_CHECKSUM_AFTER_1: u64 = 0xb067dca7d88da466;
 
 #[tokio::test]
 async fn counter_dispatch_updates_state_and_revision() {
-    crate::api::bridge::init_oxide().await.unwrap();
+    crate::oxide::init::init_oxide();
     let engine = counter_bridge::create_engine().await.unwrap();
     let before = counter_bridge::current(&engine).await;
     assert_eq!(before.state.counter, 0);
@@ -26,7 +26,7 @@ async fn counter_dispatch_updates_state_and_revision() {
 
 #[tokio::test]
 async fn json_dispatch_updates_state_and_revision() {
-    crate::api::bridge::init_oxide().await.unwrap();
+    crate::oxide::init::init_oxide();
     let engine = json_bridge::create_engine().await.unwrap();
     let before = json_bridge::current(&engine).await;
     assert_eq!(before.state.counter, 0);
@@ -50,7 +50,7 @@ async fn json_dispatch_updates_state_and_revision() {
 
 #[tokio::test]
 async fn sieve_dispatch_updates_state_and_revision() {
-    crate::api::bridge::init_oxide().await.unwrap();
+    crate::oxide::init::init_oxide();
     let engine = sieve_bridge::create_engine().await.unwrap();
     let before = sieve_bridge::current(&engine).await;
     assert_eq!(before.state.counter, 0);

@@ -9,4 +9,8 @@ pub enum AppAction {
     ToggleTodo { id: String },
     /// Delete the todo with the given ID.
     DeleteTodo { id: String },
+    OpenConfirm { title: String },
+    Pop,
+    PopUntilHome,
+    ResetStack,
 }

@@ -22,6 +22,8 @@ String buildCoreInstantiation(OxideCodegenConfig c) {
     current: (engine) => ${c.current}(engine: engine),
     stateStream: (engine) => ${c.stateStream}(engine: engine),
     stateFromSnapshot: (snap) => snap.state,
+    // ensure revision is an `int` for the core; incoming type may be BigInt
+    revisionOf: (snap) => snap.revision.toInt(),
 $initAppArg$encodeCurrentStateArg  );
 ''';
 }

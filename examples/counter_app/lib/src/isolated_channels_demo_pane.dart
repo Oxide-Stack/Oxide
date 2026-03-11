@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'rust/api/isolated_channels_bridge.dart' as ch;
-import 'rust/isolated_channels_demo/channels.dart';
+import 'package:counter_app/src/oxide.dart';
 
 /// Demonstrates Oxide isolated channels by exercising the FRB bridge from UI.
 ///
@@ -26,7 +25,7 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
 
   StreamSubscription<CounterDemoEvent>? _eventsSub;
   StreamSubscription<CounterDemoOut>? _duplexOutSub;
-  StreamSubscription<ch.CounterDemoDialogPendingRequest>? _dialogReqSub;
+  StreamSubscription<CounterDemoDialogPendingRequest>? _dialogReqSub;
 
   bool _started = false;
   bool _starting = false;
@@ -50,19 +49,19 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
     });
 
     try {
-      await ch.initIsolatedChannelsDemo();
+      await OxideStack.init(startNavigation: false);
+      // no manual init necessary any more – OxideStack.init() handles it
 
-      _eventsSub = ch.counterDemoEventsStream().listen((event) {
-        event.when(
-          notify: (message) => _append('event.notify: $message'),
-        );
+      // use unified public API surface instead of raw bridge helpers
+      _eventsSub = OxideStack.events.counterDemoEvents.listen((event) {
+        event.when(notify: (message) => _append('event.notify: $message'));
       });
 
-      _duplexOutSub = ch.counterDemoDuplexOutgoingStream().listen((event) {
+      _duplexOutSub = counterDemoDuplexOutgoingStream().listen((event) {
         event.when(send: (text) => _append('duplex.out: $text'));
       });
 
-      _dialogReqSub = ch.counterDemoDialogRequestsStream().listen((pending) {
+      _dialogReqSub = OxideStack.callbacks.counterDemoDialogRequests.listen((pending) {
         unawaited(_handleDialogRequest(pending));
       });
 
@@ -83,10 +82,13 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
     }
   }
 
-  Future<void> _handleDialogRequest(ch.CounterDemoDialogPendingRequest pending) async {
-    final request = pending.request;
-    final response = await request.when<Future<CounterDemoDialogResponse>>(
-      confirm: (title) async {
+  Future<void> _handleDialogRequest(CounterDemoDialogPendingRequest pending) async {
+    // the demo currently has a single request type; pattern-match manually to
+    // avoid an analyzer bug that misinterprets `when` as operating on `Type`.
+    final response = () async {
+      final req = pending.request;
+      if (req is CounterDemoDialogRequest_Confirm) {
+        final title = req.title;
         final result = await showDialog<bool>(
           context: context,
           builder: (context) {
@@ -102,10 +104,12 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
         );
         _append('callback.confirm answered: ${result ?? false}');
         return CounterDemoDialogResponse.confirm(result ?? false);
-      },
-    );
+      }
+      // should never happen, but keep analyzer happy
+      throw StateError('unexpected request type: $req');
+    }();
 
-    await ch.counterDemoDialogRespond(id: pending.id, response: response);
+    await OxideStack.callbacks.counterDemoDialogRespond(id: pending.id, response: await response);
   }
 
   void _append(String line) {
@@ -127,16 +131,13 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
             spacing: 8,
             runSpacing: 8,
             children: [
-              FilledButton(
-                onPressed: _starting ? null : _start,
-                child: Text(_started ? 'Started' : (_starting ? 'Starting…' : 'Start Demo')),
-              ),
+              FilledButton(onPressed: _starting ? null : _start, child: Text(_started ? 'Started' : (_starting ? 'Starting…' : 'Start Demo'))),
               FilledButton(
                 onPressed: !_started
                     ? null
                     : () async {
                         final message = _messageController.text.trim();
-                        await ch.emitCounterDemoNotification(message: message.isEmpty ? 'Hello' : message);
+                        await emitCounterDemoNotification(message: message.isEmpty ? 'Hello' : message);
                       },
                 child: const Text('Emit Event'),
               ),
@@ -145,11 +146,9 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
                     ? null
                     : () async {
                         final title = _confirmTitleController.text.trim();
-                        final ok = await ch.counterDemoDialogConfirm(title: title.isEmpty ? 'Confirm?' : title);
+                        final ok = await counterDemoDialogConfirm(title: title.isEmpty ? 'Confirm?' : title);
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Rust confirm result: $ok')),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Rust confirm result: $ok')));
                       },
                 child: const Text('Request Confirm'),
               ),
@@ -158,7 +157,7 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
                     ? null
                     : () async {
                         final title = _confirmTitleController.text.trim();
-                        final ok = await ch.counterDemoDialogConfirmViaFrbCallback(
+                        final ok = await counterDemoDialogConfirmViaFrbCallback(
                           title: title.isEmpty ? 'Confirm?' : title,
                           dartConfirm: (t) async {
                             final result = await showDialog<bool>(
@@ -168,14 +167,8 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
                                   title: const Text('Direct FRB callback'),
                                   content: Text(t),
                                   actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(context).pop(false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    FilledButton(
-                                      onPressed: () => Navigator.of(context).pop(true),
-                                      child: const Text('Confirm'),
-                                    ),
+                                    TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                                    FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Confirm')),
                                   ],
                                 );
                               },
@@ -185,9 +178,7 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
                           },
                         );
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Direct FRB callback result: $ok')),
-                        );
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Direct FRB callback result: $ok')));
                       },
                 child: const Text('Direct FRB Callback'),
               ),
@@ -196,7 +187,7 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
                     ? null
                     : () async {
                         final message = _messageController.text.trim();
-                        await ch.counterDemoDuplexSend(text: message.isEmpty ? 'Hello' : message);
+                        await counterDemoDuplexSend(text: message.isEmpty ? 'Hello' : message);
                       },
                 child: const Text('Send Duplex Out'),
               ),
@@ -205,8 +196,8 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
                     ? null
                     : () async {
                         final message = _messageController.text.trim();
-                        await ch.counterDemoDuplexIncoming(event: CounterDemoIn.receive(text: message.isEmpty ? 'Hello' : message));
-                        final last = await ch.counterDemoLastIncomingText();
+                        await counterDemoDuplexIncoming(event: CounterDemoIn.receive(text: message.isEmpty ? 'Hello' : message));
+                        final last = await counterDemoLastIncomingText();
                         _append('duplex.in stored in Rust: ${last ?? "null"}');
                       },
                 child: const Text('Send Duplex In'),

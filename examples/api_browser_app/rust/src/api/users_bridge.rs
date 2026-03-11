@@ -40,9 +40,8 @@ impl oxide_core::Reducer for UsersReducer {
         if let Some(tx) = self.sideeffect_tx.as_ref() {
             let _ = tx.send(UsersSideEffect::Fetch);
         }
-        if let Ok(runtime) = oxide_core::navigation_runtime() {
-            runtime.push(crate::routes::HomeRoute {});
-        }
+        // startup route now comes from generated configuration rather than
+        // an explicit push in reducer init.
     }
 
     fn reduce(

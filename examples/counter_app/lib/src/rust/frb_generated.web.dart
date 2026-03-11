@@ -8,12 +8,23 @@
 
 import 'api/bridge.dart';
 import 'api/isolated_channels_bridge.dart';
-import 'api/navigation_bridge.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'isolated_channels_demo/channels.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_callback_counter_demo_dialog.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_counter_demo_duplex.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_counter_demo_duplex/frb.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_counter_demo_events.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_counter_demo_events/frb.dart';
+import 'isolated_channels_demo/state.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
+import 'routes.dart';
+import 'routes/confirm_route.dart';
+import 'routes/counter_detail_route.dart';
+import 'routes/home_route.dart';
+import 'routes/oxide_navigation.dart';
+import 'routes/splash_route.dart';
 import 'state/app_action.dart';
 import 'state/app_state.dart';
 
@@ -90,9 +101,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw);
-
-  @protected
   RustStreamSink<AppStateSnapshot> dco_decode_StreamSink_app_state_snapshot_Sse(
     dynamic raw,
   );
@@ -112,6 +120,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<OxideNavCommand> dco_decode_StreamSink_oxide_nav_command_Sse(
+    dynamic raw,
+  );
+
+  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
@@ -121,10 +134,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AppState dco_decode_app_state(dynamic raw);
 
   @protected
+  AppStateSlice dco_decode_app_state_slice(dynamic raw);
+
+  @protected
   AppStateSnapshot dco_decode_app_state_snapshot(dynamic raw);
 
   @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  AppAction dco_decode_box_autoadd_app_action(dynamic raw);
+
+  @protected
+  AppState dco_decode_box_autoadd_app_state(dynamic raw);
+
+  @protected
+  bool dco_decode_box_autoadd_bool(dynamic raw);
+
+  @protected
+  ConfirmRoute dco_decode_box_autoadd_confirm_route(dynamic raw);
 
   @protected
   CounterDemoDialogResponse dco_decode_box_autoadd_counter_demo_dialog_response(
@@ -133,6 +161,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CounterDemoIn dco_decode_box_autoadd_counter_demo_in(dynamic raw);
+
+  @protected
+  CounterDemoOut dco_decode_box_autoadd_counter_demo_out(dynamic raw);
+
+  @protected
+  CounterDetailRoute dco_decode_box_autoadd_counter_detail_route(dynamic raw);
+
+  @protected
+  HomeRoute dco_decode_box_autoadd_home_route(dynamic raw);
+
+  @protected
+  RouteKind dco_decode_box_autoadd_route_kind(dynamic raw);
+
+  @protected
+  RoutePayload dco_decode_box_autoadd_route_payload(dynamic raw);
+
+  @protected
+  SplashRoute dco_decode_box_autoadd_splash_route(dynamic raw);
+
+  @protected
+  ConfirmRoute dco_decode_confirm_route(dynamic raw);
+
+  @protected
+  CounterDemoDialog dco_decode_counter_demo_dialog(dynamic raw);
 
   @protected
   CounterDemoDialogPendingRequest
@@ -147,7 +199,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CounterDemoDuplex dco_decode_counter_demo_duplex(dynamic raw);
+
+  @protected
   CounterDemoEvent dco_decode_counter_demo_event(dynamic raw);
+
+  @protected
+  CounterDemoEvents dco_decode_counter_demo_events(dynamic raw);
 
   @protected
   CounterDemoIn dco_decode_counter_demo_in(dynamic raw);
@@ -156,16 +214,49 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CounterDemoOut dco_decode_counter_demo_out(dynamic raw);
 
   @protected
+  CounterDetailRoute dco_decode_counter_detail_route(dynamic raw);
+
+  @protected
+  HomeRoute dco_decode_home_route(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_isize(dynamic raw);
 
   @protected
+  List<AppStateSlice> dco_decode_list_app_state_slice(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<RoutePayload> dco_decode_list_route_payload(dynamic raw);
+
+  @protected
   String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+
+  @protected
+  RouteKind? dco_decode_opt_box_autoadd_route_kind(dynamic raw);
+
+  @protected
+  RoutePayload? dco_decode_opt_box_autoadd_route_payload(dynamic raw);
+
+  @protected
+  OxideNavCommand dco_decode_oxide_nav_command(dynamic raw);
+
+  @protected
+  RouteKind dco_decode_route_kind(dynamic raw);
+
+  @protected
+  RoutePayload dco_decode_route_payload(dynamic raw);
+
+  @protected
+  SplashRoute dco_decode_splash_route(dynamic raw);
 
   @protected
   BigInt dco_decode_u_64(dynamic raw);
@@ -228,11 +319,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   RustStreamSink<AppStateSnapshot> sse_decode_StreamSink_app_state_snapshot_Sse(
     SseDeserializer deserializer,
   );
@@ -254,6 +340,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<OxideNavCommand> sse_decode_StreamSink_oxide_nav_command_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
@@ -263,10 +354,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AppState sse_decode_app_state(SseDeserializer deserializer);
 
   @protected
+  AppStateSlice sse_decode_app_state_slice(SseDeserializer deserializer);
+
+  @protected
   AppStateSnapshot sse_decode_app_state_snapshot(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  AppAction sse_decode_box_autoadd_app_action(SseDeserializer deserializer);
+
+  @protected
+  AppState sse_decode_box_autoadd_app_state(SseDeserializer deserializer);
+
+  @protected
+  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  ConfirmRoute sse_decode_box_autoadd_confirm_route(
+    SseDeserializer deserializer,
+  );
 
   @protected
   CounterDemoDialogResponse sse_decode_box_autoadd_counter_demo_dialog_response(
@@ -275,6 +383,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CounterDemoIn sse_decode_box_autoadd_counter_demo_in(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CounterDemoOut sse_decode_box_autoadd_counter_demo_out(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  CounterDetailRoute sse_decode_box_autoadd_counter_detail_route(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  HomeRoute sse_decode_box_autoadd_home_route(SseDeserializer deserializer);
+
+  @protected
+  RouteKind sse_decode_box_autoadd_route_kind(SseDeserializer deserializer);
+
+  @protected
+  RoutePayload sse_decode_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SplashRoute sse_decode_box_autoadd_splash_route(SseDeserializer deserializer);
+
+  @protected
+  ConfirmRoute sse_decode_confirm_route(SseDeserializer deserializer);
+
+  @protected
+  CounterDemoDialog sse_decode_counter_demo_dialog(
     SseDeserializer deserializer,
   );
 
@@ -293,7 +433,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CounterDemoDuplex sse_decode_counter_demo_duplex(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   CounterDemoEvent sse_decode_counter_demo_event(SseDeserializer deserializer);
+
+  @protected
+  CounterDemoEvents sse_decode_counter_demo_events(
+    SseDeserializer deserializer,
+  );
 
   @protected
   CounterDemoIn sse_decode_counter_demo_in(SseDeserializer deserializer);
@@ -302,16 +452,59 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CounterDemoOut sse_decode_counter_demo_out(SseDeserializer deserializer);
 
   @protected
+  CounterDetailRoute sse_decode_counter_detail_route(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  HomeRoute sse_decode_home_route(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
   @protected
+  List<AppStateSlice> sse_decode_list_app_state_slice(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<RoutePayload> sse_decode_list_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+
+  @protected
+  RouteKind? sse_decode_opt_box_autoadd_route_kind(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RoutePayload? sse_decode_opt_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  OxideNavCommand sse_decode_oxide_nav_command(SseDeserializer deserializer);
+
+  @protected
+  RouteKind sse_decode_route_kind(SseDeserializer deserializer);
+
+  @protected
+  RoutePayload sse_decode_route_payload(SseDeserializer deserializer);
+
+  @protected
+  SplashRoute sse_decode_splash_route(SseDeserializer deserializer);
 
   @protected
   BigInt sse_decode_u_64(SseDeserializer deserializer);
@@ -390,12 +583,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_StreamSink_app_state_snapshot_Sse(
     RustStreamSink<AppStateSnapshot> self,
     SseSerializer serializer,
@@ -420,6 +607,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_oxide_nav_command_Sse(
+    RustStreamSink<OxideNavCommand> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
@@ -427,6 +620,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_app_state(AppState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_app_state_slice(AppStateSlice self, SseSerializer serializer);
 
   @protected
   void sse_encode_app_state_snapshot(
@@ -438,6 +634,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_app_action(
+    AppAction self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_app_state(
+    AppState self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_confirm_route(
+    ConfirmRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_counter_demo_dialog_response(
     CounterDemoDialogResponse self,
     SseSerializer serializer,
@@ -446,6 +663,51 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_counter_demo_in(
     CounterDemoIn self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_counter_demo_out(
+    CounterDemoOut self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_counter_detail_route(
+    CounterDetailRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_home_route(
+    HomeRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_route_kind(
+    RouteKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_route_payload(
+    RoutePayload self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_splash_route(
+    SplashRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_confirm_route(ConfirmRoute self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_counter_demo_dialog(
+    CounterDemoDialog self,
     SseSerializer serializer,
   );
 
@@ -468,8 +730,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_counter_demo_duplex(
+    CounterDemoDuplex self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_counter_demo_event(
     CounterDemoEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_counter_demo_events(
+    CounterDemoEvents self,
     SseSerializer serializer,
   );
 
@@ -483,10 +757,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_counter_detail_route(
+    CounterDetailRoute self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_home_route(HomeRoute self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_app_state_slice(
+    List<AppStateSlice> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_strict(
@@ -495,7 +784,43 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_route_payload(
+    List<RoutePayload> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_route_kind(
+    RouteKind? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_route_payload(
+    RoutePayload? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_oxide_nav_command(
+    OxideNavCommand self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_route_kind(RouteKind self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_route_payload(RoutePayload self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_splash_route(SplashRoute self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_64(BigInt self, SseSerializer serializer);

@@ -36,7 +36,7 @@ pub struct AppReducer;
 
 ## Re-export `OxideError` For FRB
 
-Make sure `OxideError` is re-exported from the Rust module tree that FRB scans (based on your `flutter_rust_bridge.yaml` `rust_input`; the examples use `rust_input: crate::api`).
+Make sure `OxideError` is re-exported from the Rust module tree that FRB scans (based on your `flutter_rust_bridge.yaml` `rust_input`; the examples use `rust_input: crate`).
 
 At minimum, re-export it from your crate root (`src/lib.rs`):
 
@@ -52,4 +52,3 @@ After generation, your Flutter code imports the FRB-generated Dart API. For a ty
 
 - types like `ArcAppEngine`, `AppStateSnapshot`
 - functions like `createEngine`, `dispatch`, `current`, `stateStream`, `disposeEngine`
-

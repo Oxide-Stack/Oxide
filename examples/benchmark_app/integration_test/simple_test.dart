@@ -4,22 +4,25 @@ import 'package:integration_test/integration_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:benchmark_app/src/bench/bench_screen.dart';
+import 'package:benchmark_app/oxide.dart';
 import 'package:benchmark_app/src/oxide.dart';
-import 'package:benchmark_app/src/rust/api/bridge.dart' show initOxide;
-import 'package:benchmark_app/src/rust/frb_generated.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
-    await RustLib.init();
-    await initOxide();
+    // navigation not needed for bench app smoke test
+    await OxideStack.init(startNavigation: false);
   });
 
   testWidgets('App boots and renders dashboard', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const ProviderScope(
+      ProviderScope(
         child: BenchCounterHooksOxideScope(
-          child: BenchJsonHooksOxideScope(child: BenchSieveHooksOxideScope(child: MaterialApp(home: BenchHomeScreen()))),
+          child: BenchJsonHooksOxideScope(
+            child: BenchSieveHooksOxideScope(
+              child: MaterialApp(home: BenchHomeScreen(route: const HomeRoute())),
+            ),
+          ),
         ),
       ),
     );

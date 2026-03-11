@@ -2,18 +2,22 @@
 
 Oxide supports multiple generated UI wiring styles (“backends”). Choose the backend via `@OxideStore(backend: ...)`.
 
-At app startup, initialize FRB (your `frb_generated.dart` path may differ depending on your FRB config):
+At app startup, initialize Oxide via the generated entrypoint:
+
+> **Note:** if your Rust code defines isolated channels, the generated Dart
+> entrypoints (`OxideStack.init` and `runOxideApp`) take care of initializing
+> the channel runtime for you. **You no longer need to call any
+> `initIsolatedChannels…` helpers manually.**
+
 
 ```dart
 import 'package:flutter/widgets.dart';
 
-import 'src/rust/api/bridge.dart' show initOxide;
-import 'src/rust/frb_generated.dart';
+import 'package:your_app/oxide.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await RustLib.init();
-  await initOxide();
+  await OxideStack.init();
   runApp(const MyApp());
 }
 ```
@@ -37,14 +41,11 @@ Wrap your app (or a subtree) with the generated scope:
 ```dart
 import 'package:flutter/widgets.dart';
 
-import 'src/oxide.dart';
-import 'src/rust/api/bridge.dart' show initOxide;
-import 'src/rust/frb_generated.dart';
+import 'package:your_app/oxide.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await RustLib.init();
-  await initOxide();
+  await OxideStack.init();
   runApp(
     AppOxideScope(
       child: const MyApp(),

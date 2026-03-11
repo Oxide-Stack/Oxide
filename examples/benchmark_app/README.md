@@ -18,6 +18,10 @@ Benchmark example that compares “Dart-only” state updates vs Rust/Oxide-back
 - Rust variants batch work inside a single action via an `iterations` parameter. This reduces FFI crossings compared to repeating single-iteration actions and will affect “end-to-end” wall times.
 - The dashboard reports end-to-end wall time per action (including dispatch + state update + a frame boundary). Use this to compare how each variant behaves inside a Flutter app.
 
+## Navigation Choice
+
+This example uses `GoRouter` (`MaterialApp.router`) for app-level routing, and wires the generated `oxideNavigatorKey` into the router so Oxide can execute Rust-emitted navigation commands through the underlying Navigator.
+
 ## Run
 
 ```bash
@@ -26,7 +30,9 @@ dart run build_runner build -d
 flutter run
 ```
 
-## Regenerate FRB bindings (if Rust API changes)
+## Generate FRB bindings
+
+This repo does not commit the Rust FRB glue (`rust/src/frb_generated.rs`). Run this on a fresh checkout and whenever the Rust API changes:
 
 ```bash
 flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml

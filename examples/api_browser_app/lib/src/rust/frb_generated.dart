@@ -6,7 +6,6 @@
 import 'api/bridge.dart';
 import 'api/comments_bridge.dart';
 import 'api/isolated_channels_bridge.dart';
-import 'api/navigation_bridge.dart';
 import 'api/posts_bridge.dart';
 import 'api/users_bridge.dart';
 import 'dart:async';
@@ -15,7 +14,18 @@ import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'isolated_channels_demo/channels.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_callback_api_browser_demo_dialog.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_api_browser_demo_duplex.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_api_browser_demo_duplex/frb.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_api_browser_demo_events.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_api_browser_demo_events/frb.dart';
+import 'isolated_channels_demo/state.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'routes.dart';
+import 'routes/home_route.dart';
+import 'routes/oxide_navigation.dart';
+import 'routes/splash_route.dart';
+import 'routes/user_detail_route.dart';
 import 'state/comments_action.dart';
 import 'state/comments_state.dart';
 import 'state/common.dart';
@@ -68,7 +78,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   @override
   Future<void> executeRustInitializers() async {
-    await api.crateApiBridgeInitApp();
+    await api.crateOxideInitInitOxide();
   }
 
   @override
@@ -79,7 +89,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1223929980;
+  int get rustContentHash => -1279043764;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -91,6 +101,10 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
 abstract class RustLibApi extends BaseApi {
   Future<String> crateApiBridgeApiBaseUrl();
+
+  Future<bool> crateIsolatedChannelsDemoChannelsApiBrowserDemoDialogConfirm({
+    required String title,
+  });
 
   Future<bool> crateApiIsolatedChannelsBridgeApiBrowserDemoDialogConfirm({
     required String title,
@@ -117,8 +131,16 @@ abstract class RustLibApi extends BaseApi {
   Stream<ApiBrowserDemoOut>
   crateApiIsolatedChannelsBridgeApiBrowserDemoDuplexOutgoingStream();
 
+  Future<void> crateIsolatedChannelsDemoChannelsApiBrowserDemoDuplexSend({
+    required ApiBrowserDemoOut event,
+  });
+
   Future<void> crateApiIsolatedChannelsBridgeApiBrowserDemoDuplexSend({
     required String text,
+  });
+
+  Future<void> crateIsolatedChannelsDemoChannelsApiBrowserDemoEventsNotify({
+    required String message,
   });
 
   Stream<ApiBrowserDemoEvent>
@@ -126,6 +148,12 @@ abstract class RustLibApi extends BaseApi {
 
   Future<String?>
   crateApiIsolatedChannelsBridgeApiBrowserDemoLastIncomingText();
+
+  Future<List<CommentsStateSlice>>
+  crateStateCommentsStateCommentsStateInferSlicesImpl({
+    required CommentsState before,
+    required CommentsState after,
+  });
 
   Future<ArcCommentsEngine> crateApiCommentsBridgeCreateEngine();
 
@@ -178,29 +206,68 @@ abstract class RustLibApi extends BaseApi {
 
   Future<String> crateApiBridgeGetApiBaseUrl();
 
-  Future<void> crateApiBridgeInitApp();
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexIncoming();
 
   Future<void> crateApiIsolatedChannelsBridgeInitIsolatedChannelsDemo();
 
-  Future<void> crateApiNavigationBridgeInitNavigation();
+  Future<void> crateRoutesOxideNavigationInitNavigation();
 
-  Future<void> crateApiBridgeInitOxide();
+  Future<void> crateOxideInitInitOxide();
 
-  Stream<String> crateApiNavigationBridgeOxideNavCommandsStream();
+  Future<void> crateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandler();
 
-  Future<void> crateApiNavigationBridgeOxideNavEmitResult({
+  Future<String?> crateIsolatedChannelsDemoStateLastIncomingText();
+
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexOutgoing();
+
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideApiBrowserDemoDuplexIncoming({
+    required ApiBrowserDemoIn event,
+  });
+
+  Stream<ApiBrowserDemoEvent>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsFrbOxideEventsStream();
+
+  Stream<OxideNavCommand> crateRoutesOxideNavigationOxideNavCommandsStream();
+
+  Future<void> crateRoutesOxideNavigationOxideNavEmitResult({
     required String ticket,
     required String resultJson,
   });
 
-  Future<void> crateApiNavigationBridgeOxideNavSetCurrentRoute({
-    required String kind,
-    required String payloadJson,
+  Future<void> crateRoutesOxideNavigationOxideNavSetCurrentRoute({
+    RoutePayload? route,
+  });
+
+  Stream<ApiBrowserDemoOut>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideOutgoingStream();
+
+  Future<List<PostsStateSlice>> crateStatePostsStatePostsStateInferSlicesImpl({
+    required PostsState before,
+    required PostsState after,
   });
 
   Future<void> crateApiBridgeResetApiBaseUrl();
 
+  Future<void> crateRoutesRouteKindAsStr({required RouteKind that});
+
+  Future<RouteKind?> crateRoutesRouteKindFromStr({required String s});
+
+  Future<RouteKind> crateRoutesRoutePayloadKind({required RoutePayload that});
+
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedCallbackApiBrowserDemoDialogRuntime();
+
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsRuntime();
+
   Future<void> crateApiBridgeSetApiBaseUrl({required String url});
+
+  Future<void> crateIsolatedChannelsDemoStateSetLastIncomingText({
+    required String text,
+  });
 
   Stream<CommentsStateSnapshot> crateApiCommentsBridgeStateStream({
     required ArcCommentsEngine engine,
@@ -212,6 +279,11 @@ abstract class RustLibApi extends BaseApi {
 
   Stream<UsersStateSnapshot> crateApiUsersBridgeStateStream({
     required ArcUsersEngine engine,
+  });
+
+  Future<List<UsersStateSlice>> crateStateUsersStateUsersStateInferSlicesImpl({
+    required UsersState before,
+    required UsersState after,
   });
 
   RustArcIncrementStrongCountFnType
@@ -295,7 +367,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "api_base_url", argNames: []);
 
   @override
-  Future<bool> crateApiIsolatedChannelsBridgeApiBrowserDemoDialogConfirm({
+  Future<bool> crateIsolatedChannelsDemoChannelsApiBrowserDemoDialogConfirm({
     required String title,
   }) {
     return handler.executeNormal(
@@ -314,6 +386,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_bool,
           decodeErrorData:
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsApiBrowserDemoDialogConfirmConstMeta,
+        argValues: [title],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsApiBrowserDemoDialogConfirmConstMeta =>
+      const TaskConstMeta(
+        debugName: "api_browser_demo_dialog_confirm",
+        argNames: ["title"],
+      );
+
+  @override
+  Future<bool> crateApiIsolatedChannelsBridgeApiBrowserDemoDialogConfirm({
+    required String title,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(title, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
         ),
         constMeta:
             kCrateApiIsolatedChannelsBridgeApiBrowserDemoDialogConfirmConstMeta,
@@ -348,7 +455,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 4,
             port: port_,
           );
         },
@@ -387,7 +494,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 4,
+              funcId: 5,
               port: port_,
             );
           },
@@ -429,14 +536,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError,
+          decodeErrorData: null,
         ),
         constMeta:
             kCrateApiIsolatedChannelsBridgeApiBrowserDemoDialogRespondConstMeta,
@@ -465,14 +571,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError,
+          decodeErrorData: null,
         ),
         constMeta:
             kCrateApiIsolatedChannelsBridgeApiBrowserDemoDuplexIncomingConstMeta,
@@ -502,7 +607,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 7,
+              funcId: 8,
               port: port_,
             );
           },
@@ -528,6 +633,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateIsolatedChannelsDemoChannelsApiBrowserDemoDuplexSend({
+    required ApiBrowserDemoOut event,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_api_browser_demo_out(event, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsApiBrowserDemoDuplexSendConstMeta,
+        argValues: [event],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsApiBrowserDemoDuplexSendConstMeta =>
+      const TaskConstMeta(
+        debugName: "api_browser_demo_duplex_send",
+        argNames: ["event"],
+      );
+
+  @override
   Future<void> crateApiIsolatedChannelsBridgeApiBrowserDemoDuplexSend({
     required String text,
   }) {
@@ -539,7 +679,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 10,
             port: port_,
           );
         },
@@ -563,6 +703,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateIsolatedChannelsDemoChannelsApiBrowserDemoEventsNotify({
+    required String message,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(message, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsApiBrowserDemoEventsNotifyConstMeta,
+        argValues: [message],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsApiBrowserDemoEventsNotifyConstMeta =>
+      const TaskConstMeta(
+        debugName: "api_browser_demo_events_notify",
+        argNames: ["message"],
+      );
+
+  @override
   Stream<ApiBrowserDemoEvent>
   crateApiIsolatedChannelsBridgeApiBrowserDemoEventsStream() {
     final sink = RustStreamSink<ApiBrowserDemoEvent>();
@@ -575,7 +750,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 9,
+              funcId: 12,
               port: port_,
             );
           },
@@ -610,7 +785,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 13,
             port: port_,
           );
         },
@@ -634,6 +809,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<List<CommentsStateSlice>>
+  crateStateCommentsStateCommentsStateInferSlicesImpl({
+    required CommentsState before,
+    required CommentsState after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_comments_state(before, serializer);
+          sse_encode_box_autoadd_comments_state(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_comments_state_slice,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateStateCommentsStateCommentsStateInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateStateCommentsStateCommentsStateInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "comments_state_infer_slices_impl",
+        argNames: ["before", "after"],
+      );
+
+  @override
   Future<ArcCommentsEngine> crateApiCommentsBridgeCreateEngine() {
     return handler.executeNormal(
       NormalTask(
@@ -642,7 +855,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 15,
             port: port_,
           );
         },
@@ -671,7 +884,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 16,
             port: port_,
           );
         },
@@ -700,7 +913,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 17,
             port: port_,
           );
         },
@@ -735,7 +948,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 18,
             port: port_,
           );
         },
@@ -768,7 +981,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 19,
             port: port_,
           );
         },
@@ -801,7 +1014,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 20,
             port: port_,
           );
         },
@@ -836,7 +1049,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 21,
             port: port_,
           );
         },
@@ -875,7 +1088,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 22,
             port: port_,
           );
         },
@@ -914,7 +1127,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 23,
             port: port_,
           );
         },
@@ -951,7 +1164,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 24,
             port: port_,
           );
         },
@@ -984,7 +1197,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 25,
             port: port_,
           );
         },
@@ -1017,7 +1230,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 26,
             port: port_,
           );
         },
@@ -1047,7 +1260,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 23,
+            funcId: 27,
             port: port_,
           );
         },
@@ -1079,7 +1292,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 24,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1098,7 +1311,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "get_api_base_url", argNames: []);
 
   @override
-  Future<void> crateApiBridgeInitApp() {
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexIncoming() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -1106,7 +1320,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 25,
+            funcId: 29,
             port: port_,
           );
         },
@@ -1114,15 +1328,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiBridgeInitAppConstMeta,
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexIncomingConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBridgeInitAppConstMeta =>
-      const TaskConstMeta(debugName: "init_app", argNames: []);
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexIncomingConstMeta =>
+      const TaskConstMeta(debugName: "incoming", argNames: []);
 
   @override
   Future<void> crateApiIsolatedChannelsBridgeInitIsolatedChannelsDemo() {
@@ -1133,14 +1349,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 30,
             port: port_,
           );
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
+          decodeErrorData: null,
         ),
         constMeta:
             kCrateApiIsolatedChannelsBridgeInitIsolatedChannelsDemoConstMeta,
@@ -1158,144 +1373,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateApiNavigationBridgeInitNavigation() {
+  Future<void> crateRoutesOxideNavigationInitNavigation() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 27,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-        ),
-        constMeta: kCrateApiNavigationBridgeInitNavigationConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeInitNavigationConstMeta =>
-      const TaskConstMeta(debugName: "init_navigation", argNames: []);
-
-  @override
-  Future<void> crateApiBridgeInitOxide() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 28,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-        ),
-        constMeta: kCrateApiBridgeInitOxideConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiBridgeInitOxideConstMeta =>
-      const TaskConstMeta(debugName: "init_oxide", argNames: []);
-
-  @override
-  Stream<String> crateApiNavigationBridgeOxideNavCommandsStream() {
-    final sink = RustStreamSink<String>();
-    unawaited(
-      handler.executeNormal(
-        NormalTask(
-          callFfi: (port_) {
-            final serializer = SseSerializer(generalizedFrbRustBinding);
-            sse_encode_StreamSink_String_Sse(sink, serializer);
-            pdeCallFfi(
-              generalizedFrbRustBinding,
-              serializer,
-              funcId: 29,
-              port: port_,
-            );
-          },
-          codec: SseCodec(
-            decodeSuccessData: sse_decode_unit,
-            decodeErrorData:
-                sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-          ),
-          constMeta: kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta,
-          argValues: [sink],
-          apiImpl: this,
-        ),
-      ),
-    );
-    return sink.stream;
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavCommandsStreamConstMeta =>
-      const TaskConstMeta(
-        debugName: "oxide_nav_commands_stream",
-        argNames: ["sink"],
-      );
-
-  @override
-  Future<void> crateApiNavigationBridgeOxideNavEmitResult({
-    required String ticket,
-    required String resultJson,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(ticket, serializer);
-          sse_encode_String(resultJson, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 30,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
-        ),
-        constMeta: kCrateApiNavigationBridgeOxideNavEmitResultConstMeta,
-        argValues: [ticket, resultJson],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavEmitResultConstMeta =>
-      const TaskConstMeta(
-        debugName: "oxide_nav_emit_result",
-        argNames: ["ticket", "resultJson"],
-      );
-
-  @override
-  Future<void> crateApiNavigationBridgeOxideNavSetCurrentRoute({
-    required String kind,
-    required String payloadJson,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(kind, serializer);
-          sse_encode_String(payloadJson, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -1308,17 +1390,383 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData:
               sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
         ),
-        constMeta: kCrateApiNavigationBridgeOxideNavSetCurrentRouteConstMeta,
-        argValues: [kind, payloadJson],
+        constMeta: kCrateRoutesOxideNavigationInitNavigationConstMeta,
+        argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiNavigationBridgeOxideNavSetCurrentRouteConstMeta =>
+  TaskConstMeta get kCrateRoutesOxideNavigationInitNavigationConstMeta =>
+      const TaskConstMeta(debugName: "init_navigation", argNames: []);
+
+  @override
+  Future<void> crateOxideInitInitOxide() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 32,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateOxideInitInitOxideConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateOxideInitInitOxideConstMeta =>
+      const TaskConstMeta(debugName: "init_oxide", argNames: []);
+
+  @override
+  Future<void> crateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandler() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 33,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandlerConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandlerConstMeta =>
+      const TaskConstMeta(
+        debugName: "install_duplex_incoming_handler",
+        argNames: [],
+      );
+
+  @override
+  Future<String?> crateIsolatedChannelsDemoStateLastIncomingText() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 34,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateIsolatedChannelsDemoStateLastIncomingTextConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateIsolatedChannelsDemoStateLastIncomingTextConstMeta =>
+      const TaskConstMeta(debugName: "last_incoming_text", argNames: []);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexOutgoing() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 35,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexOutgoingConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexOutgoingConstMeta =>
+      const TaskConstMeta(debugName: "outgoing", argNames: []);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideApiBrowserDemoDuplexIncoming({
+    required ApiBrowserDemoIn event,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_api_browser_demo_in(event, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 36,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideChannelError,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideApiBrowserDemoDuplexIncomingConstMeta,
+        argValues: [event],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideApiBrowserDemoDuplexIncomingConstMeta =>
+      const TaskConstMeta(
+        debugName: "oxide_api_browser_demo_duplex_incoming",
+        argNames: ["event"],
+      );
+
+  @override
+  Stream<ApiBrowserDemoEvent>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsFrbOxideEventsStream() {
+    final sink = RustStreamSink<ApiBrowserDemoEvent>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_StreamSink_api_browser_demo_event_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 37,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta:
+              kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsFrbOxideEventsStreamConstMeta,
+          argValues: [sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsFrbOxideEventsStreamConstMeta =>
+      const TaskConstMeta(debugName: "oxide_events_stream", argNames: ["sink"]);
+
+  @override
+  Stream<OxideNavCommand> crateRoutesOxideNavigationOxideNavCommandsStream() {
+    final sink = RustStreamSink<OxideNavCommand>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_StreamSink_oxide_nav_command_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 38,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData:
+                sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
+          ),
+          constMeta: kCrateRoutesOxideNavigationOxideNavCommandsStreamConstMeta,
+          argValues: [sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta
+  get kCrateRoutesOxideNavigationOxideNavCommandsStreamConstMeta =>
+      const TaskConstMeta(
+        debugName: "oxide_nav_commands_stream",
+        argNames: ["sink"],
+      );
+
+  @override
+  Future<void> crateRoutesOxideNavigationOxideNavEmitResult({
+    required String ticket,
+    required String resultJson,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(ticket, serializer);
+          sse_encode_String(resultJson, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 39,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
+        ),
+        constMeta: kCrateRoutesOxideNavigationOxideNavEmitResultConstMeta,
+        argValues: [ticket, resultJson],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRoutesOxideNavigationOxideNavEmitResultConstMeta =>
+      const TaskConstMeta(
+        debugName: "oxide_nav_emit_result",
+        argNames: ["ticket", "resultJson"],
+      );
+
+  @override
+  Future<void> crateRoutesOxideNavigationOxideNavSetCurrentRoute({
+    RoutePayload? route,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_opt_box_autoadd_route_payload(route, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 40,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
+        ),
+        constMeta: kCrateRoutesOxideNavigationOxideNavSetCurrentRouteConstMeta,
+        argValues: [route],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateRoutesOxideNavigationOxideNavSetCurrentRouteConstMeta =>
       const TaskConstMeta(
         debugName: "oxide_nav_set_current_route",
-        argNames: ["kind", "payloadJson"],
+        argNames: ["route"],
+      );
+
+  @override
+  Stream<ApiBrowserDemoOut>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideOutgoingStream() {
+    final sink = RustStreamSink<ApiBrowserDemoOut>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_StreamSink_api_browser_demo_out_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 41,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta:
+              kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideOutgoingStreamConstMeta,
+          argValues: [sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedDuplexApiBrowserDemoDuplexFrbOxideOutgoingStreamConstMeta =>
+      const TaskConstMeta(
+        debugName: "oxide_outgoing_stream",
+        argNames: ["sink"],
+      );
+
+  @override
+  Future<List<PostsStateSlice>> crateStatePostsStatePostsStateInferSlicesImpl({
+    required PostsState before,
+    required PostsState after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_posts_state(before, serializer);
+          sse_encode_box_autoadd_posts_state(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 42,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_posts_state_slice,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStatePostsStatePostsStateInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateStatePostsStatePostsStateInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "posts_state_infer_slices_impl",
+        argNames: ["before", "after"],
       );
 
   @override
@@ -1330,7 +1778,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 32,
+            funcId: 43,
             port: port_,
           );
         },
@@ -1349,6 +1797,150 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "reset_api_base_url", argNames: []);
 
   @override
+  Future<void> crateRoutesRouteKindAsStr({required RouteKind that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_route_kind(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 44,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRoutesRouteKindAsStrConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRoutesRouteKindAsStrConstMeta =>
+      const TaskConstMeta(debugName: "route_kind_as_str", argNames: ["that"]);
+
+  @override
+  Future<RouteKind?> crateRoutesRouteKindFromStr({required String s}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(s, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 45,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_opt_box_autoadd_route_kind,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRoutesRouteKindFromStrConstMeta,
+        argValues: [s],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRoutesRouteKindFromStrConstMeta =>
+      const TaskConstMeta(debugName: "route_kind_from_str", argNames: ["s"]);
+
+  @override
+  Future<RouteKind> crateRoutesRoutePayloadKind({required RoutePayload that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_route_payload(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 46,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_route_kind,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRoutesRoutePayloadKindConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRoutesRoutePayloadKindConstMeta =>
+      const TaskConstMeta(debugName: "route_payload_kind", argNames: ["that"]);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedCallbackApiBrowserDemoDialogRuntime() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 47,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedCallbackApiBrowserDemoDialogRuntimeConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedCallbackApiBrowserDemoDialogRuntimeConstMeta =>
+      const TaskConstMeta(debugName: "runtime", argNames: []);
+
+  @override
+  Future<void>
+  crateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsRuntime() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 48,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsRuntimeConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoChannelsOxideIsolatedEventsApiBrowserDemoEventsRuntimeConstMeta =>
+      const TaskConstMeta(debugName: "runtime", argNames: []);
+
+  @override
   Future<void> crateApiBridgeSetApiBaseUrl({required String url}) {
     return handler.executeNormal(
       NormalTask(
@@ -1358,7 +1950,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 33,
+            funcId: 49,
             port: port_,
           );
         },
@@ -1375,6 +1967,40 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiBridgeSetApiBaseUrlConstMeta =>
       const TaskConstMeta(debugName: "set_api_base_url", argNames: ["url"]);
+
+  @override
+  Future<void> crateIsolatedChannelsDemoStateSetLastIncomingText({
+    required String text,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(text, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 50,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateIsolatedChannelsDemoStateSetLastIncomingTextConstMeta,
+        argValues: [text],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateIsolatedChannelsDemoStateSetLastIncomingTextConstMeta =>
+      const TaskConstMeta(
+        debugName: "set_last_incoming_text",
+        argNames: ["text"],
+      );
 
   @override
   Stream<CommentsStateSnapshot> crateApiCommentsBridgeStateStream({
@@ -1394,7 +2020,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 34,
+              funcId: 51,
               port: port_,
             );
           },
@@ -1435,7 +2061,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 35,
+              funcId: 52,
               port: port_,
             );
           },
@@ -1476,7 +2102,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 36,
+              funcId: 53,
               port: port_,
             );
           },
@@ -1497,6 +2123,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "state_stream",
         argNames: ["engine", "sink"],
+      );
+
+  @override
+  Future<List<UsersStateSlice>> crateStateUsersStateUsersStateInferSlicesImpl({
+    required UsersState before,
+    required UsersState after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_users_state(before, serializer);
+          sse_encode_box_autoadd_users_state(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 54,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_users_state_slice,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStateUsersStateUsersStateInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateStateUsersStateUsersStateInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "users_state_infer_slices_impl",
+        argNames: ["before", "after"],
       );
 
   Future<void> Function(int, dynamic)
@@ -1711,12 +2372,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RustStreamSink<String> dco_decode_StreamSink_String_Sse(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    throw UnimplementedError();
-  }
-
-  @protected
   RustStreamSink<ApiBrowserDemoDialogPendingRequest>
   dco_decode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
     dynamic raw,
@@ -1747,6 +2402,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<OxideNavCommand> dco_decode_StreamSink_oxide_nav_command_Sse(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
   RustStreamSink<PostsStateSnapshot>
   dco_decode_StreamSink_posts_state_snapshot_Sse(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -1764,6 +2427,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  ApiBrowserDemoDialog dco_decode_api_browser_demo_dialog(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return ApiBrowserDemoDialog();
   }
 
   @protected
@@ -1808,6 +2480,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiBrowserDemoDuplex dco_decode_api_browser_demo_duplex(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return ApiBrowserDemoDuplex();
+  }
+
+  @protected
   ApiBrowserDemoEvent dco_decode_api_browser_demo_event(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
@@ -1816,6 +2497,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  @protected
+  ApiBrowserDemoEvents dco_decode_api_browser_demo_events(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return ApiBrowserDemoEvents();
   }
 
   @protected
@@ -1860,9 +2550,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiBrowserDemoOut dco_decode_box_autoadd_api_browser_demo_out(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_api_browser_demo_out(raw);
+  }
+
+  @protected
   CommentsAction dco_decode_box_autoadd_comments_action(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_comments_action(raw);
+  }
+
+  @protected
+  CommentsState dco_decode_box_autoadd_comments_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_comments_state(raw);
+  }
+
+  @protected
+  HomeRoute dco_decode_box_autoadd_home_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_home_route(raw);
   }
 
   @protected
@@ -1872,15 +2580,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PostsState dco_decode_box_autoadd_posts_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_posts_state(raw);
+  }
+
+  @protected
+  RouteKind dco_decode_box_autoadd_route_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_route_kind(raw);
+  }
+
+  @protected
+  RoutePayload dco_decode_box_autoadd_route_payload(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_route_payload(raw);
+  }
+
+  @protected
+  SplashRoute dco_decode_box_autoadd_splash_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_splash_route(raw);
+  }
+
+  @protected
   BigInt dco_decode_box_autoadd_u_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_u_64(raw);
   }
 
   @protected
+  UserDetailRoute dco_decode_box_autoadd_user_detail_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_user_detail_route(raw);
+  }
+
+  @protected
   UsersAction dco_decode_box_autoadd_users_action(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_users_action(raw);
+  }
+
+  @protected
+  UsersState dco_decode_box_autoadd_users_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_users_state(raw);
   }
 
   @protected
@@ -1923,6 +2667,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CommentsStateSlice dco_decode_comments_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CommentsStateSlice.values[raw as int];
+  }
+
+  @protected
   CommentsStateSnapshot dco_decode_comments_state_snapshot(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1932,6 +2682,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       revision: dco_decode_u_64(arr[0]),
       state: dco_decode_comments_state(arr[1]),
     );
+  }
+
+  @protected
+  HomeRoute dco_decode_home_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return HomeRoute();
+  }
+
+  @protected
+  int dco_decode_i_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
   }
 
   @protected
@@ -1947,9 +2712,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<CommentsStateSlice> dco_decode_list_comments_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_comments_state_slice).toList();
+  }
+
+  @protected
   List<Post> dco_decode_list_post(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_post).toList();
+  }
+
+  @protected
+  List<PostsStateSlice> dco_decode_list_posts_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_posts_state_slice).toList();
   }
 
   @protected
@@ -1959,9 +2736,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<RoutePayload> dco_decode_list_route_payload(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_route_payload).toList();
+  }
+
+  @protected
   List<User> dco_decode_list_user(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_user).toList();
+  }
+
+  @protected
+  List<UsersStateSlice> dco_decode_list_users_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_users_state_slice).toList();
   }
 
   @protected
@@ -1988,9 +2777,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RouteKind? dco_decode_opt_box_autoadd_route_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_route_kind(raw);
+  }
+
+  @protected
+  RoutePayload? dco_decode_opt_box_autoadd_route_payload(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_route_payload(raw);
+  }
+
+  @protected
   BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_64(raw);
+  }
+
+  @protected
+  OxideNavCommand dco_decode_oxide_nav_command(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return OxideNavCommand_Push(
+          route: dco_decode_box_autoadd_route_payload(raw[1]),
+          ticket: dco_decode_opt_String(raw[2]),
+        );
+      case 1:
+        return OxideNavCommand_Pop(resultJson: dco_decode_opt_String(raw[1]));
+      case 2:
+        return OxideNavCommand_PopUntil(kind: dco_decode_String(raw[1]));
+      case 3:
+        return OxideNavCommand_Reset(
+          routes: dco_decode_list_route_payload(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   @protected
@@ -2036,6 +2859,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PostsStateSlice dco_decode_posts_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PostsStateSlice.values[raw as int];
+  }
+
+  @protected
   PostsStateSnapshot dco_decode_posts_state_snapshot(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -2045,6 +2874,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       revision: dco_decode_u_64(arr[0]),
       state: dco_decode_posts_state(arr[1]),
     );
+  }
+
+  @protected
+  RouteKind dco_decode_route_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return RouteKind.values[raw as int];
+  }
+
+  @protected
+  RoutePayload dco_decode_route_payload(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return RoutePayload_Home(dco_decode_box_autoadd_home_route(raw[1]));
+      case 1:
+        return RoutePayload_Splash(dco_decode_box_autoadd_splash_route(raw[1]));
+      case 2:
+        return RoutePayload_UserDetail(
+          dco_decode_box_autoadd_user_detail_route(raw[1]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  SplashRoute dco_decode_splash_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.isNotEmpty)
+      throw Exception('unexpected arr length: expect 0 but see ${arr.length}');
+    return SplashRoute();
   }
 
   @protected
@@ -2079,6 +2940,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  UserDetailRoute dco_decode_user_detail_route(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return UserDetailRoute(userId: dco_decode_u_64(arr[0]));
+  }
+
+  @protected
   UsersAction dco_decode_users_action(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
@@ -2102,6 +2972,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       users: dco_decode_list_user(arr[1]),
       selectedUserId: dco_decode_opt_box_autoadd_u_64(arr[2]),
     );
+  }
+
+  @protected
+  UsersStateSlice dco_decode_users_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return UsersStateSlice.values[raw as int];
   }
 
   @protected
@@ -2293,14 +3169,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RustStreamSink<String> sse_decode_StreamSink_String_Sse(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    throw UnimplementedError('Unreachable ()');
-  }
-
-  @protected
   RustStreamSink<ApiBrowserDemoDialogPendingRequest>
   sse_decode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
     SseDeserializer deserializer,
@@ -2335,6 +3203,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<OxideNavCommand> sse_decode_StreamSink_oxide_nav_command_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
   RustStreamSink<PostsStateSnapshot>
   sse_decode_StreamSink_posts_state_snapshot_Sse(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -2353,6 +3229,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  ApiBrowserDemoDialog sse_decode_api_browser_demo_dialog(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ApiBrowserDemoDialog();
   }
 
   @protected
@@ -2399,6 +3283,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiBrowserDemoDuplex sse_decode_api_browser_demo_duplex(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ApiBrowserDemoDuplex();
+  }
+
+  @protected
   ApiBrowserDemoEvent sse_decode_api_browser_demo_event(
     SseDeserializer deserializer,
   ) {
@@ -2412,6 +3304,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
+  }
+
+  @protected
+  ApiBrowserDemoEvents sse_decode_api_browser_demo_events(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return ApiBrowserDemoEvents();
   }
 
   @protected
@@ -2470,11 +3370,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiBrowserDemoOut sse_decode_box_autoadd_api_browser_demo_out(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_api_browser_demo_out(deserializer));
+  }
+
+  @protected
   CommentsAction sse_decode_box_autoadd_comments_action(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_comments_action(deserializer));
+  }
+
+  @protected
+  CommentsState sse_decode_box_autoadd_comments_state(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_comments_state(deserializer));
+  }
+
+  @protected
+  HomeRoute sse_decode_box_autoadd_home_route(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_home_route(deserializer));
   }
 
   @protected
@@ -2486,9 +3408,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PostsState sse_decode_box_autoadd_posts_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_posts_state(deserializer));
+  }
+
+  @protected
+  RouteKind sse_decode_box_autoadd_route_kind(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_route_kind(deserializer));
+  }
+
+  @protected
+  RoutePayload sse_decode_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_route_payload(deserializer));
+  }
+
+  @protected
+  SplashRoute sse_decode_box_autoadd_splash_route(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_splash_route(deserializer));
+  }
+
+  @protected
   BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_u_64(deserializer));
+  }
+
+  @protected
+  UserDetailRoute sse_decode_box_autoadd_user_detail_route(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_user_detail_route(deserializer));
   }
 
   @protected
@@ -2497,6 +3455,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_users_action(deserializer));
+  }
+
+  @protected
+  UsersState sse_decode_box_autoadd_users_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_users_state(deserializer));
   }
 
   @protected
@@ -2538,6 +3502,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CommentsStateSlice sse_decode_comments_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return CommentsStateSlice.values[inner];
+  }
+
+  @protected
   CommentsStateSnapshot sse_decode_comments_state_snapshot(
     SseDeserializer deserializer,
   ) {
@@ -2545,6 +3518,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_revision = sse_decode_u_64(deserializer);
     var var_state = sse_decode_comments_state(deserializer);
     return CommentsStateSnapshot(revision: var_revision, state: var_state);
+  }
+
+  @protected
+  HomeRoute sse_decode_home_route(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return HomeRoute();
+  }
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getInt32();
   }
 
   @protected
@@ -2566,6 +3551,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<CommentsStateSlice> sse_decode_list_comments_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <CommentsStateSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_comments_state_slice(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<Post> sse_decode_list_post(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2578,10 +3577,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<PostsStateSlice> sse_decode_list_posts_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PostsStateSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_posts_state_slice(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<RoutePayload> sse_decode_list_route_payload(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <RoutePayload>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_route_payload(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -2592,6 +3619,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <User>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_user(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<UsersStateSlice> sse_decode_list_users_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <UsersStateSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_users_state_slice(deserializer));
     }
     return ans_;
   }
@@ -2628,6 +3669,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RouteKind? sse_decode_opt_box_autoadd_route_kind(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_route_kind(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  RoutePayload? sse_decode_opt_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_route_payload(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2635,6 +3702,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       return (sse_decode_box_autoadd_u_64(deserializer));
     } else {
       return null;
+    }
+  }
+
+  @protected
+  OxideNavCommand sse_decode_oxide_nav_command(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_route = sse_decode_box_autoadd_route_payload(deserializer);
+        var var_ticket = sse_decode_opt_String(deserializer);
+        return OxideNavCommand_Push(route: var_route, ticket: var_ticket);
+      case 1:
+        var var_resultJson = sse_decode_opt_String(deserializer);
+        return OxideNavCommand_Pop(resultJson: var_resultJson);
+      case 2:
+        var var_kind = sse_decode_String(deserializer);
+        return OxideNavCommand_PopUntil(kind: var_kind);
+      case 3:
+        var var_routes = sse_decode_list_route_payload(deserializer);
+        return OxideNavCommand_Reset(routes: var_routes);
+      default:
+        throw UnimplementedError('');
     }
   }
 
@@ -2682,6 +3773,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PostsStateSlice sse_decode_posts_state_slice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return PostsStateSlice.values[inner];
+  }
+
+  @protected
   PostsStateSnapshot sse_decode_posts_state_snapshot(
     SseDeserializer deserializer,
   ) {
@@ -2689,6 +3787,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_revision = sse_decode_u_64(deserializer);
     var var_state = sse_decode_posts_state(deserializer);
     return PostsStateSnapshot(revision: var_revision, state: var_state);
+  }
+
+  @protected
+  RouteKind sse_decode_route_kind(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return RouteKind.values[inner];
+  }
+
+  @protected
+  RoutePayload sse_decode_route_payload(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_field0 = sse_decode_box_autoadd_home_route(deserializer);
+        return RoutePayload_Home(var_field0);
+      case 1:
+        var var_field0 = sse_decode_box_autoadd_splash_route(deserializer);
+        return RoutePayload_Splash(var_field0);
+      case 2:
+        var var_field0 = sse_decode_box_autoadd_user_detail_route(deserializer);
+        return RoutePayload_UserDetail(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  SplashRoute sse_decode_splash_route(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SplashRoute();
   }
 
   @protected
@@ -2715,6 +3846,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_name = sse_decode_String(deserializer);
     var var_username = sse_decode_String(deserializer);
     return User(id: var_id, name: var_name, username: var_username);
+  }
+
+  @protected
+  UserDetailRoute sse_decode_user_detail_route(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_userId = sse_decode_u_64(deserializer);
+    return UserDetailRoute(userId: var_userId);
   }
 
   @protected
@@ -2747,6 +3885,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  UsersStateSlice sse_decode_users_state_slice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return UsersStateSlice.values[inner];
+  }
+
+  @protected
   UsersStateSnapshot sse_decode_users_state_snapshot(
     SseDeserializer deserializer,
   ) {
@@ -2760,12 +3905,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getBigUint64();
-  }
-
-  @protected
-  int sse_decode_i_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt32();
   }
 
   @protected
@@ -2974,23 +4113,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_StreamSink_String_Sse(
-    RustStreamSink<String> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(
-      self.setupAndSerialize(
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-      ),
-      serializer,
-    );
-  }
-
-  @protected
   void sse_encode_StreamSink_api_browser_demo_dialog_pending_request_Sse(
     RustStreamSink<ApiBrowserDemoDialogPendingRequest> self,
     SseSerializer serializer,
@@ -3059,6 +4181,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_StreamSink_oxide_nav_command_Sse(
+    RustStreamSink<OxideNavCommand> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_oxide_nav_command,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_StreamSink_posts_state_snapshot_Sse(
     RustStreamSink<PostsStateSnapshot> self,
     SseSerializer serializer,
@@ -3099,6 +4238,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_api_browser_demo_dialog(
+    ApiBrowserDemoDialog self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
   void sse_encode_api_browser_demo_dialog_pending_request(
     ApiBrowserDemoDialogPendingRequest self,
     SseSerializer serializer,
@@ -3135,6 +4282,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_api_browser_demo_duplex(
+    ApiBrowserDemoDuplex self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
   void sse_encode_api_browser_demo_event(
     ApiBrowserDemoEvent self,
     SseSerializer serializer,
@@ -3145,6 +4300,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(0, serializer);
         sse_encode_String(message, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_api_browser_demo_events(
+    ApiBrowserDemoEvents self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected
@@ -3198,12 +4361,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_api_browser_demo_out(
+    ApiBrowserDemoOut self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_api_browser_demo_out(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_comments_action(
     CommentsAction self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_comments_action(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_comments_state(
+    CommentsState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_comments_state(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_home_route(
+    HomeRoute self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_home_route(self, serializer);
   }
 
   @protected
@@ -3216,9 +4406,54 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_posts_state(
+    PostsState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_posts_state(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_route_kind(
+    RouteKind self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_route_kind(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_route_payload(
+    RoutePayload self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_route_payload(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_splash_route(
+    SplashRoute self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_splash_route(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_user_detail_route(
+    UserDetailRoute self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_user_detail_route(self, serializer);
   }
 
   @protected
@@ -3228,6 +4463,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_users_action(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_users_state(
+    UsersState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_users_state(self, serializer);
   }
 
   @protected
@@ -3262,6 +4506,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_comments_state_slice(
+    CommentsStateSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
   void sse_encode_comments_state_snapshot(
     CommentsStateSnapshot self,
     SseSerializer serializer,
@@ -3269,6 +4522,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.revision, serializer);
     sse_encode_comments_state(self.state, serializer);
+  }
+
+  @protected
+  void sse_encode_home_route(HomeRoute self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putInt32(self);
   }
 
   @protected
@@ -3287,11 +4551,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_comments_state_slice(
+    List<CommentsStateSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_comments_state_slice(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_post(List<Post> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_post(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_posts_state_slice(
+    List<PostsStateSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_posts_state_slice(item, serializer);
     }
   }
 
@@ -3306,11 +4594,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_route_payload(
+    List<RoutePayload> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_route_payload(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_user(List<User> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_user(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_users_state_slice(
+    List<UsersStateSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_users_state_slice(item, serializer);
     }
   }
 
@@ -3341,12 +4653,61 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_route_kind(
+    RouteKind? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_route_kind(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_route_payload(
+    RoutePayload? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_route_payload(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_u_64(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_oxide_nav_command(
+    OxideNavCommand self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case OxideNavCommand_Push(route: final route, ticket: final ticket):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_route_payload(route, serializer);
+        sse_encode_opt_String(ticket, serializer);
+      case OxideNavCommand_Pop(resultJson: final resultJson):
+        sse_encode_i_32(1, serializer);
+        sse_encode_opt_String(resultJson, serializer);
+      case OxideNavCommand_PopUntil(kind: final kind):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(kind, serializer);
+      case OxideNavCommand_Reset(routes: final routes):
+        sse_encode_i_32(3, serializer);
+        sse_encode_list_route_payload(routes, serializer);
     }
   }
 
@@ -3383,6 +4744,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_posts_state_slice(
+    PostsStateSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
   void sse_encode_posts_state_snapshot(
     PostsStateSnapshot self,
     SseSerializer serializer,
@@ -3390,6 +4760,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.revision, serializer);
     sse_encode_posts_state(self.state, serializer);
+  }
+
+  @protected
+  void sse_encode_route_kind(RouteKind self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_route_payload(RoutePayload self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case RoutePayload_Home(field0: final field0):
+        sse_encode_i_32(0, serializer);
+        sse_encode_box_autoadd_home_route(field0, serializer);
+      case RoutePayload_Splash(field0: final field0):
+        sse_encode_i_32(1, serializer);
+        sse_encode_box_autoadd_splash_route(field0, serializer);
+      case RoutePayload_UserDetail(field0: final field0):
+        sse_encode_i_32(2, serializer);
+        sse_encode_box_autoadd_user_detail_route(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_splash_route(SplashRoute self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected
@@ -3418,6 +4815,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_user_detail_route(
+    UserDetailRoute self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.userId, serializer);
+  }
+
+  @protected
   void sse_encode_users_action(UsersAction self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
@@ -3438,6 +4844,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_users_state_slice(
+    UsersStateSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
   void sse_encode_users_state_snapshot(
     UsersStateSnapshot self,
     SseSerializer serializer,
@@ -3451,12 +4866,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
-  }
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt32(self);
   }
 }
 

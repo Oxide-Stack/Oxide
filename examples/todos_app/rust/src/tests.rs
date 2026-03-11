@@ -1,5 +1,5 @@
 use crate::state::AppAction;
-use crate::api::bridge::AppRootReducer;
+use crate::api::bridge::{AppRootReducer, AppSideEffect};
 use crate::state::{AppState, AppStateSlice};
 use oxide_core::OxideError;
 use oxide_core::{Reducer, StateChange};
@@ -20,7 +20,7 @@ fn reset_persistence_file(key: &str) {
 }
 
 async fn create_test_engine(key: &str) -> ReducerEngine<AppRootReducer, AppStateSlice> {
-    crate::api::bridge::init_oxide().await.unwrap();
+    crate::oxide::init::init_oxide();
     ReducerEngine::<AppRootReducer, AppStateSlice>::new_persistent(
         AppRootReducer::default(),
         AppState::new(),
@@ -55,15 +55,15 @@ async fn wait_for_persistence_file(key: &str) {
 
 #[test]
 fn frb_init_app_is_callable() {
-    crate::api::bridge::init_app();
+    crate::oxide::init::init_oxide();
 }
 
 #[test]
-fn reducer_effect_noop_returns_none() {
+fn reducer_effect_updates_last_confirmed() {
     let mut reducer = AppRootReducer::default();
     let mut state = AppState::new();
-    let input = ();
-    let snapshot = oxide_core::StateSnapshot {
+    let input = AppSideEffect::ConfirmResolved { ok: true };
+    let snapshot = oxide_core::StateSnapshot::<AppState, AppStateSlice> {
         revision: 0,
         state: state.clone(),
         slices: Vec::new(),
@@ -87,7 +87,8 @@ fn reducer_effect_noop_returns_none() {
     };
 
     let change = reducer.effect(&mut state, ctx).expect("effect");
-    assert_eq!(change, StateChange::None);
+    assert_eq!(change, StateChange::Infer);
+    assert_eq!(state.last_confirmed, Some(true));
 }
 
 #[tokio::test]

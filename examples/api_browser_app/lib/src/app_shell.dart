@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import 'app.dart';
+import '../oxide.dart';
+import 'navigation/pages.dart';
 
 @OxideApp(navigation: OxideNavigation.navigator())
 final class ApiBrowserApp extends StatelessWidget {
@@ -12,7 +13,8 @@ final class ApiBrowserApp extends StatelessWidget {
     return MaterialApp(
       title: 'Oxide API Browser',
       theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
-      home: const ApiBrowserHome(),
+      navigatorKey: OxideStack.navigatorKey,
+      home: ApiBrowserSplashPage(route: const SplashRoute()),
     );
   }
 }

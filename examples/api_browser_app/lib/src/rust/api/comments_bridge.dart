@@ -7,7 +7,6 @@ import '../frb_generated.dart';
 import '../state/comments_action.dart';
 import '../state/comments_state.dart';
 import '../state/common.dart';
-import 'bridge.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `CommentsReducer`, `CommentsSideEffect`, `__OxideReducerMarker_CommentsReducer`
@@ -38,6 +37,9 @@ Stream<CommentsStateSnapshot> stateStream({
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< Arc < CommentsEngine >>>
 abstract class ArcCommentsEngine implements RustOpaqueInterface {}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< OxideError>>
+abstract class OxideError implements RustOpaqueInterface {}
 
 class CommentsStateSnapshot {
   final BigInt revision;

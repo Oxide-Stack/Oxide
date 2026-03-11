@@ -6,6 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`
+
 ///oxide:state
 ///oxide:meta:{"kind":"state","name":"SieveState","docs":[],"fields":[{"name":"counter","ty":"u64"},{"name":"checksum","ty":"u64"}],"variants":null}
 class SieveState {
@@ -13,6 +15,18 @@ class SieveState {
   final BigInt checksum;
 
   const SieveState({required this.counter, required this.checksum});
+
+  static Future<List<SieveStateSlice>> inferSlicesImpl({
+    required SieveState before,
+    required SieveState after,
+  }) => RustLib.instance.api.crateStateSieveStateSieveStateInferSlicesImpl(
+    before: before,
+    after: after,
+  );
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  static Future<SieveState> newInstance() =>
+      RustLib.instance.api.crateStateSieveStateSieveStateNew();
 
   @override
   int get hashCode => counter.hashCode ^ checksum.hashCode;
@@ -25,3 +39,5 @@ class SieveState {
           counter == other.counter &&
           checksum == other.checksum;
 }
+
+enum SieveStateSlice { oxideUnused }

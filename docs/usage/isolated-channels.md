@@ -26,25 +26,17 @@ Then gate your channel declarations so they do not compile unless explicitly ena
 use oxide_core::{OxideCallbacking, OxideEventChannel, OxideEventDuplexChannel};
 ```
 
-## Initialization (`initOxide` Integration)
+## Initialization (`OxideStack.init`)
 
-Applications should initialize the channel runtime during startup, alongside the normal Oxide runtime initialization.
+Applications should initialize Oxide once during startup using the generated entrypoint. The macro-generated Rust init hook runs during `RustLib.init()` and initializes the isolated channel runtime when the feature is enabled.
 
-In your FRB API module:
+Call the Dart entrypoint from `main()`:
 
-```rust
-#[flutter_rust_bridge::frb]
-pub async fn init_oxide() -> Result<(), oxide_core::OxideError> {
-  fn thread_pool() -> oxide_core::runtime::ThreadPool {
-    crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
-  }
-
-  let _ = oxide_core::runtime::init(thread_pool);
-
-  #[cfg(feature = "isolated-channels")]
-  oxide_core::init_isolated_channels()?;
-
-  Ok(())
+```dart
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await OxideStack.init();
+  runApp(const MyApp());
 }
 ```
 

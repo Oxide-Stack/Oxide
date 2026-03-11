@@ -8,11 +8,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
-import '../../oxide_generated/routes/route_kind.g.dart';
+import '../../oxide.dart';
 import '../oxide.dart';
-import '../rust/api/bridge.dart' show openCharts;
+// navigation to charts is now performed directly in Dart; the Rust bridge helper is no longer needed
+
+import 'bench_detail.dart';
 import 'bench_charts.dart';
 import 'bench_models.dart';
+import 'routing_bench_screen.dart';
 import 'workloads.dart';
 
 final class _Inputs {
@@ -99,24 +102,72 @@ final class _BenchChartsArgs {
   final int iterations;
   final int samples;
   final int warmup;
+
+  @override
+  String toString() {
+    return 'BenchChartsArgs(samplesByVariant: \\$samplesByVariant, iterations: \\$iterations, samples: \\$samples, warmup: \\$warmup)';
+  }
 }
 
 _BenchChartsArgs? _benchChartsArgs;
 
-@OxideRoutePage(RouteKind.splash)
+@OxideRoutePage('Splash')
 final class BenchSplashScreen extends ConsumerWidget {
-  const BenchSplashScreen({super.key});
+  const BenchSplashScreen({super.key, required this.route});
+
+  final SplashRoute route;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(benchCounterRiverpodOxideProvider);
-    return const Scaffold(body: Center(child: Text('Loading…')));
+    return Scaffold(
+      body: Center(
+        child: Semantics(label: 'Loading', child: const CircularProgressIndicator()),
+      ),
+    );
   }
 }
 
-@OxideRoutePage(RouteKind.home)
+class _LoadingView extends StatelessWidget {
+  const _LoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Semantics(label: 'Loading', child: const CircularProgressIndicator()),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView(this.title, this.error);
+
+  final String title;
+  final Object? error;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text('$error', textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+@OxideRoutePage('Home')
 final class BenchHomeScreen extends StatelessWidget {
-  const BenchHomeScreen({super.key});
+  const BenchHomeScreen({super.key, required this.route});
+
+  final HomeRoute route;
 
   @override
   Widget build(BuildContext context) {
@@ -124,17 +175,62 @@ final class BenchHomeScreen extends StatelessWidget {
   }
 }
 
-@OxideRoutePage(RouteKind.charts)
+@OxideRoutePage('Charts')
 final class BenchChartsScreen extends StatelessWidget {
-  const BenchChartsScreen({super.key});
+  const BenchChartsScreen({super.key, required this.route});
+
+  final ChartsRoute route;
 
   @override
   Widget build(BuildContext context) {
     final args = _benchChartsArgs;
+    // debug log each build of charts screen
+    // ignore: avoid_print
+    print('[Bench] BenchChartsScreen.build args=$args');
     if (args == null) {
+      // if navigation somehow ended up here without parameters, bounce back
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // safe to call even if already on '/'
+        context.go('/');
+      });
       return const Scaffold(body: Center(child: Text('Missing chart args')));
     }
     return _ChartsView(samplesByVariant: args.samplesByVariant, iterations: args.iterations, samples: args.samples, warmup: args.warmup);
+  }
+}
+
+@OxideRoutePage('RoutingBench')
+final class RoutingBenchPage extends StatelessWidget {
+  const RoutingBenchPage({super.key, required this.route});
+
+  final RoutingBenchRoute route;
+
+  @override
+  Widget build(BuildContext context) {
+    return const RoutingBenchScreen();
+  }
+}
+
+@OxideRoutePage('BenchDetail')
+final class BenchDetailPage extends StatelessWidget {
+  const BenchDetailPage({super.key, required this.route});
+
+  final BenchDetailRoute route;
+
+  @override
+  Widget build(BuildContext context) {
+    final Object? raw = route.id;
+    // convert value to integer safely regardless of underlying type
+    final int id;
+    if (raw is int) {
+      id = raw;
+    } else if (raw is BigInt) {
+      id = raw.toInt();
+    } else {
+      // fallback: stringify and parse
+      id = int.tryParse(raw?.toString() ?? '') ?? 0;
+    }
+    return BenchDetailScreen(id: id);
   }
 }
 
@@ -173,19 +269,14 @@ final class _BenchScreenState extends State<_BenchScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Benchmark Dashboard'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.route),
-              onPressed: () => context.go('/routing'),
-            ),
-          ],
+          actions: [IconButton(icon: const Icon(Icons.route), onPressed: () => context.go('/routing'))],
         ),
         body: FutureBuilder(
           future: _inputs,
           builder: (context, snap) {
             if (!snap.hasData) {
-              if (snap.hasError) return Center(child: Text('Error loading assets: ${snap.error}'));
-              return const Center(child: CircularProgressIndicator());
+              if (snap.hasError) return _ErrorView('Error loading assets', snap.error);
+              return const _LoadingView();
             }
             return _BenchDashboard(inputs: snap.data!);
           },
@@ -406,8 +497,17 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
             alignment: Alignment.centerLeft,
             child: FilledButton.tonal(
               onPressed: () {
+                // debug: log args before navigation
+                // ignore: avoid_print
+                print('[Bench] setting charts args before navigation: iterations=$_iterations, samples=$_samples, warmup=$_warmup');
                 _benchChartsArgs = _BenchChartsArgs(samplesByVariant: _samplesByVariant, iterations: _iterations, samples: _samples, warmup: _warmup);
-                unawaited(openCharts());
+                // log value immediately after assignment
+                // ignore: avoid_print
+                print('[Bench] _benchChartsArgs set = $_benchChartsArgs');
+                // perform navigation locally; no need to ask Rust to push the route
+                // ignore: avoid_print
+                print('[Bench] navigating to /charts');
+                context.go('/charts');
               },
               child: const Text('View Charts'),
             ),
