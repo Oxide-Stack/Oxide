@@ -69,11 +69,6 @@ else
 fi
 
 for dir in "${examples[@]}"; do
-  if [[ -f "$dir/rust/Cargo.toml" ]]; then
-    cd "$dir/rust"
-    cargo test
-  fi
-
   cd "$dir"
   rm -rf build
   flutter pub get
@@ -87,6 +82,13 @@ for dir in "${examples[@]}"; do
       fi
     fi
   fi
+
+  if [[ -f "$dir/rust/Cargo.toml" ]]; then
+    cd "$dir/rust"
+    cargo test
+    cd "$dir"
+  fi
+
   dart run build_runner build -d
   flutter test
 

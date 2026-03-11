@@ -20,6 +20,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install flutter_rust_bridge_codegen (via cargo)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v flutter_rust_bridge_codegen >/dev/null 2>&1; then
+            cargo install flutter_rust_bridge_codegen --locked
+          fi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
       - name: Test (Rust workspace)
         working-directory: rust
         run: cargo test --workspace
@@ -54,7 +66,14 @@ jobs:
             "examples/api_browser_app/rust"
           )
           for dir in "${examples[@]}"; do
-            (cd "$dir" && cargo test)
+            example_root="$(dirname "$dir")"
+            (
+              cd "$example_root"
+              flutter pub get
+              flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+              cd "rust"
+              cargo test
+            )
           done
 
   flutter:

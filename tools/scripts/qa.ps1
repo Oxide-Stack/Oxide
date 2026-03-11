@@ -123,16 +123,6 @@ function Run-IntegrationTest([string] $testPath) {
 foreach ($dir in $exampleDirs) {
   Push-Location (Join-Path $rootDir $dir)
   try {
-    $exampleRustDir = Join-Path (Get-Location) "rust"
-    if (Test-Path (Join-Path $exampleRustDir "Cargo.toml")) {
-      Push-Location $exampleRustDir
-      try {
-        Run "cargo" @("test")
-      } finally {
-        Pop-Location
-      }
-    }
-
     $buildDir = Join-Path (Get-Location) "build"
     if (Test-Path $buildDir) {
       try {
@@ -153,6 +143,17 @@ foreach ($dir in $exampleDirs) {
         }
       }
     }
+
+    $exampleRustDir = Join-Path (Get-Location) "rust"
+    if (Test-Path (Join-Path $exampleRustDir "Cargo.toml")) {
+      Push-Location $exampleRustDir
+      try {
+        Run "cargo" @("test")
+      } finally {
+        Pop-Location
+      }
+    }
+
     Run "dart" @("run", "build_runner", "build", "-d")
     Run "flutter" @("test")
 

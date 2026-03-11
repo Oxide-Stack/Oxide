@@ -98,7 +98,14 @@ jobs:
             "examples/benchmark_app/rust"
           )
           for dir in "${examples[@]}"; do
-            (cd "$dir" && cargo test)
+            example_root="$(dirname "$dir")"
+            (
+              cd "$example_root"
+              flutter pub get
+              flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+              cd "rust"
+              cargo test
+            )
           done
       - name: Test oxide_runtime
         working-directory: flutter/oxide_runtime
