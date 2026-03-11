@@ -197,7 +197,7 @@ jobs:
               if (Test-Path "rust") {
                 Push-Location "rust"
                 try {
-                  Invoke-Native -Command cargo -Args @("build")
+                  Invoke-Native -Command cargo -Args @("build", "--target-dir", "target")
                 } finally {
                   Pop-Location
                 }
