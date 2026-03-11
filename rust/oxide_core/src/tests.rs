@@ -382,3 +382,72 @@ async fn watch_receiver_to_stream_emits_updates() {
 fn test_side_effect_noop_variant_is_constructible() {
     let _ = TestSideEffect::Noop;
 }
+
+#[cfg(feature = "frb-spawn")]
+#[tokio::test]
+async fn runtime_spawn_executes_and_returns_result() {
+    // Provide a thread_pool compatible with FRB APIs.
+    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+            std::sync::OnceLock::new();
+        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+    }
+
+    // Initialize runtime (idempotent)
+    let _ = crate::runtime::init(thread_pool);
+
+    // Spawn an async task via FRB and await its JoinHandle for the result.
+    let handle = crate::runtime::spawn(async move { 123u32 });
+    let result = handle.await.unwrap();
+    assert_eq!(result, 123u32);
+}
+
+#[cfg(feature = "frb-spawn")]
+#[tokio::test]
+async fn runtime_spawn_blocking_executes_and_returns_result() {
+    // Provide a thread_pool compatible with FRB APIs.
+    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+            std::sync::OnceLock::new();
+        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+    }
+
+    // Initialize runtime (idempotent)
+    let _ = crate::runtime::init(thread_pool);
+
+    // Spawn a blocking function via FRB and await its JoinHandle for the result.
+    let handle = crate::runtime::spawn_blocking(|| 7u32);
+    let result = handle.await.unwrap();
+    assert_eq!(result, 7u32);
+}
+
+#[tokio::test]
+async fn runtime_init_and_spawn_paths_exercised() {
+    // Provide a thread_pool compatible with FRB APIs.
+    fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+        static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+            std::sync::OnceLock::new();
+        POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+    }
+
+    // Initialize FRB runtime via runtime::init and then engine globals.
+    let _ = crate::runtime::init(thread_pool);
+    let _ = crate::init_engine_globals();
+    // init_from_frb should also succeed in the normal path.
+    let _ = crate::init_from_frb(thread_pool);
+
+    // Exercise thread_pool accessor
+    let _tp = crate::runtime::thread_pool().expect("thread pool present");
+
+    // Exercise safe_spawn path: spawn a simple future and ensure it runs.
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    let ran = Arc::new(AtomicBool::new(false));
+    let ran_clone = ran.clone();
+    crate::runtime::safe_spawn(async move {
+        ran_clone.store(true, Ordering::SeqCst);
+    });
+    // Allow the spawned future a short time to execute.
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    assert!(ran.load(Ordering::SeqCst));
+}
