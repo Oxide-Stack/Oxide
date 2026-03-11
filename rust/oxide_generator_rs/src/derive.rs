@@ -303,6 +303,7 @@ pub(crate) fn expand_state_struct(
 
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         pub enum #slice_enum_ident {
+            __OxideUnused,
         }
 
         impl #ident {
@@ -367,6 +368,7 @@ pub(crate) fn expand_state_enum(args: StateArgs, mut item: ItemEnum) -> proc_mac
 
         #[derive(Debug, Clone, Copy, PartialEq, Eq)]
         pub enum #slice_enum_ident {
+            __OxideUnused,
         }
 
         impl #ident {

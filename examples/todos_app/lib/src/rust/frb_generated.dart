@@ -73,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -214610542;
+  int get rustContentHash => -1655340973;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -129,6 +129,11 @@ abstract class RustLibApi extends BaseApi {
 
   Stream<AppStateSnapshot> crateApiBridgeStateStream({
     required ArcAppEngine engine,
+  });
+
+  Future<List<TodoItemSlice>> crateStateAppStateTodoItemInferSlicesImpl({
+    required TodoItem before,
+    required TodoItem after,
   });
 
   RustArcIncrementStrongCountFnType
@@ -665,6 +670,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     argNames: ["engine", "sink"],
   );
 
+  @override
+  Future<List<TodoItemSlice>> crateStateAppStateTodoItemInferSlicesImpl({
+    required TodoItem before,
+    required TodoItem after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_todo_item(before, serializer);
+          sse_encode_box_autoadd_todo_item(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 17,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_todo_item_slice,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStateAppStateTodoItemInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateStateAppStateTodoItemInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "todo_item_infer_slices_impl",
+        argNames: ["before", "after"],
+      );
+
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_ArcAppEngine => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine;
@@ -864,6 +904,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  TodoItem dco_decode_box_autoadd_todo_item(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_todo_item(raw);
+  }
+
+  @protected
   ConfirmRoute dco_decode_confirm_route(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -909,6 +955,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<TodoItem> dco_decode_list_todo_item(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_todo_item).toList();
+  }
+
+  @protected
+  List<TodoItemSlice> dco_decode_list_todo_item_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_todo_item_slice).toList();
   }
 
   @protected
@@ -1000,6 +1052,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       title: dco_decode_String(arr[1]),
       completed: dco_decode_bool(arr[2]),
     );
+  }
+
+  @protected
+  TodoItemSlice dco_decode_todo_item_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return TodoItemSlice.values[raw as int];
   }
 
   @protected
@@ -1239,6 +1297,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  TodoItem sse_decode_box_autoadd_todo_item(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_todo_item(deserializer));
+  }
+
+  @protected
   ConfirmRoute sse_decode_confirm_route(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_title = sse_decode_String(deserializer);
@@ -1300,6 +1364,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <TodoItem>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_todo_item(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<TodoItemSlice> sse_decode_list_todo_item_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <TodoItemSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_todo_item_slice(deserializer));
     }
     return ans_;
   }
@@ -1416,6 +1494,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_title = sse_decode_String(deserializer);
     var var_completed = sse_decode_bool(deserializer);
     return TodoItem(id: var_id, title: var_title, completed: var_completed);
+  }
+
+  @protected
+  TodoItemSlice sse_decode_todo_item_slice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return TodoItemSlice.values[inner];
   }
 
   @protected
@@ -1684,6 +1769,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_todo_item(
+    TodoItem self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_todo_item(self, serializer);
+  }
+
+  @protected
   void sse_encode_confirm_route(ConfirmRoute self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.title, serializer);
@@ -1743,6 +1837,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_todo_item(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_todo_item_slice(
+    List<TodoItemSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_todo_item_slice(item, serializer);
     }
   }
 
@@ -1848,6 +1954,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.title, serializer);
     sse_encode_bool(self.completed, serializer);
+  }
+
+  @protected
+  void sse_encode_todo_item_slice(
+    TodoItemSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected

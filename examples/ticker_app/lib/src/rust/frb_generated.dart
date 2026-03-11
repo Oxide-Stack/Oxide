@@ -73,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -214610542;
+  int get rustContentHash => -859871528;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -129,6 +129,17 @@ abstract class RustLibApi extends BaseApi {
 
   Stream<AppStateSnapshot> crateApiBridgeStateStream({
     required ArcAppEngine engine,
+  });
+
+  Future<List<TickStateSlice>> crateStateAppStateTickStateInferSlicesImpl({
+    required TickState before,
+    required TickState after,
+  });
+
+  Future<List<TickerControlStateSlice>>
+  crateStateAppStateTickerControlStateInferSlicesImpl({
+    required TickerControlState before,
+    required TickerControlState after,
   });
 
   RustArcIncrementStrongCountFnType
@@ -665,6 +676,79 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     argNames: ["engine", "sink"],
   );
 
+  @override
+  Future<List<TickStateSlice>> crateStateAppStateTickStateInferSlicesImpl({
+    required TickState before,
+    required TickState after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_tick_state(before, serializer);
+          sse_encode_box_autoadd_tick_state(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 17,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_tick_state_slice,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStateAppStateTickStateInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateStateAppStateTickStateInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "tick_state_infer_slices_impl",
+        argNames: ["before", "after"],
+      );
+
+  @override
+  Future<List<TickerControlStateSlice>>
+  crateStateAppStateTickerControlStateInferSlicesImpl({
+    required TickerControlState before,
+    required TickerControlState after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_ticker_control_state(before, serializer);
+          sse_encode_box_autoadd_ticker_control_state(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 18,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_ticker_control_state_slice,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateStateAppStateTickerControlStateInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateStateAppStateTickerControlStateInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "ticker_control_state_infer_slices_impl",
+        argNames: ["before", "after"],
+      );
+
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_ArcAppEngine => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcAppEngine;
@@ -869,6 +953,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  TickState dco_decode_box_autoadd_tick_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_tick_state(raw);
+  }
+
+  @protected
+  TickerControlState dco_decode_box_autoadd_ticker_control_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ticker_control_state(raw);
+  }
+
+  @protected
   ConfirmRoute dco_decode_confirm_route(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -908,6 +1004,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<RoutePayload> dco_decode_list_route_payload(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_route_payload).toList();
+  }
+
+  @protected
+  List<TickStateSlice> dco_decode_list_tick_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_tick_state_slice).toList();
+  }
+
+  @protected
+  List<TickerControlStateSlice> dco_decode_list_ticker_control_state_slice(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_ticker_control_state_slice)
+        .toList();
   }
 
   @protected
@@ -1002,6 +1114,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  TickStateSlice dco_decode_tick_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return TickStateSlice.values[raw as int];
+  }
+
+  @protected
   TickerControlState dco_decode_ticker_control_state(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1011,6 +1129,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       isRunning: dco_decode_bool(arr[0]),
       intervalMs: dco_decode_u_64(arr[1]),
     );
+  }
+
+  @protected
+  TickerControlStateSlice dco_decode_ticker_control_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return TickerControlStateSlice.values[raw as int];
   }
 
   @protected
@@ -1249,6 +1373,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  TickState sse_decode_box_autoadd_tick_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_tick_state(deserializer));
+  }
+
+  @protected
+  TickerControlState sse_decode_box_autoadd_ticker_control_state(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ticker_control_state(deserializer));
+  }
+
+  @protected
   ConfirmRoute sse_decode_confirm_route(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_title = sse_decode_String(deserializer);
@@ -1298,6 +1436,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <RoutePayload>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_route_payload(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<TickStateSlice> sse_decode_list_tick_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <TickStateSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_tick_state_slice(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<TickerControlStateSlice> sse_decode_list_ticker_control_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <TickerControlStateSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ticker_control_state_slice(deserializer));
     }
     return ans_;
   }
@@ -1421,6 +1587,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  TickStateSlice sse_decode_tick_state_slice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return TickStateSlice.values[inner];
+  }
+
+  @protected
   TickerControlState sse_decode_ticker_control_state(
     SseDeserializer deserializer,
   ) {
@@ -1431,6 +1604,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       isRunning: var_isRunning,
       intervalMs: var_intervalMs,
     );
+  }
+
+  @protected
+  TickerControlStateSlice sse_decode_ticker_control_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return TickerControlStateSlice.values[inner];
   }
 
   @protected
@@ -1702,6 +1884,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_tick_state(
+    TickState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_tick_state(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_ticker_control_state(
+    TickerControlState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ticker_control_state(self, serializer);
+  }
+
+  @protected
   void sse_encode_confirm_route(ConfirmRoute self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.title, serializer);
@@ -1749,6 +1949,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_route_payload(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_tick_state_slice(
+    List<TickStateSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_tick_state_slice(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ticker_control_state_slice(
+    List<TickerControlStateSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ticker_control_state_slice(item, serializer);
     }
   }
 
@@ -1857,6 +2081,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_tick_state_slice(
+    TickStateSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
   void sse_encode_ticker_control_state(
     TickerControlState self,
     SseSerializer serializer,
@@ -1864,6 +2097,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_bool(self.isRunning, serializer);
     sse_encode_u_64(self.intervalMs, serializer);
+  }
+
+  @protected
+  void sse_encode_ticker_control_state_slice(
+    TickerControlStateSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected

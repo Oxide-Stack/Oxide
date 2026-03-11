@@ -119,6 +119,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SplashRoute dco_decode_box_autoadd_splash_route(dynamic raw);
 
   @protected
+  TickState dco_decode_box_autoadd_tick_state(dynamic raw);
+
+  @protected
+  TickerControlState dco_decode_box_autoadd_ticker_control_state(dynamic raw);
+
+  @protected
   ConfirmRoute dco_decode_confirm_route(dynamic raw);
 
   @protected
@@ -135,6 +141,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RoutePayload> dco_decode_list_route_payload(dynamic raw);
+
+  @protected
+  List<TickStateSlice> dco_decode_list_tick_state_slice(dynamic raw);
+
+  @protected
+  List<TickerControlStateSlice> dco_decode_list_ticker_control_state_slice(
+    dynamic raw,
+  );
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -164,7 +178,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TickState dco_decode_tick_state(dynamic raw);
 
   @protected
+  TickStateSlice dco_decode_tick_state_slice(dynamic raw);
+
+  @protected
   TickerControlState dco_decode_ticker_control_state(dynamic raw);
+
+  @protected
+  TickerControlStateSlice dco_decode_ticker_control_state_slice(dynamic raw);
 
   @protected
   BigInt dco_decode_u_64(dynamic raw);
@@ -268,6 +288,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SplashRoute sse_decode_box_autoadd_splash_route(SseDeserializer deserializer);
 
   @protected
+  TickState sse_decode_box_autoadd_tick_state(SseDeserializer deserializer);
+
+  @protected
+  TickerControlState sse_decode_box_autoadd_ticker_control_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ConfirmRoute sse_decode_confirm_route(SseDeserializer deserializer);
 
   @protected
@@ -286,6 +314,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RoutePayload> sse_decode_list_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<TickStateSlice> sse_decode_list_tick_state_slice(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<TickerControlStateSlice> sse_decode_list_ticker_control_state_slice(
     SseDeserializer deserializer,
   );
 
@@ -321,7 +359,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   TickState sse_decode_tick_state(SseDeserializer deserializer);
 
   @protected
+  TickStateSlice sse_decode_tick_state_slice(SseDeserializer deserializer);
+
+  @protected
   TickerControlState sse_decode_ticker_control_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  TickerControlStateSlice sse_decode_ticker_control_state_slice(
     SseDeserializer deserializer,
   );
 
@@ -457,6 +503,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_tick_state(
+    TickState self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_ticker_control_state(
+    TickerControlState self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_confirm_route(ConfirmRoute self, SseSerializer serializer);
 
   @protected
@@ -480,6 +538,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_route_payload(
     List<RoutePayload> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_tick_state_slice(
+    List<TickStateSlice> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ticker_control_state_slice(
+    List<TickerControlStateSlice> self,
     SseSerializer serializer,
   );
 
@@ -520,8 +590,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_tick_state(TickState self, SseSerializer serializer);
 
   @protected
+  void sse_encode_tick_state_slice(
+    TickStateSlice self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_ticker_control_state(
     TickerControlState self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_ticker_control_state_slice(
+    TickerControlStateSlice self,
     SseSerializer serializer,
   );
 

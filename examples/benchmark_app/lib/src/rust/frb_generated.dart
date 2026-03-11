@@ -84,7 +84,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1719149954;
+  int get rustContentHash => 1232258034;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -98,6 +98,12 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateUtilCanonicalizeJson({required Value value});
 
   Future<BigInt> crateUtilCountEntries({required Value value});
+
+  Future<List<CounterStateSlice>>
+  crateStateCounterStateCounterStateInferSlicesImpl({
+    required CounterState before,
+    required CounterState after,
+  });
 
   Future<CounterState> crateStateCounterStateCounterStateNew();
 
@@ -155,6 +161,11 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateOxideInitInitOxide();
 
+  Future<List<JsonStateSlice>> crateStateJsonStateJsonStateInferSlicesImpl({
+    required JsonState before,
+    required JsonState after,
+  });
+
   Future<JsonState> crateStateJsonStateJsonStateNew();
 
   Future<ReducerEngineBenchNavReducer> crateApiNavBridgeNavEngine();
@@ -177,6 +188,11 @@ abstract class RustLibApi extends BaseApi {
   Future<RouteKind?> crateRoutesRouteKindFromStr({required String s});
 
   Future<RouteKind> crateRoutesRoutePayloadKind({required RoutePayload that});
+
+  Future<List<SieveStateSlice>> crateStateSieveStateSieveStateInferSlicesImpl({
+    required SieveState before,
+    required SieveState after,
+  });
 
   Future<SieveState> crateStateSieveStateSieveStateNew();
 
@@ -314,6 +330,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "count_entries", argNames: ["value"]);
 
   @override
+  Future<List<CounterStateSlice>>
+  crateStateCounterStateCounterStateInferSlicesImpl({
+    required CounterState before,
+    required CounterState after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_counter_state(before, serializer);
+          sse_encode_box_autoadd_counter_state(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_counter_state_slice,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStateCounterStateCounterStateInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateStateCounterStateCounterStateInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "counter_state_infer_slices_impl",
+        argNames: ["before", "after"],
+      );
+
+  @override
   Future<CounterState> crateStateCounterStateCounterStateNew() {
     return handler.executeNormal(
       NormalTask(
@@ -322,7 +375,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 4,
             port: port_,
           );
         },
@@ -349,7 +402,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 5,
             port: port_,
           );
         },
@@ -378,7 +431,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
@@ -407,7 +460,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -442,7 +495,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 8,
             port: port_,
           );
         },
@@ -475,7 +528,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 9,
             port: port_,
           );
         },
@@ -508,7 +561,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 10,
             port: port_,
           );
         },
@@ -543,7 +596,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 11,
             port: port_,
           );
         },
@@ -582,7 +635,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 12,
             port: port_,
           );
         },
@@ -620,7 +673,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 13,
             port: port_,
           );
         },
@@ -657,7 +710,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 14,
             port: port_,
           );
         },
@@ -690,7 +743,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 15,
             port: port_,
           );
         },
@@ -723,7 +776,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 16,
             port: port_,
           );
         },
@@ -751,7 +804,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 17,
             port: port_,
           );
         },
@@ -783,7 +836,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 18,
             port: port_,
           );
         },
@@ -810,7 +863,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 19,
             port: port_,
           );
         },
@@ -838,7 +891,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 20,
             port: port_,
           );
         },
@@ -857,6 +910,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_oxide", argNames: []);
 
   @override
+  Future<List<JsonStateSlice>> crateStateJsonStateJsonStateInferSlicesImpl({
+    required JsonState before,
+    required JsonState after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_json_state(before, serializer);
+          sse_encode_box_autoadd_json_state(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 21,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_json_state_slice,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStateJsonStateJsonStateInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateStateJsonStateJsonStateInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "json_state_infer_slices_impl",
+        argNames: ["before", "after"],
+      );
+
+  @override
   Future<JsonState> crateStateJsonStateJsonStateNew() {
     return handler.executeNormal(
       NormalTask(
@@ -865,7 +953,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 22,
             port: port_,
           );
         },
@@ -892,7 +980,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 23,
             port: port_,
           );
         },
@@ -921,7 +1009,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 24,
             port: port_,
           );
         },
@@ -952,7 +1040,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 23,
+              funcId: 25,
               port: port_,
             );
           },
@@ -991,7 +1079,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 24,
+            funcId: 26,
             port: port_,
           );
         },
@@ -1025,7 +1113,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 25,
+            funcId: 27,
             port: port_,
           );
         },
@@ -1058,7 +1146,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1086,7 +1174,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 29,
             port: port_,
           );
         },
@@ -1114,7 +1202,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 28,
+            funcId: 30,
             port: port_,
           );
         },
@@ -1133,6 +1221,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "route_payload_kind", argNames: ["that"]);
 
   @override
+  Future<List<SieveStateSlice>> crateStateSieveStateSieveStateInferSlicesImpl({
+    required SieveState before,
+    required SieveState after,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_sieve_state(before, serializer);
+          sse_encode_box_autoadd_sieve_state(after, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 31,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_sieve_state_slice,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateStateSieveStateSieveStateInferSlicesImplConstMeta,
+        argValues: [before, after],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateStateSieveStateSieveStateInferSlicesImplConstMeta =>
+      const TaskConstMeta(
+        debugName: "sieve_state_infer_slices_impl",
+        argNames: ["before", "after"],
+      );
+
+  @override
   Future<SieveState> crateStateSieveStateSieveStateNew() {
     return handler.executeNormal(
       NormalTask(
@@ -1141,7 +1264,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 29,
+            funcId: 32,
             port: port_,
           );
         },
@@ -1177,7 +1300,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 30,
+              funcId: 33,
               port: port_,
             );
           },
@@ -1218,7 +1341,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 31,
+              funcId: 34,
               port: port_,
             );
           },
@@ -1259,7 +1382,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 32,
+              funcId: 35,
               port: port_,
             );
           },
@@ -1547,6 +1670,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CounterState dco_decode_box_autoadd_counter_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_counter_state(raw);
+  }
+
+  @protected
   HomeRoute dco_decode_box_autoadd_home_route(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_home_route(raw);
@@ -1556,6 +1685,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   JsonAction dco_decode_box_autoadd_json_action(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_json_action(raw);
+  }
+
+  @protected
+  JsonState dco_decode_box_autoadd_json_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_json_state(raw);
   }
 
   @protected
@@ -1580,6 +1715,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SieveAction dco_decode_box_autoadd_sieve_action(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_sieve_action(raw);
+  }
+
+  @protected
+  SieveState dco_decode_box_autoadd_sieve_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_sieve_state(raw);
   }
 
   @protected
@@ -1618,6 +1759,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       counter: dco_decode_u_64(arr[0]),
       checksum: dco_decode_u_64(arr[1]),
     );
+  }
+
+  @protected
+  CounterStateSlice dco_decode_counter_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CounterStateSlice.values[raw as int];
   }
 
   @protected
@@ -1673,6 +1820,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JsonStateSlice dco_decode_json_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return JsonStateSlice.values[raw as int];
+  }
+
+  @protected
   JsonStateSnapshot dco_decode_json_state_snapshot(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1682,6 +1835,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       revision: dco_decode_u_64(arr[0]),
       state: dco_decode_json_state(arr[1]),
     );
+  }
+
+  @protected
+  List<CounterStateSlice> dco_decode_list_counter_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_counter_state_slice).toList();
+  }
+
+  @protected
+  List<JsonStateSlice> dco_decode_list_json_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_json_state_slice).toList();
   }
 
   @protected
@@ -1700,6 +1865,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<RoutePayload> dco_decode_list_route_payload(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_route_payload).toList();
+  }
+
+  @protected
+  List<SieveStateSlice> dco_decode_list_sieve_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_sieve_state_slice).toList();
   }
 
   @protected
@@ -1801,6 +1972,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       counter: dco_decode_u_64(arr[0]),
       checksum: dco_decode_u_64(arr[1]),
     );
+  }
+
+  @protected
+  SieveStateSlice dco_decode_sieve_state_slice(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SieveStateSlice.values[raw as int];
   }
 
   @protected
@@ -2123,6 +2300,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CounterState sse_decode_box_autoadd_counter_state(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_counter_state(deserializer));
+  }
+
+  @protected
   HomeRoute sse_decode_box_autoadd_home_route(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_home_route(deserializer));
@@ -2132,6 +2317,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   JsonAction sse_decode_box_autoadd_json_action(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_json_action(deserializer));
+  }
+
+  @protected
+  JsonState sse_decode_box_autoadd_json_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_json_state(deserializer));
   }
 
   @protected
@@ -2162,6 +2353,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_sieve_action(deserializer));
+  }
+
+  @protected
+  SieveState sse_decode_box_autoadd_sieve_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_sieve_state(deserializer));
   }
 
   @protected
@@ -2198,6 +2395,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_counter = sse_decode_u_64(deserializer);
     var var_checksum = sse_decode_u_64(deserializer);
     return CounterState(counter: var_counter, checksum: var_checksum);
+  }
+
+  @protected
+  CounterStateSlice sse_decode_counter_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return CounterStateSlice.values[inner];
   }
 
   @protected
@@ -2248,6 +2454,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JsonStateSlice sse_decode_json_state_slice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return JsonStateSlice.values[inner];
+  }
+
+  @protected
   JsonStateSnapshot sse_decode_json_state_snapshot(
     SseDeserializer deserializer,
   ) {
@@ -2255,6 +2468,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_revision = sse_decode_u_64(deserializer);
     var var_state = sse_decode_json_state(deserializer);
     return JsonStateSnapshot(revision: var_revision, state: var_state);
+  }
+
+  @protected
+  List<CounterStateSlice> sse_decode_list_counter_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <CounterStateSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_counter_state_slice(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<JsonStateSlice> sse_decode_list_json_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <JsonStateSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_json_state_slice(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -2281,6 +2522,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <RoutePayload>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_route_payload(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<SieveStateSlice> sse_decode_list_sieve_state_slice(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SieveStateSlice>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_sieve_state_slice(deserializer));
     }
     return ans_;
   }
@@ -2411,6 +2666,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_counter = sse_decode_u_64(deserializer);
     var var_checksum = sse_decode_u_64(deserializer);
     return SieveState(counter: var_counter, checksum: var_checksum);
+  }
+
+  @protected
+  SieveStateSlice sse_decode_sieve_state_slice(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return SieveStateSlice.values[inner];
   }
 
   @protected
@@ -2796,6 +3058,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_counter_state(
+    CounterState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_counter_state(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_home_route(
     HomeRoute self,
     SseSerializer serializer,
@@ -2811,6 +3082,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_json_action(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_json_state(
+    JsonState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_json_state(self, serializer);
   }
 
   @protected
@@ -2850,6 +3130,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_sieve_state(
+    SieveState self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_sieve_state(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_splash_route(
     SplashRoute self,
     SseSerializer serializer,
@@ -2878,6 +3167,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.counter, serializer);
     sse_encode_u_64(self.checksum, serializer);
+  }
+
+  @protected
+  void sse_encode_counter_state_slice(
+    CounterStateSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -2922,6 +3220,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_json_state_slice(
+    JsonStateSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
   void sse_encode_json_state_snapshot(
     JsonStateSnapshot self,
     SseSerializer serializer,
@@ -2929,6 +3236,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.revision, serializer);
     sse_encode_json_state(self.state, serializer);
+  }
+
+  @protected
+  void sse_encode_list_counter_state_slice(
+    List<CounterStateSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_counter_state_slice(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_json_state_slice(
+    List<JsonStateSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_json_state_slice(item, serializer);
+    }
   }
 
   @protected
@@ -2962,6 +3293,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_route_payload(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_sieve_state_slice(
+    List<SieveStateSlice> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_sieve_state_slice(item, serializer);
     }
   }
 
@@ -3075,6 +3418,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_64(self.counter, serializer);
     sse_encode_u_64(self.checksum, serializer);
+  }
+
+  @protected
+  void sse_encode_sieve_state_slice(
+    SieveStateSlice self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected

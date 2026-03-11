@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `infer_slices`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `infer_slices`
 
 /// State for the ticker example.
 ///oxide:state
@@ -70,6 +70,14 @@ class TickState {
     this.lastConfirmed,
   });
 
+  static Future<List<TickStateSlice>> inferSlicesImpl({
+    required TickState before,
+    required TickState after,
+  }) => RustLib.instance.api.crateStateAppStateTickStateInferSlicesImpl(
+    before: before,
+    after: after,
+  );
+
   @override
   int get hashCode =>
       ticks.hashCode ^ lastTickSource.hashCode ^ lastConfirmed.hashCode;
@@ -84,6 +92,8 @@ class TickState {
           lastConfirmed == other.lastConfirmed;
 }
 
+enum TickStateSlice { oxideUnused }
+
 /// Runtime control settings for the ticker.
 ///oxide:state
 ///oxide:meta:{"kind":"state","name":"TickerControlState","docs":["frb_encoded(235b667262286e6f6e5f6f7061717565295d)","Runtime control settings for the ticker."],"fields":[{"name":"is_running","ty":"bool"},{"name":"interval_ms","ty":"u64"}],"variants":null}
@@ -96,6 +106,15 @@ class TickerControlState {
 
   const TickerControlState({required this.isRunning, required this.intervalMs});
 
+  static Future<List<TickerControlStateSlice>> inferSlicesImpl({
+    required TickerControlState before,
+    required TickerControlState after,
+  }) =>
+      RustLib.instance.api.crateStateAppStateTickerControlStateInferSlicesImpl(
+        before: before,
+        after: after,
+      );
+
   @override
   int get hashCode => isRunning.hashCode ^ intervalMs.hashCode;
 
@@ -107,3 +126,5 @@ class TickerControlState {
           isRunning == other.isRunning &&
           intervalMs == other.intervalMs;
 }
+
+enum TickerControlStateSlice { oxideUnused }

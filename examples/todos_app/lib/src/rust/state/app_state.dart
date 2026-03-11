@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `infer_slices`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `infer_slices`
 
 /// State for the todos example.
 ///oxide:state
@@ -78,6 +78,14 @@ class TodoItem {
     required this.completed,
   });
 
+  static Future<List<TodoItemSlice>> inferSlicesImpl({
+    required TodoItem before,
+    required TodoItem after,
+  }) => RustLib.instance.api.crateStateAppStateTodoItemInferSlicesImpl(
+    before: before,
+    after: after,
+  );
+
   @override
   int get hashCode => id.hashCode ^ title.hashCode ^ completed.hashCode;
 
@@ -90,3 +98,5 @@ class TodoItem {
           title == other.title &&
           completed == other.completed;
 }
+
+enum TodoItemSlice { oxideUnused }

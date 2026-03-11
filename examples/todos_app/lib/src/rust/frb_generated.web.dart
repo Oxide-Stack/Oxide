@@ -121,6 +121,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SplashRoute dco_decode_box_autoadd_splash_route(dynamic raw);
 
   @protected
+  TodoItem dco_decode_box_autoadd_todo_item(dynamic raw);
+
+  @protected
   ConfirmRoute dco_decode_confirm_route(dynamic raw);
 
   @protected
@@ -140,6 +143,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<TodoItem> dco_decode_list_todo_item(dynamic raw);
+
+  @protected
+  List<TodoItemSlice> dco_decode_list_todo_item_slice(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -167,6 +173,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   TodoItem dco_decode_todo_item(dynamic raw);
+
+  @protected
+  TodoItemSlice dco_decode_todo_item_slice(dynamic raw);
 
   @protected
   BigInt dco_decode_u_64(dynamic raw);
@@ -270,6 +279,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SplashRoute sse_decode_box_autoadd_splash_route(SseDeserializer deserializer);
 
   @protected
+  TodoItem sse_decode_box_autoadd_todo_item(SseDeserializer deserializer);
+
+  @protected
   ConfirmRoute sse_decode_confirm_route(SseDeserializer deserializer);
 
   @protected
@@ -293,6 +305,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<TodoItem> sse_decode_list_todo_item(SseDeserializer deserializer);
+
+  @protected
+  List<TodoItemSlice> sse_decode_list_todo_item_slice(
+    SseDeserializer deserializer,
+  );
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -324,6 +341,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   TodoItem sse_decode_todo_item(SseDeserializer deserializer);
+
+  @protected
+  TodoItemSlice sse_decode_todo_item_slice(SseDeserializer deserializer);
 
   @protected
   BigInt sse_decode_u_64(SseDeserializer deserializer);
@@ -457,6 +477,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_todo_item(
+    TodoItem self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_confirm_route(ConfirmRoute self, SseSerializer serializer);
 
   @protected
@@ -485,6 +511,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_todo_item(List<TodoItem> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_todo_item_slice(
+    List<TodoItemSlice> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
@@ -521,6 +553,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_todo_item(TodoItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_todo_item_slice(TodoItemSlice self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_64(BigInt self, SseSerializer serializer);

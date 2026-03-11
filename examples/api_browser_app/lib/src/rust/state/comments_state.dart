@@ -7,7 +7,7 @@ import '../frb_generated.dart';
 import 'common.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`
 
 class Comment {
   final BigInt id;
@@ -42,6 +42,15 @@ class CommentsState {
     this.selectedPostId,
   });
 
+  static Future<List<CommentsStateSlice>> inferSlicesImpl({
+    required CommentsState before,
+    required CommentsState after,
+  }) =>
+      RustLib.instance.api.crateStateCommentsStateCommentsStateInferSlicesImpl(
+        before: before,
+        after: after,
+      );
+
   @override
   int get hashCode =>
       phase.hashCode ^ comments.hashCode ^ selectedPostId.hashCode;
@@ -55,3 +64,5 @@ class CommentsState {
           comments == other.comments &&
           selectedPostId == other.selectedPostId;
 }
+
+enum CommentsStateSlice { oxideUnused }

@@ -193,10 +193,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CounterAction dco_decode_box_autoadd_counter_action(dynamic raw);
 
   @protected
+  CounterState dco_decode_box_autoadd_counter_state(dynamic raw);
+
+  @protected
   HomeRoute dco_decode_box_autoadd_home_route(dynamic raw);
 
   @protected
   JsonAction dco_decode_box_autoadd_json_action(dynamic raw);
+
+  @protected
+  JsonState dco_decode_box_autoadd_json_state(dynamic raw);
 
   @protected
   RouteKind dco_decode_box_autoadd_route_kind(dynamic raw);
@@ -211,6 +217,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SieveAction dco_decode_box_autoadd_sieve_action(dynamic raw);
 
   @protected
+  SieveState dco_decode_box_autoadd_sieve_state(dynamic raw);
+
+  @protected
   SplashRoute dco_decode_box_autoadd_splash_route(dynamic raw);
 
   @protected
@@ -221,6 +230,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CounterState dco_decode_counter_state(dynamic raw);
+
+  @protected
+  CounterStateSlice dco_decode_counter_state_slice(dynamic raw);
 
   @protected
   CounterStateSnapshot dco_decode_counter_state_snapshot(dynamic raw);
@@ -238,7 +250,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   JsonState dco_decode_json_state(dynamic raw);
 
   @protected
+  JsonStateSlice dco_decode_json_state_slice(dynamic raw);
+
+  @protected
   JsonStateSnapshot dco_decode_json_state_snapshot(dynamic raw);
+
+  @protected
+  List<CounterStateSlice> dco_decode_list_counter_state_slice(dynamic raw);
+
+  @protected
+  List<JsonStateSlice> dco_decode_list_json_state_slice(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -248,6 +269,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RoutePayload> dco_decode_list_route_payload(dynamic raw);
+
+  @protected
+  List<SieveStateSlice> dco_decode_list_sieve_state_slice(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -275,6 +299,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SieveState dco_decode_sieve_state(dynamic raw);
+
+  @protected
+  SieveStateSlice dco_decode_sieve_state_slice(dynamic raw);
 
   @protected
   SieveStateSnapshot dco_decode_sieve_state_snapshot(dynamic raw);
@@ -435,10 +462,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CounterState sse_decode_box_autoadd_counter_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   HomeRoute sse_decode_box_autoadd_home_route(SseDeserializer deserializer);
 
   @protected
   JsonAction sse_decode_box_autoadd_json_action(SseDeserializer deserializer);
+
+  @protected
+  JsonState sse_decode_box_autoadd_json_state(SseDeserializer deserializer);
 
   @protected
   RouteKind sse_decode_box_autoadd_route_kind(SseDeserializer deserializer);
@@ -457,6 +492,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SieveAction sse_decode_box_autoadd_sieve_action(SseDeserializer deserializer);
 
   @protected
+  SieveState sse_decode_box_autoadd_sieve_state(SseDeserializer deserializer);
+
+  @protected
   SplashRoute sse_decode_box_autoadd_splash_route(SseDeserializer deserializer);
 
   @protected
@@ -467,6 +505,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CounterState sse_decode_counter_state(SseDeserializer deserializer);
+
+  @protected
+  CounterStateSlice sse_decode_counter_state_slice(
+    SseDeserializer deserializer,
+  );
 
   @protected
   CounterStateSnapshot sse_decode_counter_state_snapshot(
@@ -486,7 +529,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   JsonState sse_decode_json_state(SseDeserializer deserializer);
 
   @protected
+  JsonStateSlice sse_decode_json_state_slice(SseDeserializer deserializer);
+
+  @protected
   JsonStateSnapshot sse_decode_json_state_snapshot(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<CounterStateSlice> sse_decode_list_counter_state_slice(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<JsonStateSlice> sse_decode_list_json_state_slice(
     SseDeserializer deserializer,
   );
 
@@ -498,6 +554,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RoutePayload> sse_decode_list_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<SieveStateSlice> sse_decode_list_sieve_state_slice(
     SseDeserializer deserializer,
   );
 
@@ -533,6 +594,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SieveState sse_decode_sieve_state(SseDeserializer deserializer);
+
+  @protected
+  SieveStateSlice sse_decode_sieve_state_slice(SseDeserializer deserializer);
 
   @protected
   SieveStateSnapshot sse_decode_sieve_state_snapshot(
@@ -730,6 +794,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_counter_state(
+    CounterState self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_home_route(
     HomeRoute self,
     SseSerializer serializer,
@@ -738,6 +808,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_json_action(
     JsonAction self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_json_state(
+    JsonState self,
     SseSerializer serializer,
   );
 
@@ -766,6 +842,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_sieve_state(
+    SieveState self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_splash_route(
     SplashRoute self,
     SseSerializer serializer,
@@ -779,6 +861,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_counter_state(CounterState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_counter_state_slice(
+    CounterStateSlice self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_counter_state_snapshot(
@@ -799,8 +887,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_json_state(JsonState self, SseSerializer serializer);
 
   @protected
+  void sse_encode_json_state_slice(
+    JsonStateSlice self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_json_state_snapshot(
     JsonStateSnapshot self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_counter_state_slice(
+    List<CounterStateSlice> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_json_state_slice(
+    List<JsonStateSlice> self,
     SseSerializer serializer,
   );
 
@@ -816,6 +922,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_route_payload(
     List<RoutePayload> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_sieve_state_slice(
+    List<SieveStateSlice> self,
     SseSerializer serializer,
   );
 
@@ -857,6 +969,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_sieve_state(SieveState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sieve_state_slice(
+    SieveStateSlice self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_sieve_state_snapshot(

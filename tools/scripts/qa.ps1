@@ -19,13 +19,39 @@ function Run([string] $exe, [string[]] $commandArgs) {
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $rootDir = Resolve-Path (Join-Path $scriptDir "..\..")
 
+Run "pwsh" @(
+  "-NoProfile",
+  "-File",
+  (Join-Path $rootDir "tools\scripts\version_sync.ps1"),
+  "-Verify"
+)
+
 Push-Location (Join-Path $rootDir "rust")
 try {
   Run "cargo" @("test", "--workspace")
   Run "cargo" @("test", "-p", "oxide_generator_rs", "--test", "compile")
   Run "cargo" @("test", "-p", "oxide_core", "--features", "navigation-binding,isolated-channels")
+
+  Run "rustup" @("target", "add", "wasm32-unknown-unknown", "wasm32-wasip1")
+  Run "cargo" @("check", "-p", "oxide_core", "--target", "wasm32-unknown-unknown", "--all-features")
+  Run "cargo" @("check", "-p", "oxide_core", "--target", "wasm32-wasip1", "--all-features")
+  Run "cargo" @("test", "-p", "oxide_core", "--target", "wasm32-unknown-unknown", "--all-features", "--no-run", "--test", "wasm_web_compat")
+  Run "cargo" @("test", "-p", "oxide_core", "--target", "wasm32-wasip1", "--all-features", "--no-run", "--test", "wasm_wasi_compat")
+
+  if (($env:QA_SKIP_COVERAGE -ne "1") -and (Get-Command cargo-llvm-cov -ErrorAction SilentlyContinue)) {
+    Run "rustup" @("component", "add", "llvm-tools-preview")
+    Run "cargo" @("llvm-cov", "--workspace", "--all-features", "--fail-under-lines", "62", "--fail-under-regions", "65", "--summary-only")
+  } elseif (($env:QA_REQUIRE_COVERAGE -eq "1") -and ($env:QA_SKIP_COVERAGE -ne "1")) {
+    throw "cargo-llvm-cov is not installed (set QA_SKIP_COVERAGE=1 to skip)."
+  }
 } finally {
   Pop-Location
+}
+
+Run "flutter" @("config", "--enable-windows-desktop")
+
+if (-not (Get-Command flutter_rust_bridge_codegen -ErrorAction SilentlyContinue)) {
+  Run "cargo" @("install", "flutter_rust_bridge_codegen", "--locked")
 }
 
 Push-Location (Join-Path $rootDir "flutter\oxide_runtime")
@@ -118,11 +144,13 @@ foreach ($dir in $exampleDirs) {
     Run "flutter" @("pub", "get")
     if (Test-Path "flutter_rust_bridge.yaml") {
       Run "flutter_rust_bridge_codegen" @("generate", "--config-file", "flutter_rust_bridge.yaml")
-      $diff = git diff --name-only | Select-String -Pattern '(^|/)frb_generated\.'
+      $diff = git diff --name-only -- . | Select-String -Pattern '(^|/)frb_generated\.'
       if ($diff) {
         Write-Host "FRB generated outputs are out of date in ${dir}:"
         $diff | ForEach-Object { Write-Host $_ }
-        throw "FRB generated outputs are out of date."
+        if ($env:QA_SKIP_FRB_DIFF_CHECK -ne "1") {
+          throw "FRB generated outputs are out of date."
+        }
       }
     }
     Run "dart" @("run", "build_runner", "build", "-d")

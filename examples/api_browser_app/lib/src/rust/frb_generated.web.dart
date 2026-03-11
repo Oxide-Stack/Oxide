@@ -234,10 +234,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CommentsAction dco_decode_box_autoadd_comments_action(dynamic raw);
 
   @protected
+  CommentsState dco_decode_box_autoadd_comments_state(dynamic raw);
+
+  @protected
   HomeRoute dco_decode_box_autoadd_home_route(dynamic raw);
 
   @protected
   PostsAction dco_decode_box_autoadd_posts_action(dynamic raw);
+
+  @protected
+  PostsState dco_decode_box_autoadd_posts_state(dynamic raw);
 
   @protected
   RouteKind dco_decode_box_autoadd_route_kind(dynamic raw);
@@ -258,6 +264,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   UsersAction dco_decode_box_autoadd_users_action(dynamic raw);
 
   @protected
+  UsersState dco_decode_box_autoadd_users_state(dynamic raw);
+
+  @protected
   Comment dco_decode_comment(dynamic raw);
 
   @protected
@@ -265,6 +274,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CommentsState dco_decode_comments_state(dynamic raw);
+
+  @protected
+  CommentsStateSlice dco_decode_comments_state_slice(dynamic raw);
 
   @protected
   CommentsStateSnapshot dco_decode_comments_state_snapshot(dynamic raw);
@@ -282,7 +294,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<Comment> dco_decode_list_comment(dynamic raw);
 
   @protected
+  List<CommentsStateSlice> dco_decode_list_comments_state_slice(dynamic raw);
+
+  @protected
   List<Post> dco_decode_list_post(dynamic raw);
+
+  @protected
+  List<PostsStateSlice> dco_decode_list_posts_state_slice(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -292,6 +310,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<User> dco_decode_list_user(dynamic raw);
+
+  @protected
+  List<UsersStateSlice> dco_decode_list_users_state_slice(dynamic raw);
 
   @protected
   LoadPhase dco_decode_load_phase(dynamic raw);
@@ -319,6 +340,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PostsState dco_decode_posts_state(dynamic raw);
+
+  @protected
+  PostsStateSlice dco_decode_posts_state_slice(dynamic raw);
 
   @protected
   PostsStateSnapshot dco_decode_posts_state_snapshot(dynamic raw);
@@ -352,6 +376,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   UsersState dco_decode_users_state(dynamic raw);
+
+  @protected
+  UsersStateSlice dco_decode_users_state_slice(dynamic raw);
 
   @protected
   UsersStateSnapshot dco_decode_users_state_snapshot(dynamic raw);
@@ -550,10 +577,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CommentsState sse_decode_box_autoadd_comments_state(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   HomeRoute sse_decode_box_autoadd_home_route(SseDeserializer deserializer);
 
   @protected
   PostsAction sse_decode_box_autoadd_posts_action(SseDeserializer deserializer);
+
+  @protected
+  PostsState sse_decode_box_autoadd_posts_state(SseDeserializer deserializer);
 
   @protected
   RouteKind sse_decode_box_autoadd_route_kind(SseDeserializer deserializer);
@@ -578,6 +613,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   UsersAction sse_decode_box_autoadd_users_action(SseDeserializer deserializer);
 
   @protected
+  UsersState sse_decode_box_autoadd_users_state(SseDeserializer deserializer);
+
+  @protected
   Comment sse_decode_comment(SseDeserializer deserializer);
 
   @protected
@@ -585,6 +623,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CommentsState sse_decode_comments_state(SseDeserializer deserializer);
+
+  @protected
+  CommentsStateSlice sse_decode_comments_state_slice(
+    SseDeserializer deserializer,
+  );
 
   @protected
   CommentsStateSnapshot sse_decode_comments_state_snapshot(
@@ -604,7 +647,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<Comment> sse_decode_list_comment(SseDeserializer deserializer);
 
   @protected
+  List<CommentsStateSlice> sse_decode_list_comments_state_slice(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<Post> sse_decode_list_post(SseDeserializer deserializer);
+
+  @protected
+  List<PostsStateSlice> sse_decode_list_posts_state_slice(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -616,6 +669,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<User> sse_decode_list_user(SseDeserializer deserializer);
+
+  @protected
+  List<UsersStateSlice> sse_decode_list_users_state_slice(
+    SseDeserializer deserializer,
+  );
 
   @protected
   LoadPhase sse_decode_load_phase(SseDeserializer deserializer);
@@ -647,6 +705,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PostsState sse_decode_posts_state(SseDeserializer deserializer);
+
+  @protected
+  PostsStateSlice sse_decode_posts_state_slice(SseDeserializer deserializer);
 
   @protected
   PostsStateSnapshot sse_decode_posts_state_snapshot(
@@ -682,6 +743,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   UsersState sse_decode_users_state(SseDeserializer deserializer);
+
+  @protected
+  UsersStateSlice sse_decode_users_state_slice(SseDeserializer deserializer);
 
   @protected
   UsersStateSnapshot sse_decode_users_state_snapshot(
@@ -924,6 +988,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_comments_state(
+    CommentsState self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_home_route(
     HomeRoute self,
     SseSerializer serializer,
@@ -932,6 +1002,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_posts_action(
     PostsAction self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_posts_state(
+    PostsState self,
     SseSerializer serializer,
   );
 
@@ -969,6 +1045,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_users_state(
+    UsersState self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_comment(Comment self, SseSerializer serializer);
 
   @protected
@@ -979,6 +1061,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_comments_state(CommentsState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_comments_state_slice(
+    CommentsStateSlice self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_comments_state_snapshot(
@@ -999,7 +1087,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_comment(List<Comment> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_comments_state_slice(
+    List<CommentsStateSlice> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_post(List<Post> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_posts_state_slice(
+    List<PostsStateSlice> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_strict(
@@ -1015,6 +1115,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_user(List<User> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_users_state_slice(
+    List<UsersStateSlice> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_load_phase(LoadPhase self, SseSerializer serializer);
@@ -1051,6 +1157,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_posts_state(PostsState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_posts_state_slice(
+    PostsStateSlice self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_posts_state_snapshot(
@@ -1090,6 +1202,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_users_state(UsersState self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_users_state_slice(
+    UsersStateSlice self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_users_state_snapshot(
