@@ -241,6 +241,9 @@ error[E0599]: the method `subscribe` exists for struct `ReducerEngine<MyReducer,
  4 | pub struct MyState {
    | ------------------ doesn't satisfy `MyState: SlicedState`
 ...
+16 | pub struct MyReducer;
+   | -------------------- doesn't satisfy `MyReducer: Reducer<_>`
+17 |
 18 | #[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0 }, no_frb)]
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method cannot be called on `ReducerEngine<MyReducer, _>` due to unsatisfied trait bounds
    |

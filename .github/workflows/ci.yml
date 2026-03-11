@@ -14,7 +14,6 @@ jobs:
       - name: Verify version sync
         run: bash ./tools/scripts/version_sync.sh --verify
 
-
   rust:
     runs-on: ubuntu-latest
     needs: verify
@@ -67,12 +66,16 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Install flutter_rust_bridge_codegen
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install flutter_rust_bridge_codegen (via cargo)
         shell: bash
         run: |
           set -euo pipefail
-          dart pub global activate flutter_rust_bridge_codegen
-          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+          # Install via cargo (FRB codegen is distributed via cargo)
+          if ! command -v flutter_rust_bridge_codegen >/dev/null 2>&1; then
+            cargo install flutter_rust_bridge_codegen --locked
+          fi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
       - name: Test oxide_runtime
         working-directory: flutter/oxide_runtime
@@ -101,6 +104,7 @@ jobs:
             (
               cd "$dir"
               flutter pub get
+              # Use the cargo-installed binary
               flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
               if git diff --name-only | grep -E '(^|/)frb_generated\.' >/dev/null; then
                 echo "FRB generated outputs are out of date in $dir:"
@@ -130,13 +134,17 @@ jobs:
           flutter config --enable-windows-desktop
           flutter doctor -v
           flutter devices
-      - name: Install flutter_rust_bridge_codegen
+      - name: Install flutter_rust_bridge_codegen (via cargo)
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
           Set-StrictMode -Version Latest
-          dart pub global activate flutter_rust_bridge_codegen
-          $env:PATH = "$env:PATH;$env:LOCALAPPDATA\Pub\Cache\bin"
+          # Install via cargo if not already present
+          if (-not (Get-Command flutter_rust_bridge_codegen -ErrorAction SilentlyContinue)) {
+            cargo install flutter_rust_bridge_codegen --locked
+          }
+          # Ensure the cargo bin dir is on PATH for subsequent steps in this job
+          $env:PATH = "$env:PATH;$env:USERPROFILE\.cargo\bin"
       - name: Test examples (Windows integration tests)
         shell: pwsh
         run: |
