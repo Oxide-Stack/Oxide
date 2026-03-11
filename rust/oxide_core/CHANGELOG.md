@@ -1,4 +1,9 @@
-
+## 0.4.0
+- Unified initialization: converge runtime init APIs to enable `OxideStack.init()` replacing the previous `RustLib.init()` + `initOxide()` pattern
+- Add typed FRB command stream plumbing used by navigation route payloads and expose initialization hooks for the navigation runtime
+- Wire isolated-channel runtime primitives (event, callbacking, duplex) so codegen-generated entrypoints can interoperate with the runtime; include helpers and init plumbing
+- Provide runtime migration support for FRB-generated entrypoints and helpers to ease migration from older init patterns
+- Internal runtime refactors to improve lifecycle management, initialization ordering, and testability
 
 ## 0.3.0
 - Add isolated channels runtime primitives (event, callbacking, duplex) with init plumbing and tests

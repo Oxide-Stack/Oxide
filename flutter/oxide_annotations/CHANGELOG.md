@@ -1,3 +1,9 @@
+## 0.4.0
+- Expand navigation annotations and metadata to support macro-driven route generation and migration to the new navigation init pattern
+- Add support for `oxide_route`-style metadata consumed by the generator to produce typed route bindings and a unified `oxide.dart` entrypoint
+- Add annotation metadata to enable isolated-channel codegen (event/duplex/callback) and runtime wiring
+- Update annotation documentation and examples to align with the unified `OxideStack.init()` initialization pattern
+
 ## 0.3.0
 - Add navigation annotations support and refresh metadata
 
@@ -22,7 +28,6 @@
 - Rust: `oxide_generator_rs` state/actions/reducer macros (FRB-friendly surface generation).
 - Flutter: `oxide_annotations`, `oxide_generator`, and `oxide_runtime`.
 - Examples: counter, todos (persistence), ticker, benchmark.
-
 
 ## 0.0.1
 - Initial Release
