@@ -24,10 +24,10 @@ help: the trait `SlicedState` is not implemented for `MyState`
    | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_without_sliced_state.rs:24:5
+  --> tests/ui/fail_reducer_infer_without_sliced_state.rs:24:78
    |
 24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |                                                                              ^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`
   --> tests/ui/fail_reducer_infer_without_sliced_state.rs:4:1
@@ -118,6 +118,13 @@ help: the trait `SlicedState` is not implemented for `MyState`
    |
  4 | pub struct MyState {
    | ^^^^^^^^^^^^^^^^^^
+
+note: required by a bound in `_oxide_require_sliced_state`
+  --> tests/ui/fail_reducer_infer_without_sliced_state.rs:18:1
+   |
+18 | #[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0 }, no_frb)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `_oxide_require_sliced_state`
+   = note: this error originates in the attribute macro `reducer` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0599]: the function or associated item `new` exists for struct `ReducerEngine<MyReducer, _>`, but its trait bounds were not satisfied
   --> tests/ui/fail_reducer_infer_without_sliced_state.rs:18:1
