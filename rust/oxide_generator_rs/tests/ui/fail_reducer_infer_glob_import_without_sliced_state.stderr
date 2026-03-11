@@ -12,10 +12,10 @@ help: the trait `SlicedState` is not implemented for `MyState`
    = note: this error originates in the attribute macro `reducer` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:36
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:26:15
    |
-24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
-   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+26 |         _ctx: oxide_core::InitContext<Self::SideEffect>,
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
@@ -26,8 +26,11 @@ help: the trait `SlicedState` is not implemented for `MyState`
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:5
    |
-24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+24 | /     async fn init(
+25 | |         &mut self,
+26 | |         _ctx: oxide_core::InitContext<Self::SideEffect>,
+27 | |     ) {
+   | |_____^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
@@ -72,10 +75,10 @@ help: the trait `SlicedState` is not implemented for `MyState`
    | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:24:60
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:26:39
    |
-24 |     async fn init(&mut self, _ctx: oxide_core::InitContext<Self::SideEffect>) {}
-   |                                                            ^^^^^^^^^^^^^^^^ unsatisfied trait bound
+26 |         _ctx: oxide_core::InitContext<Self::SideEffect>,
+   |                                       ^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`
   --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:4:1
@@ -84,9 +87,9 @@ help: the trait `SlicedState` is not implemented for `MyState`
    | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:28:21
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:32:21
    |
-28 |         state: &mut Self::State,
+32 |         state: &mut Self::State,
    |                     ^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`
@@ -96,9 +99,9 @@ help: the trait `SlicedState` is not implemented for `MyState`
    | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:50:22
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:54:22
    |
-50 |         _state: &mut Self::State,
+54 |         _state: &mut Self::State,
    |                      ^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`
@@ -194,9 +197,9 @@ note: the trait `SlicedState` must be implemented
    = note: this error originates in the attribute macro `reducer` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:28:16
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:32:16
    |
-28 |         state: &mut Self::State,
+32 |         state: &mut Self::State,
    |                ^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`
@@ -206,9 +209,9 @@ help: the trait `SlicedState` is not implemented for `MyState`
    | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: the trait bound `MyState: SlicedState` is not satisfied
-  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:50:17
+  --> tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs:54:17
    |
-50 |         _state: &mut Self::State,
+54 |         _state: &mut Self::State,
    |                 ^^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `SlicedState` is not implemented for `MyState`
