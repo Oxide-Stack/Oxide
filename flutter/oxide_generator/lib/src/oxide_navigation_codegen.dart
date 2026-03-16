@@ -144,7 +144,7 @@ Future<RustChannelMetadata> readRustChannelMetadata() async {
   }
 
   if (events.isEmpty && callbacks.isEmpty && bridgeText != null) {
-    _inferChannelsFromBridge(bridgeText!, events: events, callbacks: callbacks);
+    _inferChannelsFromBridge(bridgeText, events: events, callbacks: callbacks);
   }
 
   return RustChannelMetadata(events: events, callbacks: callbacks, crateName: crateName, initFnName: initFnName);
@@ -575,13 +575,17 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     final rustType = r.rustType;
     final kindCtor = _lowerCamel(r.kind);
     buf.writeln('    case RouteKind.$kindCtor:');
-    buf.writeln('      final r = route as route_models.$rustType;');
-    buf.writeln('      return rust_routes.RoutePayload.$kindCtor($rustType(');
-    for (final f in r.fields) {
-      final fieldName = _lowerCamel(f.name);
-      buf.writeln('        $fieldName: r.$fieldName,');
+    if (r.fields.isEmpty) {
+      buf.writeln('      return rust_routes.RoutePayload.$kindCtor($rustType());');
+    } else {
+      buf.writeln('      final r = route as route_models.$rustType;');
+      buf.writeln('      return rust_routes.RoutePayload.$kindCtor($rustType(');
+      for (final f in r.fields) {
+        final fieldName = _lowerCamel(f.name);
+        buf.writeln('        $fieldName: r.$fieldName,');
+      }
+      buf.writeln('      ));');
     }
-    buf.writeln('      ));');
   }
   buf
     ..writeln('  }')
@@ -600,9 +604,12 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('}')
     ..writeln()
     ..writeln('OxideNavigationCommand<route_models.OxideRoute, RouteKind> _mapOxideNavCommand(rust_nav.OxideNavCommand cmd) {')
-    ..writeln('  // debug incoming commands from Rust')
-    ..writeln('  // ignore: avoid_print')
-    ..writeln('  print("[Oxide] received nav command: \$cmd");')
+    ..writeln('  assert(() {')
+    ..writeln('    // debug incoming commands from Rust')
+    ..writeln('    // ignore: avoid_print')
+    ..writeln('    print("[Oxide] received nav command: \$cmd");')
+    ..writeln('    return true;')
+    ..writeln('  }());')
     ..writeln('  return cmd.when(')
     ..writeln('    push: (route, ticket) {')
     ..writeln('      final decoded = _fromRustRoutePayload(route);')
@@ -651,14 +658,20 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('// multiple times (e.g. hot-restart, debug experiments).')
     // top-level flag keeps state across repeated init calls; easier to format
     ..writeln('bool _oxideNavStarted = false;')
-    ..writeln('void oxideNavStart() {')
-    ..writeln('  // debug log to trace calls')
-    ..writeln('  // ignore: avoid_print')
-    ..writeln(r"  print('[Oxide] oxideNavStart called, started=$_oxideNavStarted');")
+    ..writeln('Future<void> oxideNavStart() async {')
+    ..writeln('  assert(() {')
+    ..writeln('    // debug log to trace calls')
+    ..writeln('    // ignore: avoid_print')
+    ..writeln(r"    print('[Oxide] oxideNavStart called, started=$_oxideNavStarted');")
+    ..writeln('    return true;')
+    ..writeln('  }());')
     ..writeln('  if (_oxideNavStarted) return;')
     ..writeln('  _oxideNavStarted = true;')
     ..writeln('  oxideNavigationRuntime.start();')
-    ..writeln('  unawaited(rust_nav.initNavigation());')
+    ..writeln('  WidgetsBinding.instance.addPostFrameCallback((_) {')
+    ..writeln('    // initNavigation requires the navigation stack to exist (after the first frame).')
+    ..writeln('    unawaited(rust_nav.initNavigation());')
+    ..writeln('  });')
     ..writeln('}')
     ..writeln()
     ..writeln('Future<void> oxideNavStop() => oxideNavigationRuntime.stop();');
@@ -717,7 +730,7 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln()
     ..writeln('  static GlobalKey<NavigatorState> get navigatorKey => oxideNavigatorKey;')
     ..writeln()
-    ..writeln('  static Future<void> init({bool startNavigation = true}) async {')
+    ..writeln('  static Future<void> init({bool startNavigation = false}) async {')
     ..writeln('    if (_initialized) return;')
     ..writeln('    // make sure flutter bindings are ready; simplifies example setup')
     ..writeln('    WidgetsFlutterBinding.ensureInitialized();')
@@ -728,7 +741,7 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln(hasChannels ? '    // initialize any generated channel APIs before returning' : '')
     ..writeln(hasChannels ? '    await oxideInitChannels();' : '')
     ..writeln('    if (startNavigation) {')
-    ..writeln('      oxideNavStart();')
+    ..writeln('      await oxideNavStart();')
     ..writeln('    }')
     ..writeln('  }')
     ..writeln()
@@ -819,8 +832,8 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
   buf.writeln('// initial route.');
   buf.writeln('Future<void> runOxideApp(Widget app, {bool startNavigation = true}) async {');
   buf.writeln('  WidgetsFlutterBinding.ensureInitialized();');
-  buf.writeln('  // always perform core init but postpone actual navigation start');
-  buf.writeln('  await OxideStack.init(startNavigation: false);');
+  buf.writeln('  // always perform core init; navigation start is deferred until the first frame.');
+  buf.writeln('  await OxideStack.init();');
   buf.writeln('  runApp(app);');
   buf.writeln('  if (startNavigation) {');
   buf.writeln('    WidgetsBinding.instance.addPostFrameCallback((_) {');

@@ -49,7 +49,7 @@ final class _IsolatedChannelsDemoPaneState extends State<IsolatedChannelsDemoPan
     });
 
     try {
-      await OxideStack.init(startNavigation: false);
+      await OxideStack.init();
       // no manual init necessary any more – OxideStack.init() handles it
 
       // use unified public API surface instead of raw bridge helpers

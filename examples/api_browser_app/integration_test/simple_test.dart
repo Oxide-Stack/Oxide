@@ -13,8 +13,8 @@ import 'package:api_browser_app/oxide.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
-    // disable navigation so runtime doesn't log errors during testing
-    await OxideStack.init(startNavigation: false);
+    // Initialization should be safe regardless of navigator wiring.
+    await OxideStack.init();
   });
 
   testWidgets('Loads users, posts, and comments via local API server', (WidgetTester tester) async {

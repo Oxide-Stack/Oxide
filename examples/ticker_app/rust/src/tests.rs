@@ -3,7 +3,7 @@ use crate::state::AppAction;
 
 #[tokio::test]
 async fn manual_tick_increments_ticks() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let _ = engine.dispatch(AppAction::ManualTick).await.expect("dispatch");
     let snapshot = engine.current().await;
@@ -12,7 +12,7 @@ async fn manual_tick_increments_ticks() {
 
 #[tokio::test]
 async fn reset_sets_ticks_to_zero() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let _ = engine.dispatch(AppAction::ManualTick).await.expect("dispatch");
     let snapshot = engine.dispatch(AppAction::Reset).await.expect("dispatch");
@@ -21,7 +21,7 @@ async fn reset_sets_ticks_to_zero() {
 
 #[tokio::test]
 async fn auto_tick_requires_running() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let before = engine.current().await;
     let _ = engine.dispatch(AppAction::AutoTick).await.expect("dispatch");
@@ -31,7 +31,7 @@ async fn auto_tick_requires_running() {
 
 #[tokio::test]
 async fn start_ticker_spawns_background_auto_ticks() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let mut rx = engine.subscribe();
     let before = rx.borrow().clone();
@@ -61,7 +61,7 @@ async fn start_ticker_spawns_background_auto_ticks() {
 
 #[tokio::test]
 async fn side_effect_tick_updates_state() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let mut rx = engine.subscribe();
     let before = rx.borrow().clone();
@@ -82,7 +82,7 @@ async fn side_effect_tick_updates_state() {
 
 #[tokio::test]
 async fn start_ticker_is_idempotent_for_same_interval() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let _ = engine
         .dispatch(AppAction::StartTicker { interval_ms: 50 })
@@ -102,7 +102,7 @@ async fn start_ticker_is_idempotent_for_same_interval() {
 
 #[tokio::test]
 async fn start_ticker_updates_interval_when_running() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let _ = engine
         .dispatch(AppAction::StartTicker { interval_ms: 10 })
@@ -126,7 +126,7 @@ async fn start_ticker_updates_interval_when_running() {
 
 #[tokio::test]
 async fn stop_ticker_is_noop_when_stopped() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let before = engine.current().await;
     let _ = engine.dispatch(AppAction::StopTicker).await.expect("dispatch");
@@ -137,7 +137,7 @@ async fn stop_ticker_is_noop_when_stopped() {
 
 #[tokio::test]
 async fn reset_is_noop_from_initial_state() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let before = engine.current().await;
     let _ = engine.dispatch(AppAction::Reset).await.expect("dispatch");
@@ -148,12 +148,12 @@ async fn reset_is_noop_from_initial_state() {
 
 #[test]
 fn frb_init_app_is_callable() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
 }
 
 #[tokio::test]
 async fn stop_ticker_stops_background_task() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let mut rx = engine.subscribe();
 
@@ -185,7 +185,7 @@ async fn stop_ticker_stops_background_task() {
 
 #[tokio::test]
 async fn auto_tick_action_updates_tick_slice_when_running() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = AppEngine::new().await.unwrap();
     let before = engine.current().await;
 
@@ -202,7 +202,7 @@ async fn auto_tick_action_updates_tick_slice_when_running() {
 
 #[tokio::test]
 async fn frb_engine_helpers_are_callable() {
-    crate::oxide::init::init_oxide();
+    crate::oxide::init::init_oxide().expect("oxide init");
     let engine = crate::api::bridge::create_engine().await.unwrap();
     let _ = crate::api::bridge::current(&engine).await;
     let _ = crate::api::bridge::dispatch(&engine, AppAction::ManualTick)

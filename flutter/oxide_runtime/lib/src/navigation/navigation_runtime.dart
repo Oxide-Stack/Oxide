@@ -129,7 +129,7 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
         // ignore redundant resets to avoid unnecessary navigator churn and
         // flicker. equality is based on route sequence, preserving order.
         if (!_routesEqual(_stack, routes)) {
-          handler.reset(routes);
+          await handler.reset(routes);
           _reset(routes);
           await _syncCurrentRoute();
         }

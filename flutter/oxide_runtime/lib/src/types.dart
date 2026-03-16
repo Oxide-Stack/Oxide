@@ -28,9 +28,8 @@ typedef OxideStateStream<E, Snap> = Stream<Snap> Function(E engine);
 /// This is typically used for lightweight per-library initialization in the
 /// bindings layer.
 ///
-/// In Flutter Rust Bridge (FRB) apps, you should still call `RustLib.init()` and
-/// the app's `initOxide()` during `main()`; this hook is not a substitute for
-/// that required runtime initialization.
+/// In Flutter apps, you should still call `OxideStack.init()` during `main()`;
+/// this hook is not a substitute for that required runtime initialization.
 typedef OxideInitApp = void Function();
 
 /// Extracts the state value from a snapshot.

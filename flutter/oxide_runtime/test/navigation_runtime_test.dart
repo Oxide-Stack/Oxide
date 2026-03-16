@@ -33,7 +33,7 @@ final class _TestHandler implements OxideNavigationHandler<String, String> {
   }
 
   @override
-  void reset(List<String> routes) {
+  Future<void> reset(List<String> routes) async {
     resets.add(List<String>.from(routes));
     current = routes.isEmpty ? null : routes.last;
   }

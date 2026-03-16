@@ -95,28 +95,26 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
   }
 
   @override
-  void reset(List<RouteT> routes) {
+  Future<void> reset(List<RouteT> routes) async {
     final navigator = navigatorKey.currentState;
     if (navigator != null) {
       if (routes.isEmpty) {
         navigator.popUntil((r) => r.isFirst);
         return;
       }
-      unawaited(_resetAsync(navigator, routes));
+      await _resetAsync(navigator, routes);
       return;
     }
-    unawaited(() async {
-      try {
-        final navigator = await _waitForNavigator();
-        if (routes.isEmpty) {
-          navigator.popUntil((r) => r.isFirst);
-          return;
-        }
-        await _resetAsync(navigator, routes);
-      } catch (error, stackTrace) {
-        Zone.current.handleUncaughtError(error, stackTrace);
+    try {
+      final navigator = await _waitForNavigator();
+      if (routes.isEmpty) {
+        navigator.popUntil((r) => r.isFirst);
+        return;
       }
-    }());
+      await _resetAsync(navigator, routes);
+    } catch (error, stackTrace) {
+      Zone.current.handleUncaughtError(error, stackTrace);
+    }
   }
 
   @override

@@ -493,12 +493,12 @@ fn generate_oxide_init_module() -> syn::Result<TokenStream2> {
         pub mod oxide {
             pub mod init {
                 #[flutter_rust_bridge::frb(init)]
-                pub fn init_oxide() {
+                pub fn init_oxide() -> Result<(), oxide_core::OxideError> {
                     flutter_rust_bridge::setup_default_user_utils();
                     fn thread_pool() -> oxide_core::runtime::ThreadPool {
                         crate::frb_generated::FLUTTER_RUST_BRIDGE_HANDLER.thread_pool()
                     }
-                    oxide_core::init_from_frb(thread_pool).expect("oxide init failed during FRB init");
+                    oxide_core::init_from_frb(thread_pool)
                 }
             }
         }

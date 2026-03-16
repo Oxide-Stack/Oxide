@@ -10,10 +10,13 @@
 //! ## Initialization requirement
 //!
 //! The FRB spawning APIs require access to a thread pool provider. Consumers
-//! must initialize Oxide once at application startup (typically exposed as an
-//! `initOxide()` function in their FRB API module) before creating any engines.
+//! must initialize Oxide once at application startup before creating any engines.
 //!
-//! In other words, call `runtime::init(...)` after `RustLib.init()` (Dart) and
+//! In Flutter apps, this is typically performed by calling `OxideStack.init()`
+//! from `main()`, which ensures `RustLib.init()` is executed and the generated
+//! FRB init hook (e.g., `init_oxide`) runs.
+//!
+//! In other environments, call `runtime::init(...)` after `RustLib.init()` and
 //! before `ReducerEngine::new(...)`.
 
 // Maintenance: keep this module free of store/reducer semantics. It should only
@@ -70,7 +73,7 @@ pub fn ensure_initialized() -> CoreResult<()> {
 
     Err(crate::OxideError::Validation {
         message:
-            "oxide_core runtime not initialized; call initOxide() from Dart main after RustLib.init()"
+            "oxide_core runtime not initialized; call OxideStack.init() from Dart main (this calls RustLib.init() and the generated init hook)"
                 .to_string(),
     })
 }
@@ -84,7 +87,9 @@ pub fn thread_pool() -> CoreResult<ThreadPool> {
     ensure_initialized()?;
     let provider = THREAD_POOL_PROVIDER
         .get()
-        .expect("thread pool provider present after ensure_initialized");
+        .ok_or_else(|| crate::OxideError::Validation {
+            message: "oxide_core runtime thread pool provider not set".to_string(),
+        })?;
     Ok(provider())
 }
 
@@ -98,7 +103,9 @@ where
     F: Future + Send + 'static,
     F::Output: Send + 'static,
 {
-    ensure_initialized().expect("oxide_core runtime must be initialized before spawning");
+    if let Err(err) = ensure_initialized() {
+        debug_assert!(false, "oxide_core runtime must be initialized before spawning: {err}");
+    }
     flutter_rust_bridge::spawn(future)
 }
 
@@ -107,7 +114,9 @@ pub fn spawn_local<F>(future: F)
 where
     F: Future<Output = ()> + 'static,
 {
-    ensure_initialized().expect("oxide_core runtime must be initialized before spawning");
+    if let Err(err) = ensure_initialized() {
+        debug_assert!(false, "oxide_core runtime must be initialized before spawning: {err}");
+    }
     wasm_bindgen_futures::spawn_local(future);
 }
 

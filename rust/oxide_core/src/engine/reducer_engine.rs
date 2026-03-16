@@ -76,7 +76,7 @@ where
 ///
 /// # Runtime requirements
 /// Creating an engine spawns a background task via Flutter Rust Bridge.
-/// Call `initOxide()` from Dart (after `RustLib.init()`) before creating engines.
+/// Call `OxideStack.init()` from Dart (which calls `RustLib.init()` and the generated init hook) before creating engines.
 pub struct ReducerEngine<R, StateSlice = ()>
 where
     R: Reducer<StateSlice>,

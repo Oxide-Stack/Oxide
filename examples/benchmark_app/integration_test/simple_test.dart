@@ -11,7 +11,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
     // navigation not needed for bench app smoke test
-    await OxideStack.init(startNavigation: false);
+    await OxideStack.init();
   });
 
   testWidgets('App boots and renders dashboard', (WidgetTester tester) async {

@@ -107,7 +107,9 @@ void main() {
     expect(src, contains('if (_oxideNavStarted) return;'));
     // debug log should be emitted
     expect(src, contains("print('[Oxide] oxideNavStart called"));
-    expect(src, contains('initNavigation()'));
+    expect(src, contains('Future<void> oxideNavStart() async')); // schedules init for the next frame
+    expect(src, contains('WidgetsBinding.instance.addPostFrameCallback'));
+    expect(src, contains('unawaited(rust_nav.initNavigation());'));
   });
 
   test('generateOxideStackSource forwards to bridge APIs', () {

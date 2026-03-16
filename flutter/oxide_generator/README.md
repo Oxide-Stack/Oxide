@@ -75,7 +75,7 @@ The generator emits backend-specific glue. Depending on `backend: OxideBackend..
 - `keepAlive`: keeps the generated store alive when possible (backend-dependent behavior).
 - `bindings`: optional import alias prefix used to qualify default binding function names.
 - `createEngine`, `disposeEngine`, `dispatch`, `stateStream`, `current`: binding function names (typically FRB-generated).
-- `initApp`: optional initialization hook invoked at the start of store initialization (not a substitute for FRB `RustLib.init()` + `initOxide()`).
+- `initApp`: optional initialization hook invoked at the start of store initialization (not a substitute for calling `OxideStack.init()` in `main()`).
 - `encodeCurrentState`: optional binding used by the runtime to snapshot/persist bytes.
 
 ## Lifetime / Keep-Alive

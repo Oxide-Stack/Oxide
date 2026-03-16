@@ -17,7 +17,6 @@ Future<void> main() async {
         child: BenchJsonHooksOxideScope(child: BenchSieveHooksOxideScope(child: BenchApp())),
       ),
     ),
-    startNavigation: false,
   );
 
   // start the navigation runtime manually and then immediately wipe any
