@@ -139,6 +139,8 @@ impl NavigationRuntime {
     }
 
     fn send_command(&self, cmd: NavCommand) -> CoreResult<()> {
+        let cmd_desc = format!("{:?}", cmd);
+        tracing::debug!(target: "oxide::nav", "Emitting navigation command: {}", cmd_desc);
         self.command_tx.send(cmd).map_err(|_| OxideError::Internal {
             message: "navigation command stream receiver disconnected".into(),
         })

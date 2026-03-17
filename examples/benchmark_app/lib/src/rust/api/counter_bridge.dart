@@ -20,6 +20,9 @@ Future<ArcCounterEngine> createEngine() =>
 Future<void> disposeEngine({required ArcCounterEngine engine}) =>
     RustLib.instance.api.crateApiCounterBridgeDisposeEngine(engine: engine);
 
+Stream<(String, String, String)> setupRustLogs() =>
+    RustLib.instance.api.crateApiCounterBridgeSetupRustLogs();
+
 Future<CounterStateSnapshot> dispatch({
   required ArcCounterEngine engine,
   required CounterAction action,

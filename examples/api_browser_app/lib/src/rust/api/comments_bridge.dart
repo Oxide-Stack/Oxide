@@ -20,6 +20,9 @@ Future<ArcCommentsEngine> createEngine() =>
 Future<void> disposeEngine({required ArcCommentsEngine engine}) =>
     RustLib.instance.api.crateApiCommentsBridgeDisposeEngine(engine: engine);
 
+Stream<(String, String, String)> setupRustLogs() =>
+    RustLib.instance.api.crateApiCommentsBridgeSetupRustLogs();
+
 Future<CommentsStateSnapshot> dispatch({
   required ArcCommentsEngine engine,
   required CommentsAction action,

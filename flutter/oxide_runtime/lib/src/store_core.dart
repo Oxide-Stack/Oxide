@@ -5,6 +5,7 @@
 // and error capture.
 import 'dart:async';
 
+import 'logger.dart';
 import 'types.dart';
 
 /// Core runtime used by generated store wrappers.
@@ -125,6 +126,7 @@ final class OxideStoreCore<S, A, E, Snap> {
   /// A future that completes once the core is initialized (successfully or with
   /// an error recorded).
   Future<void> initialize({S? initialState}) async {
+    OxideLogger.trace('OxideStore', 'Initializing engine...');
     _isLoading = true;
     _error = null;
     _errorStackTrace = null;
@@ -152,6 +154,12 @@ final class OxideStoreCore<S, A, E, Snap> {
           _emitSnapshot(initialSnap);
         }
       }
+
+      if (OxideLogger.isAdvancedLoggingEnabled) {
+        OxideLogger.advanced('OxideStore', 'Initial snapshot: ${_snapshotSummary(initialSnap)}');
+      }
+
+      OxideLogger.debug('OxideStore', 'Engine initialized and snapshot recorded.');
       if (_isDisposed) return;
 
       _subscription = stateStream(engine).listen(
@@ -195,8 +203,14 @@ final class OxideStoreCore<S, A, E, Snap> {
 
     _error = null;
     _errorStackTrace = null;
+    final previousSnapshot = _snapshot;
+
+    if (OxideLogger.isAdvancedLoggingEnabled) {
+      OxideLogger.advanced('OxideStore', 'Dispatch payload: before=${_snapshotSummary(previousSnapshot)} action=$action');
+    }
 
     try {
+      OxideLogger.trace('OxideStore', 'Dispatching action: $action');
       _snapshot = await _track(() => dispatch(engine, action));
       final snap = _snapshot;
       if (snap != null) {
@@ -204,7 +218,11 @@ final class OxideStoreCore<S, A, E, Snap> {
           _emitSnapshot(snap);
         }
       }
+
+      OxideLogger.advancedTransition('OxideStore', before: _snapshotSummary(previousSnapshot), action: action, after: _snapshotSummary(snap));
     } catch (err, st) {
+      OxideLogger.error('OxideStore', 'Error dispatching action: $action', err, st);
+      OxideLogger.advanced('OxideStore', 'Dispatch failure: before=${_snapshotSummary(previousSnapshot)} action=$action error=$err');
       _error = err;
       _errorStackTrace = st;
     }
@@ -248,6 +266,30 @@ final class OxideStoreCore<S, A, E, Snap> {
       _lastDeliveredRevision = rev;
     }
     return true;
+  }
+
+  String _snapshotSummary(Snap? snap) {
+    if (snap == null) return 'null';
+
+    final parts = <String>[];
+
+    if (revisionOf != null) {
+      try {
+        final rev = revisionOf!(snap);
+        parts.add('revision=$rev');
+      } catch (_) {
+        parts.add('revision=<unavailable>');
+      }
+    }
+
+    try {
+      final state = stateFromSnapshot(snap);
+      parts.add('state=$state');
+    } catch (_) {
+      parts.add('state=<unavailable>');
+    }
+
+    return parts.join(' ');
   }
 
   void _emitSnapshot(Snap snap) {

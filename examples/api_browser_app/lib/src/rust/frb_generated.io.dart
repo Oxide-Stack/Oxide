@@ -177,6 +177,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_StreamSink_posts_state_snapshot_Sse(dynamic raw);
 
   @protected
+  RustStreamSink<(String, String, String)>
+  dco_decode_StreamSink_record_string_string_string_Sse(dynamic raw);
+
+  @protected
   RustStreamSink<UsersStateSnapshot>
   dco_decode_StreamSink_users_state_snapshot_Sse(dynamic raw);
 
@@ -346,6 +350,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PostsStateSnapshot dco_decode_posts_state_snapshot(dynamic raw);
 
   @protected
+  (String, String, String) dco_decode_record_string_string_string(dynamic raw);
+
+  @protected
   RouteKind dco_decode_route_kind(dynamic raw);
 
   @protected
@@ -498,6 +505,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   RustStreamSink<PostsStateSnapshot>
   sse_decode_StreamSink_posts_state_snapshot_Sse(SseDeserializer deserializer);
+
+  @protected
+  RustStreamSink<(String, String, String)>
+  sse_decode_StreamSink_record_string_string_string_Sse(
+    SseDeserializer deserializer,
+  );
 
   @protected
   RustStreamSink<UsersStateSnapshot>
@@ -713,6 +726,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  (String, String, String) sse_decode_record_string_string_string(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RouteKind sse_decode_route_kind(SseDeserializer deserializer);
 
   @protected
@@ -892,6 +910,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_StreamSink_posts_state_snapshot_Sse(
     RustStreamSink<PostsStateSnapshot> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_record_string_string_string_Sse(
+    RustStreamSink<(String, String, String)> self,
     SseSerializer serializer,
   );
 
@@ -1165,6 +1189,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_posts_state_snapshot(
     PostsStateSnapshot self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_string_string_string(
+    (String, String, String) self,
     SseSerializer serializer,
   );
 

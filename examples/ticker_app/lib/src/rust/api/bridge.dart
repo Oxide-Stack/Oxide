@@ -20,6 +20,9 @@ Future<ArcAppEngine> createEngine() =>
 Future<void> disposeEngine({required ArcAppEngine engine}) =>
     RustLib.instance.api.crateApiBridgeDisposeEngine(engine: engine);
 
+Stream<(String, String, String)> setupRustLogs() =>
+    RustLib.instance.api.crateApiBridgeSetupRustLogs();
+
 Future<AppStateSnapshot> dispatch({
   required ArcAppEngine engine,
   required AppAction action,

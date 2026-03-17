@@ -214,6 +214,7 @@ where
         &self,
         action: R::Action,
     ) -> CoreResult<StateSnapshot<R::State, StateSlice>> {
+        tracing::debug!(target: "oxide::engine", "Dispatching action");
         let mut state = self.shared.state.lock().await;
         let before_snapshot = StateSnapshot {
             revision: state.revision,
@@ -241,8 +242,12 @@ where
 
         match change {
             // Why: "no externally-visible change" should not spam watchers.
-            StateChange::None => Ok(before_snapshot),
+            StateChange::None => {
+                tracing::trace!(target: "oxide::engine", "Action applied, no state change");
+                Ok(before_snapshot)
+            }
             StateChange::Full => {
+                tracing::debug!(target: "oxide::engine", "Action applied, full state update");
                 state.state = next_state;
                 state.revision = state.revision.saturating_add(1);
 
@@ -257,6 +262,7 @@ where
             }
             StateChange::Infer => {
                 let slices = state.reducer.infer_slices(&state.state, &next_state);
+                tracing::debug!(target: "oxide::engine", "Action applied, slice inferred update: {} slices", slices.len());
 
                 state.state = next_state;
                 state.revision = state.revision.saturating_add(1);
@@ -271,6 +277,7 @@ where
                 Ok(snapshot)
             }
             StateChange::Slices(slices) => {
+                tracing::debug!(target: "oxide::engine", "Action applied, explicit slices matched: {} slices", slices.len());
                 state.state = next_state;
                 state.revision = state.revision.saturating_add(1);
 

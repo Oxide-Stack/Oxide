@@ -21,6 +21,9 @@ Future<ArcSieveEngine> createEngine() =>
 Future<void> disposeEngine({required ArcSieveEngine engine}) =>
     RustLib.instance.api.crateApiSieveBridgeDisposeEngine(engine: engine);
 
+Stream<(String, String, String)> setupRustLogs() =>
+    RustLib.instance.api.crateApiSieveBridgeSetupRustLogs();
+
 Future<SieveStateSnapshot> dispatch({
   required ArcSieveEngine engine,
   required SieveAction action,

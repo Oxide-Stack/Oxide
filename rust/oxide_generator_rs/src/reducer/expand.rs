@@ -275,6 +275,15 @@ pub(crate) fn expand_reducer_impl(
             pub fn dispose_engine(_engine: &std::sync::Arc<#engine_ident>) {}
 
             #[flutter_rust_bridge::frb]
+            pub async fn setup_rust_logs(sink: crate::frb_generated::StreamSink<(String, String, String)>) {
+                if let Some(mut rx) = oxide_core::ffi::logger::setup_log_stream() {
+                    while let Some(log) = rx.recv().await {
+                        let _ = sink.add(log);
+                    }
+                }
+            }
+
+            #[flutter_rust_bridge::frb]
             pub async fn dispatch(
                 engine: &std::sync::Arc<#engine_ident>,
                 action: #action_ty,
@@ -473,3 +482,4 @@ pub(crate) fn expand_reducer_impl(
         #frb_tokens
     }
 }
+

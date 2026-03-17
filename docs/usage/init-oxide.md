@@ -33,3 +33,21 @@ Future<void> main() async {
 
 - Call `OxideStack.init()` once per app startup.
 - Do not access `OxideStack.navigation` or create any Oxide engines before initialization.
+
+## Debug Logging Flags
+
+Oxide exposes compile-time Dart flags for structured runtime logging:
+
+- `OXIDE_DEBUG_LOGS=true`: enables explicit debug logs in release builds.
+- `ENABLE_ADVANCED_LOGS=true`: enables verbose transition payload logs (for example `before -> action -> after`).
+
+Common usage:
+
+```bash
+flutter run --dart-define=OXIDE_DEBUG_LOGS=true --dart-define=ENABLE_ADVANCED_LOGS=true
+```
+
+Notes:
+
+- In debug/profile builds, baseline Oxide logs are already available.
+- `ENABLE_ADVANCED_LOGS` is intended for deep diagnostics and can produce large logs because it includes state snapshots and action payloads.

@@ -174,6 +174,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<(String, String, String)>
+  dco_decode_StreamSink_record_string_string_string_Sse(dynamic raw);
+
+  @protected
   RustStreamSink<SieveStateSnapshot>
   dco_decode_StreamSink_sieve_state_snapshot_Sse(dynamic raw);
 
@@ -284,6 +288,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   OxideNavCommand dco_decode_oxide_nav_command(dynamic raw);
+
+  @protected
+  (String, String, String) dco_decode_record_string_string_string(dynamic raw);
 
   @protected
   RouteKind dco_decode_route_kind(dynamic raw);
@@ -439,6 +446,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<(String, String, String)>
+  sse_decode_StreamSink_record_string_string_string_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<SieveStateSnapshot>
   sse_decode_StreamSink_sieve_state_snapshot_Sse(SseDeserializer deserializer);
 
@@ -577,6 +590,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   OxideNavCommand sse_decode_oxide_nav_command(SseDeserializer deserializer);
+
+  @protected
+  (String, String, String) sse_decode_record_string_string_string(
+    SseDeserializer deserializer,
+  );
 
   @protected
   RouteKind sse_decode_route_kind(SseDeserializer deserializer);
@@ -757,6 +775,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_StreamSink_oxide_nav_command_Sse(
     RustStreamSink<OxideNavCommand> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_record_string_string_string_Sse(
+    RustStreamSink<(String, String, String)> self,
     SseSerializer serializer,
   );
 
@@ -949,6 +973,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_oxide_nav_command(
     OxideNavCommand self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_record_string_string_string(
+    (String, String, String) self,
     SseSerializer serializer,
   );
 
