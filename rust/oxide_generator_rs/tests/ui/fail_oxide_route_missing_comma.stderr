@@ -1,0 +1,5 @@
+error: expected `,`
+ --> tests/ui/fail_oxide_route_missing_comma.rs:3:27
+  |
+3 | #[oxide_route(path = "/x" return = i32)]
+  |                           ^^^^^^

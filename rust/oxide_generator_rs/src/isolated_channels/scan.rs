@@ -73,3 +73,56 @@ impl SpanPath for &Path {
         proc_macro2::Span::call_site()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::TEST_ENV_LOCK;
+
+    fn temp_manifest(prefix: &str) -> PathBuf {
+        let mut dir = std::env::temp_dir();
+        dir.push(format!(
+            "{}_{}_{}",
+            prefix,
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(dir.join("src")).unwrap();
+        dir
+    }
+
+    #[test]
+    fn discovers_enum_in_src_and_skips_target_tree() {
+        let _guard = TEST_ENV_LOCK
+            .get_or_init(|| std::sync::Mutex::new(()))
+            .lock()
+            .unwrap();
+
+        let dir = temp_manifest("oxide_scan");
+        fs::write(
+            dir.join("src").join("lib.rs"),
+            "pub enum DialogRequest { Confirm }",
+        )
+        .unwrap();
+        fs::create_dir_all(dir.join("target").join("nested")).unwrap();
+        fs::write(
+            dir.join("target").join("nested").join("ignored.rs"),
+            "pub enum ShouldNotBeScanned { V }",
+        )
+        .unwrap();
+
+        unsafe { std::env::set_var("CARGO_MANIFEST_DIR", &dir) };
+        let found = find_enum_in_crate_src("DialogRequest").unwrap();
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().ident.to_string(), "DialogRequest");
+
+        let missing = find_enum_in_crate_src("ShouldNotBeScanned").unwrap();
+        assert!(missing.is_none());
+
+        let _ = fs::remove_dir_all(dir);
+    }
+}

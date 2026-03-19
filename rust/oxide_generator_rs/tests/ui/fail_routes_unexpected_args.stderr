@@ -1,0 +1,5 @@
+error: unexpected token
+ --> tests/ui/fail_routes_unexpected_args.rs:3:10
+  |
+3 | #[routes(bogus = true)]
+  |          ^^^^^

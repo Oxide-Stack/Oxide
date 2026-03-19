@@ -156,3 +156,70 @@ pub(crate) fn enum_variants(item: &ItemEnum) -> Vec<VariantMeta> {
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Serialize)]
+    struct DummyMeta {
+        kind: &'static str,
+        name: &'static str,
+    }
+
+    #[test]
+    fn collect_doc_lines_filters_oxide_markers() {
+        let item: ItemStruct = syn::parse_str(
+            "#[doc = \"  user docs  \" ] #[doc = \"oxide:meta:{...}\"] struct S;",
+        )
+        .unwrap();
+        assert_eq!(collect_doc_lines(&item.attrs), vec!["user docs".to_string()]);
+    }
+
+    #[test]
+    fn push_meta_doc_appends_serialized_doc_attribute() {
+        let mut attrs: Vec<Attribute> = Vec::new();
+        push_meta_doc(
+            &mut attrs,
+            &DummyMeta {
+                kind: "state",
+                name: "AppState",
+            },
+        );
+        assert_eq!(attrs.len(), 1);
+        let rendered = quote::quote!(#(#attrs)*).to_string();
+        assert!(rendered.contains("oxide:meta:"));
+        assert!(rendered.contains("AppState"));
+    }
+
+    #[test]
+    fn struct_fields_handles_named_unnamed_and_unit() {
+        let named: ItemStruct = syn::parse_str("struct N { id: u64, name: String }").unwrap();
+        let named_fields = struct_fields(&named);
+        assert_eq!(named_fields.len(), 2);
+        assert_eq!(named_fields[0].name.as_deref(), Some("id"));
+
+        let unnamed: ItemStruct = syn::parse_str("struct U(u64, String);").unwrap();
+        let unnamed_fields = struct_fields(&unnamed);
+        assert_eq!(unnamed_fields.len(), 2);
+        assert_eq!(unnamed_fields[0].name.as_deref(), Some("_0"));
+
+        let unit: ItemStruct = syn::parse_str("struct Z;").unwrap();
+        assert!(struct_fields(&unit).is_empty());
+    }
+
+    #[test]
+    fn enum_variants_preserves_docs_and_fields() {
+        let item: ItemEnum = syn::parse_str(
+            "enum E { #[doc = \"v docs\"] A { id: u64 }, B(String), C }",
+        )
+        .unwrap();
+        let variants = enum_variants(&item);
+        assert_eq!(variants.len(), 3);
+        assert_eq!(variants[0].name, "A");
+        assert_eq!(variants[0].docs, vec!["v docs".to_string()]);
+        assert_eq!(variants[0].fields[0].name.as_deref(), Some("id"));
+        assert_eq!(variants[1].fields[0].name.as_deref(), Some("_0"));
+        assert!(variants[2].fields.is_empty());
+    }
+}
