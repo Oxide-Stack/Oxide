@@ -28,7 +28,9 @@ cargo test -p oxide_core --target wasm32-wasip1 --all-features --no-run --test w
 if [[ "${QA_SKIP_COVERAGE:-}" != "1" ]]; then
   if command -v cargo-llvm-cov >/dev/null 2>&1; then
     rustup component add llvm-tools-preview
-    cargo llvm-cov --workspace --all-features --fail-under-lines 62 --fail-under-regions 65 --summary-only
+    rust_cov_lines_min="${OXIDE_RUST_COVERAGE_LINES_MIN:-90}"
+    rust_cov_regions_min="${OXIDE_RUST_COVERAGE_REGIONS_MIN:-88}"
+    cargo llvm-cov -p oxide_core --all-features --fail-under-lines "$rust_cov_lines_min" --fail-under-regions "$rust_cov_regions_min" --summary-only
   elif [[ "${QA_REQUIRE_COVERAGE:-}" == "1" ]]; then
     echo "cargo-llvm-cov is not installed (set QA_SKIP_COVERAGE=1 to skip)." >&2
     exit 1
@@ -36,7 +38,15 @@ if [[ "${QA_SKIP_COVERAGE:-}" != "1" ]]; then
 fi
 
 cd "$ROOT_DIR/flutter/oxide_runtime"
-flutter test
+flutter test --coverage
+
+runtime_cov_min="${OXIDE_RUNTIME_COVERAGE_MIN:-90}"
+runtime_cov_pct="$(awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END { if (lf==0) { print "0.00" } else { printf "%.2f", (lh/lf)*100 } }' coverage/lcov.info)"
+echo "oxide_runtime coverage: ${runtime_cov_pct}% (min ${runtime_cov_min}%)"
+awk -v pct="$runtime_cov_pct" -v min="$runtime_cov_min" 'BEGIN { exit (pct+0 >= min+0 ? 0 : 1) }' || {
+  echo "oxide_runtime coverage gate failed: ${runtime_cov_pct}% < ${runtime_cov_min}%" >&2
+  exit 1
+}
 
 cd "$ROOT_DIR/flutter/oxide_generator"
 dart test

@@ -40,7 +40,9 @@ try {
 
   if (($env:QA_SKIP_COVERAGE -ne "1") -and (Get-Command cargo-llvm-cov -ErrorAction SilentlyContinue)) {
     Run "rustup" @("component", "add", "llvm-tools-preview")
-    Run "cargo" @("llvm-cov", "--workspace", "--all-features", "--fail-under-lines", "62", "--fail-under-regions", "65", "--summary-only")
+    $rustCovLinesMin = if ($env:OXIDE_RUST_COVERAGE_LINES_MIN) { $env:OXIDE_RUST_COVERAGE_LINES_MIN } else { "90" }
+    $rustCovRegionsMin = if ($env:OXIDE_RUST_COVERAGE_REGIONS_MIN) { $env:OXIDE_RUST_COVERAGE_REGIONS_MIN } else { "88" }
+    Run "cargo" @("llvm-cov", "-p", "oxide_core", "--all-features", "--fail-under-lines", $rustCovLinesMin, "--fail-under-regions", $rustCovRegionsMin, "--summary-only")
   } elseif (($env:QA_REQUIRE_COVERAGE -eq "1") -and ($env:QA_SKIP_COVERAGE -ne "1")) {
     throw "cargo-llvm-cov is not installed (set QA_SKIP_COVERAGE=1 to skip)."
   }
@@ -56,7 +58,34 @@ if (-not (Get-Command flutter_rust_bridge_codegen -ErrorAction SilentlyContinue)
 
 Push-Location (Join-Path $rootDir "flutter\oxide_runtime")
 try {
-  Run "flutter" @("test")
+  Run "flutter" @("test", "--coverage")
+
+  $runtimeCoverageMin = if ($env:OXIDE_RUNTIME_COVERAGE_MIN) {
+    [double]::Parse($env:OXIDE_RUNTIME_COVERAGE_MIN, [System.Globalization.CultureInfo]::InvariantCulture)
+  } else {
+    90.0
+  }
+
+  $lcovPath = Join-Path (Get-Location) "coverage\lcov.info"
+  if (-not (Test-Path $lcovPath)) {
+    throw "oxide_runtime coverage file not found at $lcovPath"
+  }
+
+  $lf = 0
+  $lh = 0
+  foreach ($line in Get-Content $lcovPath) {
+    if ($line.StartsWith("LF:")) {
+      $lf += [int]$line.Substring(3)
+    } elseif ($line.StartsWith("LH:")) {
+      $lh += [int]$line.Substring(3)
+    }
+  }
+
+  $runtimeCoverage = if ($lf -eq 0) { 0.0 } else { (100.0 * $lh / $lf) }
+  Write-Host ("oxide_runtime coverage: {0:N2}% (min {1:N2}%)" -f $runtimeCoverage, $runtimeCoverageMin)
+  if ($runtimeCoverage -lt $runtimeCoverageMin) {
+    throw ("oxide_runtime coverage gate failed: {0:N2}% < {1:N2}%" -f $runtimeCoverage, $runtimeCoverageMin)
+  }
 } finally {
   Pop-Location
 }

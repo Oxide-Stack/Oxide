@@ -4,6 +4,7 @@ use oxide_core::navigation::{
     DefaultExtra, DefaultReturn, NavCommand, NavRoute, NoExtra, NoReturn, OxideRoute,
     OxideRouteKind, OxideRoutePayload, Route, RouteContext,
 };
+use oxide_core::OxideError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -110,6 +111,148 @@ struct RouteDefaults;
 impl Route for RouteDefaults {
     type Return = NoReturn;
     type Extra = NoExtra;
+}
+
+#[derive(Clone, Deserialize)]
+struct BadRoute;
+
+impl Route for BadRoute {
+    type Return = NoReturn;
+    type Extra = NoExtra;
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct BadRoutePayload;
+
+impl OxideRoutePayload for BadRoutePayload {
+    type Kind = TestRouteKind;
+
+    fn kind(&self) -> Self::Kind {
+        TestRouteKind::Home
+    }
+}
+
+impl OxideRoute for BadRoute {
+    type Payload = BadRoutePayload;
+
+    fn into_payload(self) -> Self::Payload {
+        BadRoutePayload
+    }
+}
+
+impl Serialize for BadRoute {
+    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        Err(serde::ser::Error::custom("bad route serialize"))
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct MissingPayloadField {
+    kind: TestRouteKind,
+}
+
+impl OxideRoutePayload for MissingPayloadField {
+    type Kind = TestRouteKind;
+
+    fn kind(&self) -> Self::Kind {
+        self.kind
+    }
+}
+
+#[derive(Clone, Deserialize)]
+struct BadPayloadScalar;
+
+impl Serialize for BadPayloadScalar {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_u32(7)
+    }
+}
+
+impl OxideRoutePayload for BadPayloadScalar {
+    type Kind = TestRouteKind;
+
+    fn kind(&self) -> Self::Kind {
+        TestRouteKind::Charts
+    }
+}
+
+#[derive(Clone, Deserialize)]
+struct BadPayloadSerialize;
+
+impl Serialize for BadPayloadSerialize {
+    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        Err(serde::ser::Error::custom("bad payload serialize"))
+    }
+}
+
+impl OxideRoutePayload for BadPayloadSerialize {
+    type Kind = TestRouteKind;
+
+    fn kind(&self) -> Self::Kind {
+        TestRouteKind::Home
+    }
+}
+
+#[derive(Clone, Deserialize)]
+struct BadExtras;
+
+impl DefaultExtra for BadExtras {
+    fn default_extra() -> Self {
+        BadExtras
+    }
+}
+
+impl Serialize for BadExtras {
+    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        Err(serde::ser::Error::custom("bad extras serialize"))
+    }
+}
+
+#[derive(Clone, Deserialize)]
+struct RouteWithBadExtras;
+
+impl Route for RouteWithBadExtras {
+    type Return = NoReturn;
+    type Extra = BadExtras;
+
+    fn extras(&self) -> Option<Self::Extra> {
+        Some(BadExtras)
+    }
+}
+
+impl OxideRoute for RouteWithBadExtras {
+    type Payload = TestRoutePayload;
+
+    fn into_payload(self) -> Self::Payload {
+        TestRoutePayload {
+            kind: TestRouteKind::Home,
+        }
+    }
+}
+
+impl Serialize for RouteWithBadExtras {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        struct Payload<'a> {
+            kind: &'a str,
+        }
+        Payload { kind: "Home" }.serialize(serializer)
+    }
 }
 
 #[test]
@@ -350,3 +493,68 @@ async fn navigation_ctx_emits_commands_and_exposes_route() {
     assert!(seen.iter().any(|c| matches!(c, NavCommand::Pop { result: None })));
     assert!(seen.iter().any(|c| matches!(c, NavCommand::PopUntil { kind } if kind == "Charts")));
 }
+
+#[test]
+fn command_subscription_is_single_consumer() {
+    let runtime = oxide_core::NavigationRuntime::new();
+    let first = runtime.subscribe_commands().unwrap();
+    let second = runtime.subscribe_commands();
+    assert!(matches!(second, Err(OxideError::Validation { .. })));
+    drop(first);
+    assert!(runtime.subscribe_commands().is_ok());
+}
+
+#[tokio::test]
+async fn emit_result_returns_false_for_unknown_ticket() {
+    let runtime = oxide_core::NavigationRuntime::new();
+    let resolved = runtime.emit_result("missing-ticket", serde_json::json!(null)).await;
+    assert!(!resolved);
+}
+
+#[test]
+fn push_fails_when_route_payload_serialization_fails() {
+    let runtime = oxide_core::NavigationRuntime::new();
+    let err = runtime.push(BadRoute).unwrap_err();
+    assert!(matches!(err, OxideError::Internal { .. }));
+    assert!(err.to_string().contains("failed to serialize route payload"));
+}
+
+#[test]
+fn push_fails_when_route_extras_serialization_fails() {
+    let runtime = oxide_core::NavigationRuntime::new();
+    let err = runtime.push(RouteWithBadExtras).unwrap_err();
+    assert!(matches!(err, OxideError::Internal { .. }));
+    assert!(err.to_string().contains("failed to serialize route extras"));
+}
+
+#[test]
+fn reset_fails_when_payload_missing_payload_field() {
+    let runtime = oxide_core::NavigationRuntime::new();
+    let err = runtime
+        .reset(vec![MissingPayloadField {
+            kind: TestRouteKind::Home,
+        }])
+        .unwrap_err();
+    assert!(matches!(err, OxideError::Validation { .. }));
+    assert!(err.to_string().contains("missing a 'payload' field"));
+}
+
+#[test]
+fn reset_fails_when_payload_serializes_to_non_object() {
+    let runtime = oxide_core::NavigationRuntime::new();
+    let err = runtime.reset(vec![BadPayloadScalar]).unwrap_err();
+    assert!(matches!(err, OxideError::Validation { .. }));
+    assert!(err
+        .to_string()
+        .contains("did not serialize to an object"));
+}
+
+    #[test]
+    fn reset_fails_when_payload_serialization_fails() {
+        let runtime = oxide_core::NavigationRuntime::new();
+        let err = runtime.reset(vec![BadPayloadSerialize]).unwrap_err();
+        assert!(matches!(err, OxideError::Internal { .. }));
+        assert!(err
+        .to_string()
+        .contains("failed to serialize route payload"));
+    }

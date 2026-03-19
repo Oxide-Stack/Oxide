@@ -15,12 +15,16 @@ struct TestState {
 enum TestAction {
     Increment,
     Noop,
+    Infer,
+    ExplicitSlices,
     MutateThenFail,
 }
 
 enum TestSideEffect {
     Increment,
     Noop,
+    Infer,
+    ExplicitSlices,
     Fail,
 }
 
@@ -45,6 +49,14 @@ impl Reducer for TestReducer {
                 Ok(StateChange::Full)
             }
             TestAction::Noop => Ok(StateChange::None),
+            TestAction::Infer => {
+                state.value = state.value.saturating_add(1);
+                Ok(StateChange::Infer)
+            }
+            TestAction::ExplicitSlices => {
+                state.value = state.value.saturating_add(1);
+                Ok(StateChange::Slices(&[]))
+            }
             TestAction::MutateThenFail => {
                 state.value = state.value.saturating_add(1);
                 Err(OxideError::Internal {
@@ -65,6 +77,14 @@ impl Reducer for TestReducer {
                 Ok(StateChange::Full)
             }
             TestSideEffect::Noop => Ok(StateChange::None),
+            TestSideEffect::Infer => {
+                state.value = state.value.saturating_add(1);
+                Ok(StateChange::Infer)
+            }
+            TestSideEffect::ExplicitSlices => {
+                state.value = state.value.saturating_add(1);
+                Ok(StateChange::Slices(&[]))
+            }
             TestSideEffect::Fail => {
                 state.value = state.value.saturating_add(1);
                 Err(OxideError::Internal {
@@ -130,6 +150,23 @@ async fn engine_does_not_emit_or_bump_revision_on_none() {
 
     let next = tokio::time::timeout(std::time::Duration::from_millis(50), stream.next()).await;
     assert!(next.is_err());
+}
+
+#[tokio::test]
+async fn engine_dispatch_infer_and_explicit_slices_commit_and_emit() {
+    init_test_runtime();
+
+    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
+        .await
+        .unwrap();
+
+    let inferred = engine.dispatch(TestAction::Infer).await.unwrap();
+    assert_eq!(inferred.revision, 1);
+    assert_eq!(inferred.state, TestState { value: 1 });
+
+    let explicit = engine.dispatch(TestAction::ExplicitSlices).await.unwrap();
+    assert_eq!(explicit.revision, 2);
+    assert_eq!(explicit.state, TestState { value: 2 });
 }
 
 #[tokio::test]
@@ -202,6 +239,70 @@ async fn engine_reports_sideeffect_errors_and_does_not_commit() {
     let after = engine.current().await;
     assert_eq!(after.revision, 0);
     assert_eq!(after.state, TestState { value: 0 });
+}
+
+#[tokio::test]
+async fn engine_sideeffect_infer_and_explicit_slices_commit_and_emit() {
+    init_test_runtime();
+
+    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
+        .await
+        .unwrap();
+    let tx = engine.sideeffect_sender();
+    let mut stream = WatchStream::new(engine.subscribe());
+
+    let first = stream.next().await.expect("first snapshot");
+    assert_eq!(first.revision, 0);
+
+    tx.send(TestSideEffect::Infer).unwrap();
+    let second = tokio::time::timeout(std::time::Duration::from_secs(1), stream.next())
+        .await
+        .expect("infer side-effect update")
+        .expect("second snapshot");
+    assert_eq!(second.revision, 1);
+    assert_eq!(second.state, TestState { value: 1 });
+
+    tx.send(TestSideEffect::ExplicitSlices).unwrap();
+    let third = tokio::time::timeout(std::time::Duration::from_secs(1), stream.next())
+        .await
+        .expect("explicit slices side-effect update")
+        .expect("third snapshot");
+    assert_eq!(third.revision, 2);
+    assert_eq!(third.state, TestState { value: 2 });
+}
+
+#[tokio::test]
+async fn engine_clone_shares_same_state() {
+    init_test_runtime();
+
+    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
+        .await
+        .unwrap();
+    let cloned = engine.clone();
+
+    let _ = cloned.dispatch(TestAction::Increment).await.unwrap();
+    let after = engine.current().await;
+    assert_eq!(after.revision, 1);
+    assert_eq!(after.state, TestState { value: 1 });
+}
+
+#[tokio::test]
+async fn engine_sideeffect_none_does_not_emit_snapshot() {
+    init_test_runtime();
+
+    let engine = ReducerEngine::<TestReducer>::new(TestReducer::default(), TestState { value: 0 })
+        .await
+        .unwrap();
+    let tx = engine.sideeffect_sender();
+    let rx = engine.subscribe();
+    let mut stream = WatchStream::new(rx);
+
+    let first = stream.next().await.expect("first snapshot");
+    assert_eq!(first.revision, 0);
+
+    tx.send(TestSideEffect::Noop).unwrap();
+    let next = tokio::time::timeout(std::time::Duration::from_millis(50), stream.next()).await;
+    assert!(next.is_err());
 }
 
 #[cfg(feature = "state-persistence")]
@@ -287,6 +388,170 @@ async fn engine_reports_persistence_encode_failures() {
     assert!(err.to_string().contains("boom"));
 }
 
+#[cfg(feature = "state-persistence")]
+#[tokio::test]
+async fn sideeffect_loop_reports_persistence_encode_failures() {
+    use crate::persistence::PersistenceConfig;
+    use crate::serde::{Deserialize, Serialize};
+
+    #[derive(Clone)]
+    struct BadState;
+
+    impl Serialize for BadState {
+        fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: crate::serde::Serializer,
+        {
+            use crate::serde::ser::Error as _;
+            Err(S::Error::custom("boom-sideeffect"))
+        }
+    }
+
+    impl<'de> Deserialize<'de> for BadState {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: crate::serde::Deserializer<'de>,
+        {
+            let _ = crate::serde::de::IgnoredAny::deserialize(deserializer)?;
+            Ok(BadState)
+        }
+    }
+
+    #[derive(Default)]
+    struct BadReducer;
+
+    impl Reducer for BadReducer {
+        type State = BadState;
+        type Action = ();
+        type SideEffect = ();
+
+        async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
+
+        fn reduce(
+            &mut self,
+            _state: &mut Self::State,
+            _ctx: crate::Context<'_, Self::Action, Self::State, ()>,
+        ) -> CoreResult<StateChange> {
+            Ok(StateChange::None)
+        }
+
+        fn effect(
+            &mut self,
+            _state: &mut Self::State,
+            _ctx: crate::Context<'_, Self::SideEffect, Self::State, ()>,
+        ) -> CoreResult<StateChange> {
+            Ok(StateChange::Full)
+        }
+    }
+
+    init_test_runtime();
+
+    let engine = ReducerEngine::<BadReducer>::new_persistent(
+        BadReducer::default(),
+        BadState,
+        PersistenceConfig {
+            key: "oxide_core_test_bad_state_sideeffect".to_string(),
+            min_interval: std::time::Duration::from_millis(0),
+        },
+    )
+    .await
+    .unwrap();
+
+    let mut error_stream = WatchStream::new(engine.subscribe_errors());
+    let first = error_stream.next().await.expect("first error value");
+    assert!(first.is_none());
+
+    engine.sideeffect_sender().send(()).unwrap();
+    let err = tokio::time::timeout(std::time::Duration::from_secs(1), error_stream.next())
+        .await
+        .expect("persistence side-effect error")
+        .expect("error update")
+        .expect("some error");
+    assert!(matches!(err, OxideError::Persistence { .. }));
+    assert!(err.to_string().contains("boom-sideeffect"));
+}
+
+#[cfg(feature = "state-persistence")]
+#[tokio::test]
+async fn sideeffect_loop_persistence_success_writes_latest_state() {
+    use crate::persistence::{PersistenceConfig, decode, default_persistence_path};
+    use crate::serde::{Deserialize, Serialize};
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    struct PersistState {
+        value: u32,
+    }
+
+    #[derive(Default)]
+    struct PersistReducer;
+
+    impl Reducer for PersistReducer {
+        type State = PersistState;
+        type Action = ();
+        type SideEffect = ();
+
+        async fn init(&mut self, _ctx: InitContext<Self::SideEffect>) {}
+
+        fn reduce(
+            &mut self,
+            _state: &mut Self::State,
+            _ctx: crate::Context<'_, Self::Action, Self::State, ()>,
+        ) -> CoreResult<StateChange> {
+            Ok(StateChange::None)
+        }
+
+        fn effect(
+            &mut self,
+            state: &mut Self::State,
+            _ctx: crate::Context<'_, Self::SideEffect, Self::State, ()>,
+        ) -> CoreResult<StateChange> {
+            state.value = state.value.saturating_add(1);
+            Ok(StateChange::Full)
+        }
+    }
+
+    init_test_runtime();
+
+    let key = format!(
+        "oxide_core_test_sideeffect_ok_{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    );
+    let path = default_persistence_path(&key);
+    let _ = std::fs::remove_file(&path);
+
+    let engine = ReducerEngine::<PersistReducer>::new_persistent(
+        PersistReducer,
+        PersistState { value: 0 },
+        PersistenceConfig {
+            key,
+            min_interval: std::time::Duration::from_millis(0),
+        },
+    )
+    .await
+    .unwrap();
+
+    let mut snapshots = WatchStream::new(engine.subscribe());
+    let initial = snapshots.next().await.expect("initial snapshot");
+    assert_eq!(initial.state.value, 0);
+
+    engine.sideeffect_sender().send(()).unwrap();
+    let next = tokio::time::timeout(std::time::Duration::from_secs(1), snapshots.next())
+        .await
+        .expect("side-effect snapshot")
+        .expect("snapshot value");
+    assert_eq!(next.state.value, 1);
+
+    tokio::time::sleep(std::time::Duration::from_millis(75)).await;
+    let bytes = std::fs::read(&path).expect("persistence file should exist");
+    let restored: PersistState = decode(&bytes).expect("decode persisted state");
+    assert_eq!(restored.value, 1);
+
+    let _ = std::fs::remove_file(&path);
+}
+
 #[cfg(feature = "isolated-channels")]
 #[tokio::test]
 async fn callback_runtime_resolves_pending_requests() {
@@ -316,6 +581,32 @@ async fn callback_runtime_rejects_unknown_response_ids() {
     let runtime = crate::CallbackRuntime::<u32, u32>::new(8);
     let err = runtime.respond(999, 1).await.unwrap_err();
     assert_eq!(err, crate::OxideChannelError::UnexpectedResponse);
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn callback_runtime_respond_reports_unavailable_when_waiter_dropped() {
+    crate::init_isolated_channels().unwrap();
+
+    let runtime = std::sync::Arc::new(crate::CallbackRuntime::<u32, u32>::new(8));
+    let runtime_invoke = runtime.clone();
+
+    let invoke_task = tokio::spawn(async move { runtime_invoke.invoke(41).await });
+
+    let (id, _req) = runtime.recv_request().await.expect("request");
+    invoke_task.abort();
+    let _ = invoke_task.await;
+
+    let err = runtime.respond(id, 42).await.unwrap_err();
+    assert_eq!(err, crate::OxideChannelError::Unavailable);
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn callback_runtime_recv_request_returns_none_when_not_initialized() {
+    let runtime = crate::CallbackRuntime::<u32, u32>::new(8);
+    let received = tokio::time::timeout(std::time::Duration::from_millis(30), runtime.recv_request()).await;
+    assert!(received.is_err() || received.unwrap().is_none());
 }
 
 #[cfg(feature = "isolated-channels")]
@@ -354,6 +645,24 @@ async fn incoming_handler_converts_panics_to_platform_error() {
 
     let err = handler.handle(1).unwrap_err();
     assert!(matches!(err, crate::OxideChannelError::PlatformError(_)));
+}
+
+#[cfg(feature = "isolated-channels")]
+#[tokio::test]
+async fn incoming_handler_invokes_registered_handler() {
+    crate::init_isolated_channels().unwrap();
+
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::<u32>::new()));
+    let seen_clone = seen.clone();
+
+    let handler = crate::IncomingHandler::<u32>::new();
+    handler.register(move |value| {
+        seen_clone.lock().unwrap().push(value);
+    });
+
+    handler.handle(7).unwrap();
+    let values = seen.lock().unwrap().clone();
+    assert_eq!(values, vec![7]);
 }
 
 #[test]

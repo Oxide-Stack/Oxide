@@ -84,3 +84,20 @@ where
     }
 }
 
+#[cfg(all(test, feature = "isolated-channels"))]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn invoke_returns_unavailable_when_request_stream_is_closed() {
+        crate::init_isolated_channels().unwrap();
+
+        let runtime = CallbackRuntime::<u32, u32>::new(1);
+        runtime.requests_rx.lock().await.close();
+
+        let err = runtime.invoke(7).await.unwrap_err();
+        assert_eq!(err, OxideChannelError::Unavailable);
+        assert!(runtime.pending.lock().await.is_empty());
+    }
+}
+

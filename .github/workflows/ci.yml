@@ -53,7 +53,7 @@ jobs:
         working-directory: rust
         run: |
           rustup component add llvm-tools-preview
-          cargo llvm-cov --workspace --all-features --fail-under-lines 62 --fail-under-regions 65 --summary-only
+          cargo llvm-cov -p oxide_core --all-features --fail-under-lines 90 --fail-under-regions 88 --summary-only
       - name: Test (Example Rust crates)
         shell: bash
         run: |
@@ -96,9 +96,16 @@ jobs:
           fi
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
-      - name: Test oxide_runtime
+      - name: Test and coverage gate oxide_runtime
         working-directory: flutter/oxide_runtime
-        run: flutter test
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter test --coverage
+          min="${OXIDE_RUNTIME_COVERAGE_MIN:-90}"
+          pct="$(awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END { if (lf==0) { print "0.00" } else { printf "%.2f", (lh/lf)*100 } }' coverage/lcov.info)"
+          echo "oxide_runtime coverage: ${pct}% (min ${min}%)"
+          awk -v pct="$pct" -v min="$min" 'BEGIN { exit (pct+0 >= min+0 ? 0 : 1) }'
 
       - name: Test oxide_generator
         working-directory: flutter/oxide_generator
