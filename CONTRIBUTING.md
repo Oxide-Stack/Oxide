@@ -22,6 +22,9 @@ From the repo root:
 - Keep package code usage-agnostic. End-to-end usage belongs under `examples/`.
 - Add or update tests when behavior changes.
 - Update READMEs and changelogs when user-facing behavior changes.
+- Keep source comments concise and factual.
+- Prefer comments for invariants, edge cases, or non-obvious constraints.
+- Avoid repetitive rhetorical templates in comments.
 
 ## Publishing (Maintainers)
 

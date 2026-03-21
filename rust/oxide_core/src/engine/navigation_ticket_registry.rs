@@ -6,10 +6,10 @@ use tokio::sync::{Mutex, oneshot};
 
 /// In-memory ticket registry used to correlate Dart route results back to Rust.
 ///
-/// Why: Rust-driven navigation can optionally await a pushed route. The runtime assigns a
+/// Rust-driven navigation can optionally await a pushed route. The runtime assigns a
 /// ticket id when a result is requested and stores a resolver in this registry.
 ///
-/// How: Dart receives the ticket id on push, then calls back into Rust with `emit_result`
+/// Dart receives the ticket id on push, then calls back into Rust with `emit_result`
 /// when the route completes.
 pub struct TicketRegistry {
     next_id: AtomicU64,

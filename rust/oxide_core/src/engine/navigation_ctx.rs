@@ -4,7 +4,7 @@ use crate::navigation::{OxideRoute, OxideRouteKind, RouteContext};
 
 /// Navigation capability surface injected into reducer/effect contexts.
 ///
-/// Why: reducers/effects should not depend on Flutter types, but they often need to issue
+/// reducers/effects should not depend on Flutter types, but they often need to issue
 /// navigation intents (push/pop) and inspect the current route.
 pub struct NavigationCtx<'a> {
     runtime: &'a NavigationRuntime,

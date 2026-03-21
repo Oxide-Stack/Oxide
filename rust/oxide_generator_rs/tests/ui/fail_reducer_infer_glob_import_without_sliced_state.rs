@@ -37,8 +37,8 @@ impl oxide_core::Reducer for MyReducer {
             MyStateSlice,
         >,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        // Why: This mirrors real usage where people import variants.
-        // How: Even with `Ok(Infer)`, the macro should enforce that the state
+        // This mirrors real usage where people import variants.
+        // Even with `Ok(Infer)`, the macro should enforce that the state
         // opted into slicing (via `#[state(sliced = true)]`).
         use oxide_core::StateChange::*;
         match ctx.input {

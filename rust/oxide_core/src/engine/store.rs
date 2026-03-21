@@ -4,10 +4,10 @@ use crate::engine::CoreResult;
 
 // Reducer and state-change contracts.
 //
-// Why: The engine needs a small, deterministic interface for applying updates
+// The engine needs a small, deterministic interface for applying updates
 // that remains easy to reason about from both Rust and generated FFI surfaces.
 //
-// How: `Reducer` keeps mutation synchronous (for serialized updates) while
+// `Reducer` keeps mutation synchronous (for serialized updates) while
 // allowing async work by pushing results back as side-effects.
 /// Initialization context passed to [`Reducer::init`].
 ///

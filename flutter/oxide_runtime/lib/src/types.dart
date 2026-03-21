@@ -1,6 +1,6 @@
 // Public callback and transformer typedefs used by the Oxide runtime core.
 //
-// Why: generated bindings can vary (FRB, mocks, alternative backends), but the
+// generated bindings can vary (FRB, mocks, alternative backends), but the
 // runtime core needs a stable, strongly-typed contract for wiring them in.
 import 'dart:async';
 

@@ -8,7 +8,7 @@ import 'model.dart';
 
 // High-level store source generation.
 //
-// Why: keep the orchestration logic centralized so it is obvious which pieces
+// keep the orchestration logic centralized so it is obvious which pieces
 // contribute to the final output (actions facade + selected backend adapter).
 String generateOxideStoreSource(OxideCodegenConfig c) {
   final actionsMethods = generateActionsMethods(actionsType: c.actionsType, actionsIsEnum: c.actionsIsEnum, constructors: c.actionConstructors);

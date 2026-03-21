@@ -1,6 +1,6 @@
 // Internal (crate-level) behavioral tests.
 //
-// Why: these tests validate invariants that are easy to accidentally break during
+// these tests validate invariants that are easy to accidentally break during
 // refactors (transactionality, snapshot emission rules, and error handling).
 use tokio_stream::{StreamExt, wrappers::WatchStream};
 

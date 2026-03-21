@@ -1,6 +1,6 @@
 // Engine lifecycle and snapshot coordination for generated stores.
 //
-// Why: application state management layers (Inherited/Riverpod/BLoC) need a
+// application state management layers (Inherited/Riverpod/BLoC) need a
 // single, backend-agnostic core that owns engine creation, dispatch, streaming,
 // and error capture.
 import 'dart:async';

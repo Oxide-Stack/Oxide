@@ -9,10 +9,10 @@ import 'navigation_state.dart';
 
 /// Runtime coordinator that executes Rust-emitted navigation commands.
 ///
-/// Why: Rust is the source of truth for navigation intent. Dart must execute those intents
+/// Rust is the source of truth for navigation intent. Dart must execute those intents
 /// using Flutter-native primitives and then forward route context and results back to Rust.
 ///
-/// How: the runtime listens to a command stream, delegates execution to the configured
+/// the runtime listens to a command stream, delegates execution to the configured
 /// [OxideNavigationHandler], and invokes callbacks for result/route-context forwarding.
 final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> {
   OxideNavigationRuntime({

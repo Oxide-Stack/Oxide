@@ -1,6 +1,6 @@
 // build_runner entrypoint for Oxide store code generation.
 //
-// Why: expose a single builder factory so consuming projects can enable Oxide
+// expose a single builder factory so consuming projects can enable Oxide
 // generation via `build.yaml` without wiring source_gen manually.
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';

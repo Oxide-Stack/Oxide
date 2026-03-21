@@ -1,7 +1,7 @@
 // Annotation contracts shared between user code, generator, and generated output.
 //
-// Why: the generator needs stable metadata to produce predictable glue code.
-// How: expose a minimal annotation API with clear backend options.
+// the generator needs stable metadata to produce predictable glue code.
+// expose a minimal annotation API with clear backend options.
 /// Backend integration strategy used by generated store code.
 enum OxideBackend {
   /// Generates an `InheritedNotifier`-based scope widget plus a `ChangeNotifier`

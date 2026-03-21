@@ -1,6 +1,6 @@
 /// Interface implemented by a Dart-side navigation backend.
 ///
-/// Why: Oxide navigation is driven by Rust, but needs to execute real Flutter navigation
+/// Oxide navigation is driven by Rust, but needs to execute real Flutter navigation
 /// primitives. The handler isolates this Flutter-specific logic behind a small API.
 abstract class OxideNavigationHandler<RouteT extends Object, KindT extends Object> {
   /// Pushes a route and optionally returns a result when the pushed page pops.

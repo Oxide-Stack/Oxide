@@ -3,7 +3,7 @@ use syn::{ImplItem, ItemImpl};
 
 // Token emission for `#[reducer(...)]`.
 //
-// Why: keep all generated Rust/FRB surface construction in one place so it can
+// keep all generated Rust/FRB surface construction in one place so it can
 // be reviewed as a coherent output contract.
 use crate::meta::{ReducerMeta, push_meta_doc};
 use crate::reducer::args::ReducerArgs;

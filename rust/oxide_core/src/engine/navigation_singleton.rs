@@ -7,7 +7,7 @@ static NAVIGATION: OnceLock<NavigationRuntime> = OnceLock::new();
 
 /// Initializes the global navigation runtime.
 ///
-/// Why: navigation relies on a runtime singleton that can be reached from reducers/effects
+/// navigation relies on a runtime singleton that can be reached from reducers/effects
 /// and from FRB endpoints. Initialization is explicit so applications control startup order.
 pub fn init_navigation() -> CoreResult<()> {
     let _ = NAVIGATION.get_or_init(NavigationRuntime::new);

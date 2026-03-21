@@ -2,10 +2,10 @@ import 'model.dart';
 
 // Engine binding wiring for generated stores.
 //
-// Why: backends (Inherited/Riverpod/BLoC) should talk to `OxideStoreCore`, not
+// backends (Inherited/Riverpod/BLoC) should talk to `OxideStoreCore`, not
 // to FRB binding functions directly, to keep lifecycle code consistent.
 //
-// How: generate the single block that binds create/dispatch/current/stream into
+// generate the single block that binds create/dispatch/current/stream into
 // the `OxideStoreCore` constructor, plus optional hooks.
 String buildCoreInstantiation(OxideCodegenConfig c) {
   final initAppArg = (c.initApp == null || c.initApp!.isEmpty) ? '' : '    initApp: () => ${c.initApp}(),\n';

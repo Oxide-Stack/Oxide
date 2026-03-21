@@ -5,8 +5,8 @@ use base64::Engine as _;
 
 // Target-specific persistence backends.
 //
-// Why: Oxide supports native/WASI and browser WASM with a single persistence API.
-// How: Choose an implementation via `cfg` and keep the higher-level worker/codec
+// Oxide supports native/WASI and browser WASM with a single persistence API.
+// Choose an implementation via `cfg` and keep the higher-level worker/codec
 // logic backend-agnostic.
 #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 pub(crate) fn try_read_bytes(path: &Path) -> Option<Vec<u8>> {

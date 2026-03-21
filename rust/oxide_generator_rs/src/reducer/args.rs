@@ -3,7 +3,7 @@ use syn::{Ident, Token};
 
 // Attribute argument parsing for `#[reducer(...)]`.
 //
-// Why: a dedicated parse layer keeps the mini-language stable and isolates
+// a dedicated parse layer keeps the mini-language stable and isolates
 // syntactic concerns from validation and token emission.
 pub(crate) struct ReducerArgs {
     pub(crate) engine_ident: Ident,

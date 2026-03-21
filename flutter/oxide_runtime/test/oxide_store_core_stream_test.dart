@@ -1,6 +1,6 @@
 // Regression tests for `OxideStoreCore` snapshot forwarding and lifecycle.
 //
-// Why: these behaviors are easy to break when refactoring stream wiring or
+// these behaviors are easy to break when refactoring stream wiring or
 // disposal tracking.
 import 'dart:async';
 

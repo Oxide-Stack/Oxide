@@ -8,10 +8,10 @@ use crate::CoreResult;
 
 // Debounced persistence worker.
 //
-// Why: dispatch can be frequent; writing every snapshot would be slow and
+// dispatch can be frequent; writing every snapshot would be slow and
 // unnecessary. A debounced worker keeps the latest state without disk churn.
 //
-// How: queue encoded payloads over an unbounded channel and write the most
+// queue encoded payloads over an unbounded channel and write the most
 // recent payload once per `min_interval`.
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 struct SendTimeoutFuture(gloo_timers::future::TimeoutFuture);

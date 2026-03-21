@@ -2,7 +2,7 @@
 
 // Proc-macro entrypoint and stable macro surface.
 //
-// Why: keep macro names and signatures stable for downstream crates, while
+// keep macro names and signatures stable for downstream crates, while
 // allowing internal parsing/codegen modules to evolve safely.
 use proc_macro::TokenStream;
 use syn::Item;

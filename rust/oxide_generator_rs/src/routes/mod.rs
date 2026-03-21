@@ -464,10 +464,10 @@ fn generate_navigation_module(routes: &[RouteMeta]) -> syn::Result<TokenStream2>
             pub mod runtime {
                 /// Initializes the Oxide navigation runtime singleton.
                 ///
-                /// Why: reducers/effects may emit navigation intents, and the Dart runtime
+                /// reducers/effects may emit navigation intents, and the Dart runtime
                 /// must be able to subscribe to those commands.
                 ///
-                /// How: this only ensures the global navigation runtime exists.
+                /// this only ensures the global navigation runtime exists.
                 pub(crate) fn init() -> oxide_core::CoreResult<()> {
                     oxide_core::init_navigation()?;
                     Ok(())
@@ -475,10 +475,10 @@ fn generate_navigation_module(routes: &[RouteMeta]) -> syn::Result<TokenStream2>
 
                 /// Starts navigation bootstrap exactly once.
                 ///
-                /// Why: initial-route emission must be explicit and idempotent so route
+                /// initial-route emission must be explicit and idempotent so route
                 /// synchronization from Dart does not re-trigger startup pushes.
                 ///
-                /// How: guards the generated initial push behind a process-local `OnceLock`.
+                /// guards the generated initial push behind a process-local `OnceLock`.
                 pub(crate) fn start() -> oxide_core::CoreResult<()> {
                     init()?;
                     #start_body

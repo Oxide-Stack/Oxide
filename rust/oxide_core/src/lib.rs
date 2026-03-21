@@ -2,11 +2,11 @@
 
 // Crate entrypoint and stable public surface.
 //
-// Why: Oxide needs a small, usage-agnostic Rust core that can be consumed from
+// Oxide needs a small, usage-agnostic Rust core that can be consumed from
 // multiple environments (native, WASM, and Flutter Rust Bridge) without leaking
 // internal module structure into public imports.
 //
-// How: Keep internal modules organized by responsibility and re-export the
+// Keep internal modules organized by responsibility and re-export the
 // user-facing types from this file so refactors remain non-breaking.
 mod engine;
 
@@ -38,7 +38,7 @@ pub type ReducerCtx<'a, Input, State, StateSlice = ()> =
 
 /// Initializes global runtimes used by optional Oxide features.
 ///
-/// Why: some features (navigation, isolated channels) use explicit global singletons for
+/// some features (navigation, isolated channels) use explicit global singletons for
 /// generated glue code. This helper provides a single, idempotent entry point to initialize
 /// all enabled globals consistently.
 pub fn init_engine_globals() -> CoreResult<()> {

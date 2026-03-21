@@ -2,12 +2,12 @@ use syn::visit::Visit;
 
 // Detection for whether a reducer impl uses sliced updates.
 //
-// Why: The `#[reducer]` macro needs to know whether it should:
+// The `#[reducer]` macro needs to know whether it should:
 // - Require `State: SlicedState`
 // - Specialize the reducer impl to `Reducer<<State as SlicedState>::StateSlice>`
 // - Generate snapshot wrappers that expose `slices` metadata
 //
-// How: Walk the function AST and look for references to `Infer`/`Slices` either
+// Walk the function AST and look for references to `Infer`/`Slices` either
 // as `StateChange::Infer` / `StateChange::Slices` or via glob imports like
 // `use StateChange::*; Ok(Infer)`.
 

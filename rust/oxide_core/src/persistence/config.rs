@@ -2,7 +2,7 @@ use std::time::Duration;
 
 // Persistence configuration for throttling and keying.
 //
-// Why: Persistence needs stable addressing (key) and write debouncing (interval)
+// Persistence needs stable addressing (key) and write debouncing (interval)
 // to remain safe and efficient across platforms.
 /// Configuration for persisting a store’s state to disk.
 pub struct PersistenceConfig {

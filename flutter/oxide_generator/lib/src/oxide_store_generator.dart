@@ -1,6 +1,6 @@
 // Analyzer-driven configuration extraction for Oxide store generation.
 //
-// Why: Dart analyzer types are powerful but hard to unit-test. This layer
+// Dart analyzer types are powerful but hard to unit-test. This layer
 // translates analyzer metadata into a pure-data config consumed by the string
 // emitter.
 import 'package:analyzer/dart/element/element.dart';

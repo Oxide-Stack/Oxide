@@ -2,7 +2,7 @@ use syn::{Ident, ImplItem, ItemImpl};
 
 // Structural validation helpers for reducer impl blocks.
 //
-// Why: codegen should fail fast with actionable errors when the user-written
+// codegen should fail fast with actionable errors when the user-written
 // reducer signature doesn't match what Oxide needs to generate bindings.
 pub(crate) fn type_path_last_segment(ty: &syn::Type) -> Option<String> {
     match ty {

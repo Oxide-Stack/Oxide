@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 // Stable persistence addressing.
 //
-// Why: persistence is keyed by a logical identifier, not an app-specific path,
+// persistence is keyed by a logical identifier, not an app-specific path,
 // so multiple environments can share the same “where does my state live?” rule.
 //
-// How: derive a file name from the key and choose the final storage location
+// derive a file name from the key and choose the final storage location
 // based on the target (filesystem vs localStorage key).
 #[cfg(feature = "persistence-json")]
 const DEFAULT_PERSISTENCE_EXTENSION: &str = "json";

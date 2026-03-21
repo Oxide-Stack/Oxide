@@ -6,10 +6,10 @@ import 'navigation_handler.dart';
 
 /// Default Navigator 1.0 based navigation handler.
 ///
-/// Why: most Flutter apps already depend on Navigator. This handler provides a minimal
+/// most Flutter apps already depend on Navigator. This handler provides a minimal
 /// implementation that works for apps that want an imperative route stack.
 ///
-/// How: the handler uses a [GlobalKey] to access the active [NavigatorState], and a route
+/// the handler uses a [GlobalKey] to access the active [NavigatorState], and a route
 /// builder map keyed by a generated route kind enum.
 final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Object>
     implements OxideNavigationHandler<RouteT, KindT> {

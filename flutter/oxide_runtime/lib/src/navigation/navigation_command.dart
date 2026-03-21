@@ -1,9 +1,9 @@
 /// A navigation command consumed by an [OxideNavigationHandler].
 ///
-/// Why: Oxide navigation is Rust-driven. Rust emits commands, and Dart executes them using
+/// Oxide navigation is Rust-driven. Rust emits commands, and Dart executes them using
 /// a Flutter-native handler (Navigator 1.0, GoRouter, or custom).
 ///
-/// How: Apps typically decode incoming commands from the Rust binding layer into this model.
+/// Apps typically decode incoming commands from the Rust binding layer into this model.
 sealed class OxideNavigationCommand<RouteT extends Object, KindT extends Object> {
   const OxideNavigationCommand();
 

@@ -178,10 +178,10 @@ pub(crate) fn expand_state_struct(
             .to_compile_error();
         };
 
-        // Why: The previously-generated enum name was always `StateSlice`, which
+        // The previously-generated enum name was always `StateSlice`, which
         // collides when multiple sliced state structs exist in the same module.
         //
-        // How: Make the generated enum name state-specific, e.g. `MyStateSlice`.
+        // Make the generated enum name state-specific, e.g. `MyStateSlice`.
         let slice_enum_ident = quote::format_ident!("{}Slice", item.ident);
 
         let slice_variants: Vec<Ident> = named

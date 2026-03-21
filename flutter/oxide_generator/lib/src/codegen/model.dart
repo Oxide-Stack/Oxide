@@ -1,9 +1,9 @@
 // Pure-data config model for store code generation.
 //
-// Why: keeping the generator input as simple Dart values allows unit-testing
+// keeping the generator input as simple Dart values allows unit-testing
 // without analyzer types and keeps the codegen surface stable.
 //
-// How: OxideStoreGenerator translates analyzer metadata into these structs, and
+// OxideStoreGenerator translates analyzer metadata into these structs, and
 // the string emitter consumes them to produce the `*.oxide.g.dart` part output.
 /// Configuration used to generate store glue code.
 final class OxideCodegenConfig {
@@ -14,10 +14,10 @@ final class OxideCodegenConfig {
     required this.actionsType,
     required this.actionsIsEnum,
     required this.engineType,
-    // Why: Most stores do not opt into sliced updates, and the generator should
+    // Most stores do not opt into sliced updates, and the generator should
     // not force tests/callers to provide slice metadata when unused.
     //
-    // How: Keep these optional; `OxideStoreGenerator` only populates them when
+    // Keep these optional; `OxideStoreGenerator` only populates them when
     // `@OxideStore(slices: [...])` is present.
     this.sliceType,
     this.slices,

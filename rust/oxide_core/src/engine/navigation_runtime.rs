@@ -8,7 +8,7 @@ use crate::navigation::{NavCommand, NavRoute, OxideRoute, OxideRouteKind, OxideR
 
 /// Rust-side navigation runtime.
 ///
-/// Why: navigation is Rust-driven (reducers/effects decide where to go), but Flutter executes
+/// navigation is Rust-driven (reducers/effects decide where to go), but Flutter executes
 /// actual page transitions. The runtime bridges these worlds by:
 /// - emitting a stream of [`NavCommand`] values for Dart to execute
 /// - tracking the latest [`RouteContext`] reported by Dart

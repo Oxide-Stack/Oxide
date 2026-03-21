@@ -15,10 +15,10 @@ use crate::persistence::{
 
 // Core reducer runtime.
 //
-// Why: Oxide needs a single place that defines the transactional update semantics
+// Oxide needs a single place that defines the transactional update semantics
 // (commit vs no-op vs error) so every binding layer sees identical behavior.
 //
-// How: Guard state behind a mutex, broadcast snapshots through a watch channel,
+// Guard state behind a mutex, broadcast snapshots through a watch channel,
 // and run side-effects in a background loop that uses the same commit rule.
 struct EngineState<R, StateSlice>
 where
@@ -241,7 +241,7 @@ where
         let change = state.reducer.reduce(&mut next_state, ctx)?;
 
         match change {
-            // Why: "no externally-visible change" should not spam watchers.
+            // "no externally-visible change" should not spam watchers.
             StateChange::None => {
                 tracing::trace!(target: "oxide::engine", "Action applied, no state change");
                 Ok(before_snapshot)
