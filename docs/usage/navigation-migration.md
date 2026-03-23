@@ -24,6 +24,6 @@ This repo moved from per-example manual navigation bindings (JSON streams + `ini
 
 ## Removed APIs (legacy)
 
-- `initOxide()` (Dart) and `init_oxide()` / `init_app()` (Rust example bridges) are no longer recommended for new code. They are still generated for backwards compatibility in some places, but you should prefer `OxideStack.init()`.
+- `initOxide()` (Dart) and `init_oxide()` / `init_app()` (Rust example bridges) are still generated for backwards compatibility in some places, but new code should use `OxideStack.init()`.
 - JSON-based navigation command stream helpers and JSON route snapshot setters.
 

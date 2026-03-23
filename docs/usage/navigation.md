@@ -1,8 +1,8 @@
 # Navigation (Rust-driven)
 
-Oxide navigation is a feature-gated, Rust-driven routing layer that integrates with Flutter-native navigation backends (Navigator 1.0 and GoRouter).
+Oxide navigation is a feature-gated routing layer driven from Rust and wired into Flutter navigation backends (Navigator 1.0 and GoRouter).
 
-The goal is to let reducers/effects decide *where to go* while keeping all Flutter-specific navigation details in Dart.
+Reducers and effects decide where to go. Flutter keeps the navigation plumbing.
 
 ## Enable the Feature
 
@@ -21,7 +21,7 @@ navigation-binding = ["oxide_core/navigation-binding", "oxide_generator_rs/navig
 
 ### Dart
 
-Add `oxide_annotations`, `oxide_generator`, and `oxide_runtime` as you already do for store codegen. Navigation generation is auto-applied to dependents and produces `lib/oxide_generated/...`.
+Add `oxide_annotations`, `oxide_generator`, and `oxide_runtime` as you already do for store codegen. Navigation generation applies to dependents and produces `lib/oxide_generated/...`.
 
 ## Define Routes in Rust
 
@@ -45,9 +45,9 @@ use serde::{Deserialize, Serialize};
 pub struct SplashRoute {}
 ```
 
-The macro scans `src/routes/` and writes a JSON metadata file to `target/oxide_routes/`. The Dart generator consumes this file.
+The macro scans `src/routes/` and writes a JSON metadata file to `target/oxide_routes/`. The Dart generator reads that file.
 
-When `navigation-binding` is enabled, the macro generates FRB-ready navigation endpoints under `crate::routes::oxide_navigation` (for example: `init_navigation`, `oxide_nav_commands_stream`, `oxide_nav_emit_result`, `oxide_nav_set_current_route`). Applications should not hand-write these bindings; examples re-export them through `crate::api::oxide_navigation` for FRB discovery.
+When `navigation-binding` is enabled, the macro generates FRB-ready navigation endpoints under `crate::routes::oxide_navigation` (for example: `init_navigation`, `oxide_nav_commands_stream`, `oxide_nav_emit_result`, `oxide_nav_set_current_route`). Do not hand-write these bindings; the examples re-export them through `crate::api::oxide_navigation` for FRB discovery.
 
 ## Bind Routes to Widgets in Dart
 
@@ -77,7 +77,7 @@ import 'oxide.dart';
 
 Navigation runtime setup is generated.
 
-Use the generated navigator key with your navigation backend (Navigator 1.0 or GoRouter), and call `OxideStack.init()` from `main()`. When `startNavigation` is enabled (default), the runtime starts automatically.
+Use the generated navigator key with your navigation backend (Navigator 1.0 or GoRouter), and call `OxideStack.init()` from `main()`. If you use `runOxideApp(..., startNavigation: true)` or pass `startNavigation: true` to `OxideStack.init(...)`, the runtime starts automatically.
 
 ```dart
 import 'package:go_router/go_router.dart';

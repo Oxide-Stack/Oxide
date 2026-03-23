@@ -1,16 +1,22 @@
 # Oxide
 
-[![CI](https://github.com/Oxide-Stack/Oxide/actions/workflows/ci.yml/badge.svg)](https://github.com/Oxide-Stack/Oxide/actions/workflows/ci.yml)
+[![Basic CI](https://github.com/Oxide-Stack/Oxide/actions/workflows/ci.yml/badge.svg)](https://github.com/Oxide-Stack/Oxide/actions/workflows/ci.yml)
+[![Test Suite](https://github.com/Oxide-Stack/Oxide/actions/workflows/test-suite.yml/badge.svg)](https://github.com/Oxide-Stack/Oxide/actions/workflows/test-suite.yml)
 [![Release](https://github.com/Oxide-Stack/Oxide/actions/workflows/release.yml/badge.svg)](https://github.com/Oxide-Stack/Oxide/actions/workflows/release.yml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/tag/Oxide-Stack/Oxide?label=release)](https://github.com/Oxide-Stack/Oxide/tags)
+[![pub.dev oxide_annotations](https://img.shields.io/pub/v/oxide_annotations?label=pub%20oxide_annotations)](https://pub.dev/packages/oxide_annotations)
+[![pub.dev oxide_generator](https://img.shields.io/pub/v/oxide_generator?label=pub%20oxide_generator)](https://pub.dev/packages/oxide_generator)
+[![pub.dev oxide_runtime](https://img.shields.io/pub/v/oxide_runtime?label=pub%20oxide_runtime)](https://pub.dev/packages/oxide_runtime)
+[![crates.io oxide_core](https://img.shields.io/crates/v/oxide_core?label=crate%20oxide_core)](https://crates.io/crates/oxide_core)
+[![crates.io oxide_generator_rs](https://img.shields.io/crates/v/oxide_generator_rs?label=crate%20oxide_generator_rs)](https://crates.io/crates/oxide_generator_rs)
 
 Oxide is a Rust ↔ Flutter stack for apps where:
 
 - Rust owns state and business logic (reducers).
 - Flutter stays UI-first and consumes typed bindings plus generated adapters.
 
-The repository keeps package code usage-agnostic and pushes runnable integration into [examples/](./examples).
+Package code stays usage-agnostic. Runnable integration lives in [examples/](./examples).
 
 Architecture overview: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 
@@ -18,14 +24,26 @@ Architecture overview: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 
 Oxide is built on [Flutter Rust Bridge (FRB)](https://github.com/fzyzcjy/flutter_rust_bridge).
 
-## Why Oxide
+## What Oxide Gives You
 
 - Keep business logic and state invariants in Rust.
 - Stream revisioned snapshots to Flutter for reactive UI updates.
 - Generate the repetitive wiring (InheritedWidget / Riverpod / BLoC adapters) from a small annotation.
 - Preserve a key invariant: failed reducer calls must not partially mutate live state.
 
-## Mental Model
+## Features
+
+- Rust reducer engine with typed actions and revisioned snapshots.
+- Sliced updates for targeted widget rebuilds.
+- Optional Rust-driven navigation binding to Flutter (Navigator and GoRouter).
+- Optional isolated channels for typed callback and duplex messaging.
+- Optional state persistence (`state-persistence` feature flag).
+- Generated Flutter adapters for InheritedWidget, Inherited Hooks, Riverpod, and BLoC.
+- Unified initialization entrypoint with structured runtime logging.
+
+Feature docs are indexed in [docs/usage/README.md](./docs/usage/README.md).
+
+## Execution Flow
 
 Oxide implements a Redux-like unidirectional flow:
 
@@ -75,7 +93,7 @@ Sliced updates let Flutter stores rebuild only when specific *top-level* parts o
 - [benchmark_app](./examples/benchmark_app) — performance comparison against Dart-only approaches
 - [api_browser_app](./examples/api_browser_app) — browse a JSON API with multiple reducers
 
-## Example Demos
+## Demos
 
 Add your recordings under `docs/media/`:
 
@@ -135,7 +153,7 @@ The repo keeps a single `VERSION` file and syncs versions via scripts under [too
 - [VERSION](./VERSION) is the single source of truth.
 - Scripts apply it to the Rust workspace, Flutter packages, and example apps.
 
-## Non-Goals (Deferred)
+## Non-Goals
 
 - Offline-first behavior
 - State replay/time-travel debugging
@@ -146,7 +164,7 @@ The repo keeps a single `VERSION` file and syncs versions via scripts under [too
 - `@OxideStore.actions` supports both enum actions and union-class actions (depending on your FRB mapping).
 - Rust-side persistence is feature-gated; enable `state-persistence` on the relevant crates to use it.
 
-## 🤝 Contributing
+## Contributing
 
 Issues and PRs are welcome — especially from first-time contributors. If you’re not sure where to start, pick an example app and try adding a small feature or polishing the docs.
 
@@ -154,7 +172,7 @@ Issues and PRs are welcome — especially from first-time contributors. If you�
 - Keep package code usage-agnostic; put runnable usage under `examples/`
 - Add or update tests when you change core behavior
 
-## 📜 License
+## License
 
 Dual-licensed under MIT OR Apache-2.0. See [LICENSE](./LICENSE).
 

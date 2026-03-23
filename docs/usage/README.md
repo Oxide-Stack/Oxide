@@ -1,12 +1,12 @@
 # Oxide Usage Guide
 
-Oxide is designed to be integrated into a Flutter app that already uses Flutter Rust Bridge (FRB).
+Oxide fits into a Flutter app that already uses Flutter Rust Bridge (FRB).
 
-This folder splits the original single-file guide into feature-focused pages.
+This folder splits the guide into feature-specific pages.
 
 ## Working Examples
 
-For fully working code, follow the examples and mirror their structure:
+Use the example apps as the source of truth:
 
 - [counter_app](../../examples/counter_app)
 - [todos_app](../../examples/todos_app)
@@ -17,7 +17,7 @@ For fully working code, follow the examples and mirror their structure:
 
 ## Prerequisites
 
-Start from an FRB-integrated Flutter app/template (or copy one of this repo’s examples). Oxide assumes you already have a working FRB setup for:
+Start from an FRB-integrated Flutter app or copy one of the examples. Oxide assumes you already have FRB set up for:
 
 - building Rust
 - generating bindings
@@ -25,17 +25,19 @@ Start from an FRB-integrated Flutter app/template (or copy one of this repo’s 
 
 FRB docs: https://fzyzcjy.github.io/flutter_rust_bridge/
 
-Before using any Oxide APIs, call `OxideStack.init()` from `main()` (see [init-oxide.md](./init-oxide.md)).
+Before using Oxide APIs, call `OxideStack.init()` from `main()` (see [init-oxide.md](./init-oxide.md)).
 
 ## Topics
 
 - Reducer pattern (Rust state/actions/reducer): [reducer-pattern.md](./reducer-pattern.md)
+- Sliced updates (targeted UI rebuilds): [sliced-updates.md](./sliced-updates.md)
 - Generate FRB bindings (Rust ↔ Dart): [frb-bindings.md](./frb-bindings.md)
 - Unified async initialization (`OxideStack.init`): [init-oxide.md](./init-oxide.md)
-- Debug and advanced logging flags: [init-oxide.md](./init-oxide.md#debug-logging-flags)
+- Runtime logging and diagnostics: [init-oxide.md](./init-oxide.md#logging-usage)
 - Flutter deps + codegen (`build_runner`): [flutter-codegen.md](./flutter-codegen.md)
 - Declare a store (`@OxideStore`): [declare-store.md](./declare-store.md)
 - Use the generated adapter in UI: [ui-backends.md](./ui-backends.md)
 - Persistence (optional): [persistence.md](./persistence.md)
 - Navigation (Rust-driven): [navigation.md](./navigation.md)
+- Navigation migration notes: [navigation-migration.md](./navigation-migration.md)
 - Isolated channels (feature-gated): [isolated-channels.md](./isolated-channels.md)

@@ -12,15 +12,15 @@ In your Rust crate (the one FRB will bind to), add dependencies:
 
 ```toml
 [dependencies]
-oxide_core = "0.3.0"
-oxide_generator_rs = "0.3.0"
+oxide_core = "0.4.0"
+oxide_generator_rs = "0.4.0"
 ```
 
 When working inside this repository, use combined version + path dependencies (Cargo prefers `path` locally, while published crates resolve by `version`):
 
 ```toml
-oxide_core = { version = "0.3.0", path = "../rust/oxide_core" }
-oxide_generator_rs = { version = "0.3.0", path = "../rust/oxide_generator_rs" }
+oxide_core = { version = "0.4.0", path = "../rust/oxide_core" }
+oxide_generator_rs = { version = "0.4.0", path = "../rust/oxide_generator_rs" }
 ```
 
 ## Define State, Actions, Reducer
@@ -100,35 +100,10 @@ If you enable sliced updates (next section), you’ll also use:
 
 ## Optional: Sliced Updates
 
-Sliced updates let Flutter subscribe to only the parts of state it cares about (based on top-level state fields).
+Sliced updates are documented in detail in [sliced-updates.md](./sliced-updates.md).
 
-Rust side:
+Quick summary:
 
-```rust
-use oxide_generator_rs::{actions, reducer, state};
-
-#[state(sliced = true)]
-pub struct AppState {
-  pub counter: u64,
-  pub username: String,
-}
-
-// The macro generates an enum named `AppStateSlice` with variants derived from fields:
-// `Counter`, `Username`, ...
-```
-
-Reducer side:
-
-- Return `StateChange::Infer` to have Oxide infer which slices changed.
-- Return `StateChange::Slices(&[...])` when you already know which slices changed.
-- `StateChange::Full` always passes slice filters (acts like “full update”).
-
-Flutter side:
-
-```dart
-@OxideStore(
-  // ...
-  slices: [AppStateSlice.counter],
-)
-class AppOxide {}
-```
+- Add `#[state(sliced = true)]` on your Rust state.
+- Return `StateChange::Infer` or `StateChange::Slices(&[...])` from reducer/effect paths.
+- Use `@OxideStore(slices: [...])` in Flutter to limit rebuilds to relevant state segments.

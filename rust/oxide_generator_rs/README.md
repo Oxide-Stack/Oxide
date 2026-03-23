@@ -1,6 +1,6 @@
 # oxide_generator_rs
 
-`oxide_generator_rs` provides proc-macro attributes used to annotate Oxide state and reducer types.
+`oxide_generator_rs` provides proc-macro attributes for Oxide state and reducer types.
 
 The macros embed structured metadata as Rust doc strings so that code generation tools can discover:
 
@@ -8,7 +8,7 @@ The macros embed structured metadata as Rust doc strings so that code generation
 - action names and variant shapes
 - reducer ↔ state/actions associations
 
-This crate is intentionally usage-agnostic. For end-to-end Rust ↔ Flutter wiring, see the repository [examples](../../examples) and the root [README](../../README.md).
+This crate stays usage-agnostic. For end-to-end Rust ↔ Flutter wiring, see the repository [examples](../../examples) and the root [README](../../README.md).
 
 ## Add It To Your Crate
 
@@ -20,7 +20,7 @@ oxide_generator_rs = "0.4.0"
 oxide_core = "0.4.0"
 ```
 
-When working inside this repository, use combined version + path dependencies (Cargo prefers `path` locally, while published crates resolve by `version`):
+When working inside this repository, use combined version + path dependencies. Cargo prefers `path` locally, while published crates resolve by `version`:
 
 ```toml
 oxide_core = { version = "0.4.0", path = "../rust/oxide_core" }

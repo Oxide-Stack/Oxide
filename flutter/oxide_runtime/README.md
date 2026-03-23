@@ -1,8 +1,8 @@
 # oxide_runtime
 
-`oxide_runtime` is a small Flutter package that provides Riverpod helpers designed to be used by Oxide-generated code.
+`oxide_runtime` is a small Flutter package with Riverpod helpers for Oxide-generated code.
 
-This package is intentionally minimal and usage-agnostic.
+The package stays minimal and usage-agnostic.
 
 For runnable usage, see the repository examples and the root README:
 
@@ -35,7 +35,7 @@ final valueProvider = oxideStreamFromEngineProvider<MyEngine, int>(
 );
 ```
 
-For complete, runnable usage, see the repository examples.
+For runnable usage, see the repository examples.
 
 ## License
 

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking the time to contribute to Oxide.
+Thanks for contributing to Oxide.
 
 ## Development Setup
 
@@ -23,7 +23,7 @@ From the repo root:
 - Add or update tests when behavior changes.
 - Update READMEs and changelogs when user-facing behavior changes.
 - Keep source comments concise and factual.
-- Prefer comments for invariants, edge cases, or non-obvious constraints.
+- Use comments for invariants, edge cases, or non-obvious constraints.
 - Avoid repetitive rhetorical templates in comments.
 
 ## Publishing (Maintainers)
@@ -36,7 +36,7 @@ Publishing is automated via GitHub Actions and runs on `vX.Y.Z` tags. The releas
 
 ## Reporting Issues
 
-Please include:
+Include:
 
 - What you expected vs what happened
 - Steps to reproduce

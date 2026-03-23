@@ -1,13 +1,10 @@
-# Use The Generated Adapter In UI
+# Use the Generated Adapter in UI
 
-Oxide supports multiple generated UI wiring styles (“backends”). Choose the backend via `@OxideStore(backend: ...)`.
+Oxide supports multiple generated UI wiring styles, or backends. Choose one with `@OxideStore(backend: ...)`.
 
-At app startup, initialize Oxide via the generated entrypoint:
+At app startup, initialize Oxide through the generated entrypoint:
 
-> **Note:** if your Rust code defines isolated channels, the generated Dart
-> entrypoints (`OxideStack.init` and `runOxideApp`) take care of initializing
-> the channel runtime for you. **You no longer need to call any
-> `initIsolatedChannels…` helpers manually.**
+> **Note:** if your Rust code defines isolated channels, the generated Dart entrypoints (`OxideStack.init` and `runOxideApp`) initialize the channel runtime for you. You do not need to call `initIsolatedChannels...` helpers manually.
 
 
 ```dart
@@ -36,7 +33,7 @@ This backend generates:
 - `<Name>Scope extends StatefulWidget` (an `InheritedNotifier` provider)
 - `<Name>Actions` facade
 
-Wrap your app (or a subtree) with the generated scope:
+Wrap your app, or a subtree, with the generated scope:
 
 ```dart
 import 'package:flutter/widgets.dart';
@@ -91,7 +88,44 @@ class CounterCard extends StatelessWidget {
 This backend extends the InheritedWidget backend with a generated hook function.
 
 - Add dependency: `flutter_hooks`
-- Use the generated hook in a `HookWidget` (name depends on your store name).
+- Wrap your widget tree with the generated scope, same as the inherited backend.
+- Use the generated hook in a `HookWidget` (the exact function name depends on your store name).
+
+```yaml
+dependencies:
+  flutter_hooks: ^0.21.0
+```
+
+```dart
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+
+import 'package:your_app/src/oxide.dart';
+
+class CounterHooksCard extends HookWidget {
+  const CounterHooksCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final view = useAppOxide(context);
+
+    if (view.isLoading) return const CircularProgressIndicator();
+    if (view.error != null) return Text('Error: ${view.error}');
+
+    return Column(
+      children: [
+        Text('Counter: ${view.state?.counter ?? '-'}'),
+        FilledButton(
+          onPressed: () => unawaited(view.actions.increment()),
+          child: const Text('Increment'),
+        ),
+      ],
+    );
+  }
+}
+```
 
 ## Riverpod Backend (`OxideBackend.riverpod`)
 
@@ -109,4 +143,4 @@ This backend generates a `Cubit<OxideView<State, Actions>>` plus an actions faca
 - Provide the generated cubit with `BlocProvider`
 - Build from emitted `OxideView` and dispatch via `cubit.actions`
 
-The recommended way to learn the exact UI wiring is to copy an example and adapt it.
+Copy an example and adapt it.

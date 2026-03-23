@@ -7,16 +7,16 @@ Oxide isolated channels provide **transport-only** Rust ↔ Dart communication p
 - Explicitly initialized (no implicit routing)
 - Fully optional via a Cargo feature flag
 
-This feature implements the locked specification in `instructions/OxideIsolatedChannels_Locked.md`.
+This feature follows the locked specification in `instructions/OxideIsolatedChannels_Locked.md`.
 
-## Enable The Feature
+## Enable the Feature
 
 In your Rust crate that uses Oxide, enable `isolated-channels` on both crates:
 
 ```toml
 [dependencies]
-oxide_core = { version = "0.3.0", features = ["isolated-channels"] }
-oxide_generator_rs = { version = "0.3.0", features = ["isolated-channels"] }
+oxide_core = { version = "0.4.0", features = ["isolated-channels"] }
+oxide_generator_rs = { version = "0.4.0", features = ["isolated-channels"] }
 ```
 
 Then gate your channel declarations so they do not compile unless explicitly enabled:
@@ -28,7 +28,7 @@ use oxide_core::{OxideCallbacking, OxideEventChannel, OxideEventDuplexChannel};
 
 ## Initialization (`OxideStack.init`)
 
-Applications should initialize Oxide once during startup using the generated entrypoint. The macro-generated Rust init hook runs during `RustLib.init()` and initializes the isolated channel runtime when the feature is enabled.
+Initialize Oxide once during startup using the generated entrypoint. The macro-generated Rust init hook runs during `RustLib.init()` and initializes the isolated channel runtime when the feature is enabled.
 
 Call the Dart entrypoint from `main()`:
 
@@ -65,7 +65,7 @@ AnalyticsChannel::track("signup".to_string());
 AnalyticsChannel::screen_view("home".to_string());
 ```
 
-The macro also generates a FRB stream endpoint that emits `AnalyticsEvent` values. For a stable FRB surface, wrap the generated endpoint in your own API module (recommended).
+The macro also generates an FRB stream endpoint that emits `AnalyticsEvent` values. For a stable FRB surface, wrap the generated endpoint in your own API module.
 
 ## Rust → Dart → Rust: Callbacking
 
@@ -91,7 +91,7 @@ pub enum DialogResponse {
 }
 ```
 
-For each request variant, the macro generates one async method. The response variant must exist with the **same name**, otherwise compilation fails.
+For each request variant, the macro generates one async method. The response variant must exist with the **same name** or compilation fails.
 
 ## Duplex: Paired Independent Streams
 
@@ -115,7 +115,7 @@ pub enum ChatIn {
 }
 ```
 
-Outgoing is a Rust → Dart stream (like an event channel). Incoming is Dart → Rust via an FRB function call that forwards the typed `ChatIn` value to the Rust-side registered handler.
+Outgoing is a Rust → Dart stream (like an event channel). Incoming is Dart → Rust through an FRB function call that forwards the typed `ChatIn` value to the Rust-side registered handler.
 
 ## Dart Wiring Helpers (Optional)
 
@@ -123,4 +123,41 @@ The Oxide runtime package includes optional helpers under:
 
 `package:oxide_runtime/src/isolated_channels/isolated_channels.dart`
 
-These helpers are not exported from the main `oxide_runtime` library so apps opt in explicitly.
+These helpers are not exported from the main `oxide_runtime` library, so apps opt in explicitly.
+
+Example callback loop wiring:
+
+```dart
+import 'package:oxide_runtime/src/isolated_channels/callback_runtime.dart';
+
+Future<void> startDialogLoop(
+  Stream<DialogRequestEnvelope> requests,
+) {
+  return runOxideCallbacking<DialogRequestEnvelope, DialogRequest, DialogResponse>(
+    requests: requests,
+    requestIdOf: (e) => e.requestId,
+    requestOf: (e) => e.request,
+    handler: handleDialogRequest,
+    respond: sendDialogResponse,
+  );
+}
+```
+
+Example duplex outgoing listener:
+
+```dart
+import 'package:oxide_runtime/src/isolated_channels/duplex_runtime.dart';
+
+StreamSubscription<ChatOut> bindOutgoing(
+  Stream<ChatOut> outgoing,
+) {
+  return listenOxideDuplexOutgoing<ChatOut>(
+    outgoing: outgoing,
+    onEvent: (event) {
+      // Forward into your app service layer.
+    },
+  );
+}
+```
+
+If you want concrete end-to-end behavior, see `flutter/oxide_runtime/test/isolated_channels_runtime_test.dart` and the isolated-channel demo in `examples/api_browser_app`.

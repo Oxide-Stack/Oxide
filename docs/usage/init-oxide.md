@@ -1,10 +1,10 @@
 # Initialization (`OxideStack.init`)
 
-Oxide runs background work using Flutter Rust Bridge (FRB) spawning. The recommended setup is to let a macro-generated Rust init hook run as part of `RustLib.init()`, and expose a single Dart entrypoint (`OxideStack.init`) that must be called from `main()` before using Oxide APIs.
+Oxide runs background work through Flutter Rust Bridge (FRB) spawning. In navigation-enabled apps, the generated Rust init hook runs as part of `RustLib.init()`, and Dart calls a single entrypoint, `OxideStack.init`, from `main()` before using Oxide APIs.
 
 ## Rust: Use the Macro-Generated Init Hook
 
-If your crate uses the `#[oxide_generator_rs::routes]` macro (navigation-enabled apps), Oxide emits an FRB init hook at build time. You do not need to hand-write `init_app` / `init_oxide` functions in your crate.
+If your crate uses the `#[oxide_generator_rs::routes]` macro, Oxide emits an FRB init hook at build time. You do not need to hand-write `init_app` or `init_oxide`.
 
 ## Dart: Call `OxideStack.init()` In `main`
 
@@ -16,7 +16,7 @@ Future<void> main() async {
 }
 ```
 
-`OxideStack.init()` calls `RustLib.init()` and (by default) starts the generated navigation runtime.
+`OxideStack.init()` calls `RustLib.init()` and starts the generated navigation runtime by default.
 
 ## Dart: Or Use `runOxideApp`
 
@@ -27,21 +27,25 @@ Future<void> main() async {
 }
 ```
 
-`runOxideApp` wraps `OxideStack.init()` and `runApp(...)`, and supports the same `startNavigation` flag.
+`runOxideApp` wraps `OxideStack.init()` and `runApp(...)`, and takes the same `startNavigation` flag.
 
-## Best Practices
+## Rules
 
 - Call `OxideStack.init()` once per app startup.
 - Do not access `OxideStack.navigation` or create any Oxide engines before initialization.
 
-## Debug Logging Flags
+## Logging Usage
 
-Oxide exposes compile-time Dart flags for structured runtime logging:
+Oxide emits structured runtime logs for startup, dispatch, and error paths. Use the compile-time Dart flags below when you need extra detail or want to inspect state transitions.
+
+### Debug Logging Flags
+
+Oxide exposes these compile-time Dart flags:
 
 - `OXIDE_DEBUG_LOGS=true`: enables explicit debug logs in release builds.
 - `ENABLE_ADVANCED_LOGS=true`: enables verbose transition payload logs (for example `before -> action -> after`).
 
-Common usage:
+Example:
 
 ```bash
 flutter run --dart-define=OXIDE_DEBUG_LOGS=true --dart-define=ENABLE_ADVANCED_LOGS=true

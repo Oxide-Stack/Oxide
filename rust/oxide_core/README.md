@@ -7,7 +7,7 @@
 - Streaming revisioned snapshots (`StateSnapshot<T>`)
 - Optional persistence helpers (feature-gated)
 
-This crate is intentionally usage-agnostic. For end-to-end Rust ↔ Flutter wiring, see the repository [examples](../../examples) and the root [README](../../README.md).
+This crate stays usage-agnostic. For end-to-end Rust ↔ Flutter wiring, see the repository [examples](../../examples) and the root [README](../../README.md).
 
 ## Add It To Your Crate
 
@@ -18,7 +18,7 @@ In your `Cargo.toml`:
 oxide_core = "0.4.0"
 ```
 
-When working inside this repository, use a combined version + path dependency (Cargo prefers `path` locally, while published crates resolve by `version`):
+When working inside this repository, use a combined version + path dependency. Cargo prefers `path` locally, while published crates resolve by `version`:
 
 ```toml
 oxide_core = { version = "0.4.0", path = "../rust/oxide_core" }

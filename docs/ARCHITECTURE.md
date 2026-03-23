@@ -1,18 +1,18 @@
 # Architecture
 
-This repository is intentionally split into two usage-agnostic distribution surfaces (Rust + Flutter), plus runnable integration examples.
+This repository is split into two usage-agnostic package surfaces, Rust and Flutter, plus runnable integration examples.
 
 ## Scope
 
-- **Package/library code** lives under `rust/` and `flutter/` and must stay usage-agnostic.
-- **Runnables and wiring** live under `examples/` and are intentionally excluded from core implementation structure.
+- **Package/library code** lives under `rust/` and `flutter/` and stays usage-agnostic.
+- **Runnables and wiring** live under `examples/` and stay out of the core package structure.
 
 ## Rust
 
 ### Crates
 
 - `oxide_core`: engine primitives (state, reducer contract, snapshot streams, error model, optional persistence).
-- `oxide_generator_rs`: procedural macros that generate a binding-friendly surface for reducers/stores.
+- `oxide_generator_rs`: procedural macros that generate a binding-friendly surface for reducers and stores.
 
 ### Dependency graph
 
@@ -28,13 +28,13 @@ oxide_core          ──(no dependency)─────────────
 - `ffi/`: small adapters intended for binding layers.
 - `persistence/` (feature-gated): codec + backend + debounced writer for snapshot persistence.
 
-Maintenance guideline: keep reducer/store semantics in `engine/`; keep platform/runtime concerns in `runtime`, `ffi`, and `persistence`.
+Maintenance guideline: keep reducer/store semantics in `engine/`; keep platform and runtime concerns in `runtime`, `ffi`, and `persistence`.
 
 ## Flutter
 
 ### Packages
 
-- `oxide_annotations`: build-time annotations (`@OxideStore`) + small shared helper types used by generated output.
+- `oxide_annotations`: build-time annotations (`@OxideStore`) and small shared helper types used by generated output.
 - `oxide_generator`: build_runner / source_gen package that emits `*.oxide.g.dart` glue code.
 - `oxide_runtime`: runtime primitives used by generated stores (engine lifecycle, dispatch, snapshot stream coordination).
 
@@ -60,9 +60,9 @@ oxide_generator  ──(generates code that uses)──▶  oxide_runtime
 
 ## Testing and Validation
 
-The primary regression signal for refactors is:
+The main regression signal for refactors is:
 
 - Rust: workspace tests under `rust/` (including feature-gated persistence and wasm compatibility checks).
 - Flutter/Dart: package tests under `flutter/oxide_runtime` and `flutter/oxide_generator`, plus analysis for `flutter/oxide_annotations`.
 
-Example app tests under `examples/` are integration-focused and are intentionally treated separately from the core package/library validation.
+Example app tests under `examples/` are integration-focused and are treated separately from core package and library validation.

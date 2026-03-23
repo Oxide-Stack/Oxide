@@ -1,8 +1,8 @@
 # oxide_generator
 
-`oxide_generator` is a dev-only build_runner generator that reads `@OxideStore(...)` declarations and emits backend glue as `*.oxide.g.dart`.
+`oxide_generator` is a dev-only build_runner generator that reads `@OxideStore(...)` declarations and emits `*.oxide.g.dart` backend glue.
 
-This package is intentionally usage-agnostic. For runnable usage, see the example apps in the repository (examples/*) and the root README.
+The package stays usage-agnostic. For runnable usage, see the example apps in the repository and the root README.
 
 ## Add It To Your App
 
