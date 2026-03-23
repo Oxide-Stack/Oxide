@@ -11,8 +11,8 @@
 // Maintenance: keep this module as the internal boundary for "engine semantics"
 // (state, reducer traits, snapshot model, and dispatch loop). Anything target-
 // specific should live in `runtime`, `ffi`, or `persistence`.
-mod error;
 mod context;
+mod error;
 mod reducer_engine;
 mod snapshot;
 mod store;
@@ -26,14 +26,14 @@ mod navigation_singleton;
 #[cfg(feature = "navigation-binding")]
 mod navigation_ticket_registry;
 
-pub use error::{CoreResult, OxideError};
 pub use context::Context;
-pub use reducer_engine::ReducerEngine;
-pub use snapshot::StateSnapshot;
-pub use store::{InitContext, Reducer, SlicedState, StateChange};
+pub use error::{CoreResult, OxideError};
 #[cfg(feature = "navigation-binding")]
 pub use navigation_ctx::NavigationCtx;
 #[cfg(feature = "navigation-binding")]
 pub use navigation_runtime::NavigationRuntime;
 #[cfg(feature = "navigation-binding")]
 pub use navigation_singleton::{init_navigation, navigation_runtime};
+pub use reducer_engine::ReducerEngine;
+pub use snapshot::StateSnapshot;
+pub use store::{InitContext, Reducer, SlicedState, StateChange};

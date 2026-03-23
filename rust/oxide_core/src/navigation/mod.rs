@@ -28,9 +28,9 @@
 //! }
 //! ```
 mod default_extra;
+mod default_return;
 mod nav_command;
 mod nav_route;
-mod default_return;
 mod no_extra;
 mod no_return;
 mod oxide_route_traits;

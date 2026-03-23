@@ -26,7 +26,10 @@ fn navigation_singleton_requires_init_then_is_available() {
         Ok(_) => panic!("navigation runtime unexpectedly initialized"),
         Err(err) => err,
     };
-    assert!(err.to_string().contains("navigation runtime not initialized"));
+    assert!(
+        err.to_string()
+            .contains("navigation runtime not initialized")
+    );
 
     oxide_core::init_navigation().unwrap();
     let _runtime = oxide_core::navigation_runtime().unwrap();
@@ -41,7 +44,10 @@ fn isolated_channels_runtime_requires_init_then_is_available() {
         Ok(_) => panic!("isolated channels runtime unexpectedly initialized"),
         Err(err) => err,
     };
-    assert!(err.to_string().contains("isolated channels runtime not initialized"));
+    assert!(
+        err.to_string()
+            .contains("isolated channels runtime not initialized")
+    );
     assert_eq!(
         oxide_core::ensure_isolated_channels_initialized().unwrap_err(),
         oxide_core::OxideChannelError::Unavailable

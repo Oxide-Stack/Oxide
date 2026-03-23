@@ -25,4 +25,3 @@ pub enum OxideChannelError {
 
 /// Convenience result alias for channel operations.
 pub type OxideChannelResult<T> = Result<T, OxideChannelError>;
-

@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
-use crate::engine::{CoreResult, OxideError};
 use crate::engine::navigation_runtime::NavigationRuntime;
+use crate::engine::{CoreResult, OxideError};
 
 static NAVIGATION: OnceLock<NavigationRuntime> = OnceLock::new();
 

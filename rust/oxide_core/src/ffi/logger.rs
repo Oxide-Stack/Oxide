@@ -1,10 +1,10 @@
 use std::sync::OnceLock;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 use tracing::{Event, Subscriber};
 use tracing_subscriber::layer::Context;
-use tracing_subscriber::{filter::LevelFilter, Layer};
-use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::prelude::*;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedSender, UnboundedReceiver};
+use tracing_subscriber::registry::LookupSpan;
+use tracing_subscriber::{Layer, filter::LevelFilter};
 
 /// The log levels exposed to Dart as strings
 fn map_level(level: tracing::Level) -> &'static str {

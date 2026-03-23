@@ -1,13 +1,18 @@
+use crate::TEST_ENV_LOCK;
 use std::fs;
 use std::path::PathBuf;
-use crate::TEST_ENV_LOCK;
 use syn::ItemImpl;
 
-use super::{OxideCallbackArgs, OxideEventChannelArgs, expand_oxide_callback, expand_oxide_event_channel};
+use super::{
+    OxideCallbackArgs, OxideEventChannelArgs, expand_oxide_callback, expand_oxide_event_channel,
+};
 
 #[test]
 fn event_channel_generates_variant_helpers() {
-    let _guard = TEST_ENV_LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap();
+    let _guard = TEST_ENV_LOCK
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap();
 
     let dir = make_temp_manifest_dir("oxide_isolated_channels_event");
     write_src_lib(
@@ -32,18 +37,27 @@ fn event_channel_generates_variant_helpers() {
     .unwrap();
 
     let ts = expand_oxide_event_channel(
-        OxideEventChannelArgs { orphaned: false, no_frb: true },
+        OxideEventChannelArgs {
+            orphaned: false,
+            no_frb: true,
+        },
         item_impl,
     )
     .unwrap();
 
     let out = ts.to_string();
-    assert!(out.contains("pub fn track"), "expected track helper, got: {out}");
+    assert!(
+        out.contains("pub fn track"),
+        "expected track helper, got: {out}"
+    );
 }
 
 #[test]
 fn callbacking_enforces_variant_parity() {
-    let _guard = TEST_ENV_LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap();
+    let _guard = TEST_ENV_LOCK
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap();
 
     let dir = make_temp_manifest_dir("oxide_isolated_channels_callback");
     write_src_lib(
@@ -75,14 +89,18 @@ fn callbacking_enforces_variant_parity() {
     let message = err.to_string();
     assert!(
         message.contains("missing Response variant")
-            || message.contains("Response type must be an enum defined in the current crate `src/`"),
+            || message
+                .contains("Response type must be an enum defined in the current crate `src/`"),
         "expected parity error, got: {message}"
     );
 }
 
 #[test]
 fn callbacking_generates_methods_and_runtime_module() {
-    let _guard = TEST_ENV_LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap();
+    let _guard = TEST_ENV_LOCK
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap();
 
     let dir = make_temp_manifest_dir("oxide_isolated_channels_callback_ok");
     write_src_lib(
@@ -114,8 +132,14 @@ fn callbacking_generates_methods_and_runtime_module() {
 
     let ts = expand_oxide_callback(OxideCallbackArgs { no_frb: true }, item_impl).unwrap();
     let out = ts.to_string();
-    assert!(out.contains("pub async fn confirm"), "expected confirm method, got: {out}");
-    assert!(out.contains("pub async fn ping"), "expected ping method, got: {out}");
+    assert!(
+        out.contains("pub async fn confirm"),
+        "expected confirm method, got: {out}"
+    );
+    assert!(
+        out.contains("pub async fn ping"),
+        "expected ping method, got: {out}"
+    );
     assert!(out.contains("__oxide_isolated_callback_dialog_service"));
 }
 
@@ -143,7 +167,10 @@ fn callbacking_rejects_unsupported_args_and_non_callback_trait() {
 
 #[test]
 fn event_channel_duplex_generates_send_and_register_helpers() {
-    let _guard = TEST_ENV_LOCK.get_or_init(|| std::sync::Mutex::new(())).lock().unwrap();
+    let _guard = TEST_ENV_LOCK
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap();
 
     let dir = make_temp_manifest_dir("oxide_isolated_channels_duplex");
     write_src_lib(
@@ -181,8 +208,14 @@ fn event_channel_duplex_generates_send_and_register_helpers() {
     .unwrap();
 
     let out = ts.to_string();
-    assert!(out.contains("pub fn send"), "expected send helper, got: {out}");
-    assert!(out.contains("register_incoming"), "expected register helper, got: {out}");
+    assert!(
+        out.contains("pub fn send"),
+        "expected send helper, got: {out}"
+    );
+    assert!(
+        out.contains("register_incoming"),
+        "expected register helper, got: {out}"
+    );
 }
 
 #[test]
@@ -211,7 +244,9 @@ fn event_channel_rejects_invalid_args_and_non_channel_trait() {
     )
     .unwrap_err()
     .to_string();
-    assert!(err.contains("must be applied to an impl of OxideEventChannel or OxideEventDuplexChannel"));
+    assert!(
+        err.contains("must be applied to an impl of OxideEventChannel or OxideEventDuplexChannel")
+    );
 }
 
 fn make_temp_manifest_dir(name: &str) -> String {
@@ -219,7 +254,11 @@ fn make_temp_manifest_dir(name: &str) -> String {
     dir.push(format!("{name}_{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(dir.join("src")).unwrap();
-    fs::write(dir.join("Cargo.toml"), "[package]\nname = \"tmp\"\nversion = \"0.0.0\"\nedition = \"2024\"\n").unwrap();
+    fs::write(
+        dir.join("Cargo.toml"),
+        "[package]\nname = \"tmp\"\nversion = \"0.0.0\"\nedition = \"2024\"\n",
+    )
+    .unwrap();
     dir.to_string_lossy().to_string()
 }
 

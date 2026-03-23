@@ -2,9 +2,11 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use tokio::sync::{Mutex, mpsc, watch};
 
-use crate::engine::{CoreResult, OxideError};
 use crate::engine::navigation_ticket_registry::TicketRegistry;
-use crate::navigation::{NavCommand, NavRoute, OxideRoute, OxideRouteKind, OxideRoutePayload, RouteContext};
+use crate::engine::{CoreResult, OxideError};
+use crate::navigation::{
+    NavCommand, NavRoute, OxideRoute, OxideRouteKind, OxideRoutePayload, RouteContext,
+};
 
 /// Rust-side navigation runtime.
 ///
@@ -59,12 +61,11 @@ impl NavigationRuntime {
     /// Only a single consumer is supported, because navigation commands are ordered and must not
     /// be dropped. Attempting to subscribe twice returns an error.
     pub fn subscribe_commands(&self) -> CoreResult<NavigationCommands<'_>> {
-        if self
-            .command_stream_active
-            .swap(true, Ordering::AcqRel)
-        {
+        if self.command_stream_active.swap(true, Ordering::AcqRel) {
             return Err(OxideError::Validation {
-                message: "navigation commands stream already active; only one consumer is supported".into(),
+                message:
+                    "navigation commands stream already active; only one consumer is supported"
+                        .into(),
             });
         }
 
@@ -114,7 +115,9 @@ impl NavigationRuntime {
 
     /// Pops the current route with a JSON result value.
     pub fn pop_with_json(&self, result: serde_json::Value) -> CoreResult<()> {
-        self.send_command(NavCommand::Pop { result: Some(result) })
+        self.send_command(NavCommand::Pop {
+            result: Some(result),
+        })
     }
 
     /// Pops routes until a route with the given kind becomes active.
@@ -153,12 +156,7 @@ impl NavigationRuntime {
 }
 
 fn nav_route_from_oxide_route<R: OxideRoute>(route: R) -> CoreResult<NavRoute> {
-    let kind = route
-        .clone()
-        .into_payload()
-        .kind()
-        .as_str()
-        .to_string();
+    let kind = route.clone().into_payload().kind().as_str().to_string();
     let payload = serde_json::to_value(&route).map_err(|e| OxideError::Internal {
         message: format!("failed to serialize route payload for kind {kind}: {e}"),
     })?;
@@ -171,7 +169,11 @@ fn nav_route_from_oxide_route<R: OxideRoute>(route: R) -> CoreResult<NavRoute> {
         })
         .transpose()?;
 
-    Ok(NavRoute { kind, payload, extras })
+    Ok(NavRoute {
+        kind,
+        payload,
+        extras,
+    })
 }
 
 fn nav_route_from_oxide_payload<P: OxideRoutePayload>(payload: P) -> CoreResult<NavRoute> {
@@ -184,13 +186,13 @@ fn nav_route_from_oxide_payload<P: OxideRoutePayload>(payload: P) -> CoreResult<
             None => {
                 return Err(OxideError::Validation {
                     message: format!("route payload for kind {kind} is missing a 'payload' field"),
-                })
+                });
             }
         },
         _ => {
             return Err(OxideError::Validation {
                 message: format!("route payload for kind {kind} did not serialize to an object"),
-            })
+            });
         }
     };
     Ok(NavRoute {

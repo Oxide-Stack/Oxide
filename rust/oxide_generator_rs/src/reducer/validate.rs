@@ -235,28 +235,30 @@ mod tests {
         assert!(is_reducer_trait(&trait_path));
 
         let item_impl = parse_impl("impl MyReducer { fn reduce(&mut self) {} type X = u64; }");
-        assert_eq!(impl_reducer_ident(&item_impl).unwrap().to_string(), "MyReducer");
+        assert_eq!(
+            impl_reducer_ident(&item_impl).unwrap().to_string(),
+            "MyReducer"
+        );
         assert!(impl_assoc_type(&item_impl, "X").is_some());
         assert!(find_impl_fn(&item_impl, "reduce").is_some());
     }
 
     #[test]
     fn validate_init_sig_accepts_expected_shape_and_rejects_bad_forms() {
-        let ok_impl = parse_impl(
-            "impl R { async fn init(&mut self, _ctx: oxide_core::InitContext<()>) {} }",
-        );
+        let ok_impl =
+            parse_impl("impl R { async fn init(&mut self, _ctx: oxide_core::InitContext<()>) {} }");
         let ok_fn = find_impl_fn(&ok_impl, "init").unwrap();
         validate_init_sig(ok_fn).unwrap();
 
-        let bad_async = parse_impl("impl R { fn init(&mut self, _ctx: oxide_core::InitContext<()>) {} }");
+        let bad_async =
+            parse_impl("impl R { fn init(&mut self, _ctx: oxide_core::InitContext<()>) {} }");
         let err = validate_init_sig(find_impl_fn(&bad_async, "init").unwrap())
             .unwrap_err()
             .to_string();
         assert!(err.contains("must be async"));
 
-        let bad_receiver = parse_impl(
-            "impl R { async fn init(&self, _ctx: oxide_core::InitContext<()>) {} }",
-        );
+        let bad_receiver =
+            parse_impl("impl R { async fn init(&self, _ctx: oxide_core::InitContext<()>) {} }");
         let err = validate_init_sig(find_impl_fn(&bad_receiver, "init").unwrap())
             .unwrap_err()
             .to_string();

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'oxide.dart';
 import 'src/bench/bench_app.dart';
-import 'src/oxide.dart';
 
 Future<void> main() async {
   // start without kicking off navigation immediately so we can clear any
@@ -14,7 +13,9 @@ Future<void> main() async {
   await runOxideApp(
     const ProviderScope(
       child: BenchCounterHooksOxideScope(
-        child: BenchJsonHooksOxideScope(child: BenchSieveHooksOxideScope(child: BenchApp())),
+        child: BenchJsonHooksOxideScope(
+          child: BenchSieveHooksOxideScope(child: BenchApp()),
+        ),
       ),
     ),
   );
@@ -28,7 +29,7 @@ Future<void> main() async {
     // start the runtime via the public API instead of calling the generated
     // helper directly; this avoids the need to import the generated file.
     OxideStack.navigation.start();
-    WidgetsBinding.instance.addPostFrameCallback((__) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       // debug log so we can spot when the cleanup occurs
       // ignore: avoid_print
       print('[Bench] clearing restored navigation state');

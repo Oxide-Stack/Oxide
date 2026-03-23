@@ -169,11 +169,13 @@ mod tests {
 
     #[test]
     fn collect_doc_lines_filters_oxide_markers() {
-        let item: ItemStruct = syn::parse_str(
-            "#[doc = \"  user docs  \" ] #[doc = \"oxide:meta:{...}\"] struct S;",
-        )
-        .unwrap();
-        assert_eq!(collect_doc_lines(&item.attrs), vec!["user docs".to_string()]);
+        let item: ItemStruct =
+            syn::parse_str("#[doc = \"  user docs  \" ] #[doc = \"oxide:meta:{...}\"] struct S;")
+                .unwrap();
+        assert_eq!(
+            collect_doc_lines(&item.attrs),
+            vec!["user docs".to_string()]
+        );
     }
 
     #[test]
@@ -210,10 +212,8 @@ mod tests {
 
     #[test]
     fn enum_variants_preserves_docs_and_fields() {
-        let item: ItemEnum = syn::parse_str(
-            "enum E { #[doc = \"v docs\"] A { id: u64 }, B(String), C }",
-        )
-        .unwrap();
+        let item: ItemEnum =
+            syn::parse_str("enum E { #[doc = \"v docs\"] A { id: u64 }, B(String), C }").unwrap();
         let variants = enum_variants(&item);
         assert_eq!(variants.len(), 3);
         assert_eq!(variants[0].name, "A");

@@ -32,5 +32,4 @@ fn ui() {
         t.compile_fail("tests/ui/fail_oxide_event_channel_wrong_target.rs");
         t.compile_fail("tests/ui/fail_oxide_callback_wrong_target.rs");
     }
-
 }

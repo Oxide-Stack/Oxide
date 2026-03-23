@@ -5,17 +5,17 @@
 // keep macro names and signatures stable for downstream crates, while
 // allowing internal parsing/codegen modules to evolve safely.
 use proc_macro::TokenStream;
-use syn::Item;
-use syn::parse_macro_input;
 #[cfg(test)]
 use std::sync::{Mutex, OnceLock};
+use syn::Item;
+use syn::parse_macro_input;
 
 mod derive;
+#[cfg(feature = "isolated-channels")]
+mod isolated_channels;
 mod meta;
 mod reducer;
 mod routes;
-#[cfg(feature = "isolated-channels")]
-mod isolated_channels;
 #[cfg(test)]
 pub(crate) static TEST_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
@@ -144,10 +144,12 @@ pub fn oxide_event_channel(attr: TokenStream, item: TokenStream) -> TokenStream 
     let args = parse_macro_input!(attr as isolated_channels::OxideEventChannelArgs);
     let input = parse_macro_input!(item as Item);
     match input {
-        Item::Impl(item_impl) => match isolated_channels::expand_oxide_event_channel(args, item_impl) {
-            Ok(ts) => ts.into(),
-            Err(e) => e.to_compile_error().into(),
-        },
+        Item::Impl(item_impl) => {
+            match isolated_channels::expand_oxide_event_channel(args, item_impl) {
+                Ok(ts) => ts.into(),
+                Err(e) => e.to_compile_error().into(),
+            }
+        }
         other => syn::Error::new_spanned(
             other,
             "#[oxide_event_channel] can only be applied to an impl block",

@@ -78,13 +78,19 @@ fn find_forbidden_type_shape(ty: &Type) -> Option<&'static str> {
                     PathArguments::AngleBracketed(args) => {
                         for arg in &args.args {
                             if matches!(arg, GenericArgument::Lifetime(_)) {
-                                return Some("lifetime parameters are not allowed in channel payloads");
+                                return Some(
+                                    "lifetime parameters are not allowed in channel payloads",
+                                );
                             }
-                            return Some("generic type arguments are not allowed in channel payloads");
+                            return Some(
+                                "generic type arguments are not allowed in channel payloads",
+                            );
                         }
                     }
                     PathArguments::Parenthesized(_) => {
-                        return Some("parenthesized path arguments are not allowed in channel payloads");
+                        return Some(
+                            "parenthesized path arguments are not allowed in channel payloads",
+                        );
                     }
                 }
             }
@@ -101,10 +107,16 @@ mod tests {
     #[test]
     fn type_to_simple_ident_accepts_plain_and_path_types() {
         let plain: Type = syn::parse_str("DialogRequest").unwrap();
-        assert_eq!(type_to_simple_ident(&plain).unwrap().to_string(), "DialogRequest");
+        assert_eq!(
+            type_to_simple_ident(&plain).unwrap().to_string(),
+            "DialogRequest"
+        );
 
         let path: Type = syn::parse_str("crate::channels::DialogResponse").unwrap();
-        assert_eq!(type_to_simple_ident(&path).unwrap().to_string(), "DialogResponse");
+        assert_eq!(
+            type_to_simple_ident(&path).unwrap().to_string(),
+            "DialogResponse"
+        );
     }
 
     #[test]
@@ -120,17 +132,17 @@ mod tests {
 
     #[test]
     fn validate_enum_payload_accepts_unit_and_simple_fields() {
-        let item_enum: ItemEnum = syn::parse_str(
-            "enum Events { Ping, Track { id: u64 }, Error(String) }",
-        )
-        .unwrap();
+        let item_enum: ItemEnum =
+            syn::parse_str("enum Events { Ping, Track { id: u64 }, Error(String) }").unwrap();
         validate_enum_payload(&item_enum).unwrap();
     }
 
     #[test]
     fn validate_enum_payload_rejects_generics_and_forbidden_shapes() {
         let generic_enum: ItemEnum = syn::parse_str("enum Generic<T> { V(T) }").unwrap();
-        let err = validate_enum_payload(&generic_enum).unwrap_err().to_string();
+        let err = validate_enum_payload(&generic_enum)
+            .unwrap_err()
+            .to_string();
         assert!(err.contains("generics are not allowed"));
 
         let ref_enum: ItemEnum = syn::parse_str("enum E { V(&'static str) }").unwrap();
@@ -138,8 +150,12 @@ mod tests {
         assert!(err.contains("references are not allowed"));
 
         let trait_obj_enum: ItemEnum = syn::parse_str("enum E { V(Box<dyn Send>) }").unwrap();
-        let err = validate_enum_payload(&trait_obj_enum).unwrap_err().to_string();
-        assert!(err.contains("generic type arguments are not allowed") || err.contains("trait objects are not allowed"));
+        let err = validate_enum_payload(&trait_obj_enum)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            err.contains("generic type arguments are not allowed")
+                || err.contains("trait objects are not allowed")
+        );
     }
 }
-

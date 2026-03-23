@@ -86,7 +86,10 @@ async fn persistence_restores_state_across_engines() {
         if tokio::time::Instant::now() >= deadline {
             break;
         }
-        if std::fs::metadata(&path).map(|m| m.len() > 0).unwrap_or(false) {
+        if std::fs::metadata(&path)
+            .map(|m| m.len() > 0)
+            .unwrap_or(false)
+        {
             break;
         }
         tokio::time::sleep(std::time::Duration::from_millis(10)).await;

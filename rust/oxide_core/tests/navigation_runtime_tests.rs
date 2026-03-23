@@ -1,10 +1,10 @@
 #![cfg(feature = "navigation-binding")]
 
+use oxide_core::OxideError;
 use oxide_core::navigation::{
     DefaultExtra, DefaultReturn, NavCommand, NavRoute, NoExtra, NoReturn, OxideRoute,
     OxideRouteKind, OxideRoutePayload, Route, RouteContext,
 };
-use oxide_core::OxideError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Duration;
@@ -298,8 +298,8 @@ async fn push_emits_a_command() {
 
     runtime
         .push(TestRoute {
-        kind: TestRouteKind::Home,
-    })
+            kind: TestRouteKind::Home,
+        })
         .unwrap();
 
     let cmd = tokio::time::timeout(Duration::from_secs(1), rx.recv())
@@ -335,7 +335,9 @@ async fn push_with_ticket_can_be_resolved() {
         other => panic!("unexpected command: {other:?}"),
     }
 
-    let resolved = runtime.emit_result(&ticket, serde_json::json!({"ok": true})).await;
+    let resolved = runtime
+        .emit_result(&ticket, serde_json::json!({"ok": true}))
+        .await;
     assert!(resolved);
 
     let value = result_rx.await.unwrap();
@@ -388,9 +390,9 @@ async fn reset_emits_payload_without_envelope() {
 
     runtime
         .reset(vec![WrappedPayload {
-        kind: TestRouteKind::Charts,
-        payload: serde_json::json!({"id": 7}),
-    }])
+            kind: TestRouteKind::Charts,
+            payload: serde_json::json!({"id": 7}),
+        }])
         .unwrap();
 
     let cmd = tokio::time::timeout(Duration::from_secs(1), rx.recv())
@@ -415,11 +417,11 @@ async fn route_extras_are_encoded_in_push() {
 
     runtime
         .push(RouteWithExtras {
-        kind: TestRouteKind::Home,
-        extras: TestExtra {
-            label: "hello".to_string(),
-        },
-    })
+            kind: TestRouteKind::Home,
+            extras: TestExtra {
+                label: "hello".to_string(),
+            },
+        })
         .unwrap();
 
     let cmd = tokio::time::timeout(Duration::from_secs(1), rx.recv())
@@ -428,7 +430,10 @@ async fn route_extras_are_encoded_in_push() {
         .unwrap();
 
     match cmd {
-        NavCommand::Push { route, ticket: None } => {
+        NavCommand::Push {
+            route,
+            ticket: None,
+        } => {
             assert_eq!(route.kind, "Home");
             assert_eq!(route.extras, Some(serde_json::json!({"label": "hello"})));
         }
@@ -489,9 +494,18 @@ async fn navigation_ctx_emits_commands_and_exposes_route() {
         seen.push(cmd);
     }
 
-    assert!(seen.iter().any(|c| matches!(c, NavCommand::Push { route, ticket: None } if route.kind == "Home")));
-    assert!(seen.iter().any(|c| matches!(c, NavCommand::Pop { result: None })));
-    assert!(seen.iter().any(|c| matches!(c, NavCommand::PopUntil { kind } if kind == "Charts")));
+    assert!(
+        seen.iter()
+            .any(|c| matches!(c, NavCommand::Push { route, ticket: None } if route.kind == "Home"))
+    );
+    assert!(
+        seen.iter()
+            .any(|c| matches!(c, NavCommand::Pop { result: None }))
+    );
+    assert!(
+        seen.iter()
+            .any(|c| matches!(c, NavCommand::PopUntil { kind } if kind == "Charts"))
+    );
 }
 
 #[test]
@@ -507,7 +521,9 @@ fn command_subscription_is_single_consumer() {
 #[tokio::test]
 async fn emit_result_returns_false_for_unknown_ticket() {
     let runtime = oxide_core::NavigationRuntime::new();
-    let resolved = runtime.emit_result("missing-ticket", serde_json::json!(null)).await;
+    let resolved = runtime
+        .emit_result("missing-ticket", serde_json::json!(null))
+        .await;
     assert!(!resolved);
 }
 
@@ -516,7 +532,10 @@ fn push_fails_when_route_payload_serialization_fails() {
     let runtime = oxide_core::NavigationRuntime::new();
     let err = runtime.push(BadRoute).unwrap_err();
     assert!(matches!(err, OxideError::Internal { .. }));
-    assert!(err.to_string().contains("failed to serialize route payload"));
+    assert!(
+        err.to_string()
+            .contains("failed to serialize route payload")
+    );
 }
 
 #[test]
@@ -544,17 +563,16 @@ fn reset_fails_when_payload_serializes_to_non_object() {
     let runtime = oxide_core::NavigationRuntime::new();
     let err = runtime.reset(vec![BadPayloadScalar]).unwrap_err();
     assert!(matches!(err, OxideError::Validation { .. }));
-    assert!(err
-        .to_string()
-        .contains("did not serialize to an object"));
+    assert!(err.to_string().contains("did not serialize to an object"));
 }
 
-    #[test]
-    fn reset_fails_when_payload_serialization_fails() {
-        let runtime = oxide_core::NavigationRuntime::new();
-        let err = runtime.reset(vec![BadPayloadSerialize]).unwrap_err();
-        assert!(matches!(err, OxideError::Internal { .. }));
-        assert!(err
-        .to_string()
-        .contains("failed to serialize route payload"));
-    }
+#[test]
+fn reset_fails_when_payload_serialization_fails() {
+    let runtime = oxide_core::NavigationRuntime::new();
+    let err = runtime.reset(vec![BadPayloadSerialize]).unwrap_err();
+    assert!(matches!(err, OxideError::Internal { .. }));
+    assert!(
+        err.to_string()
+            .contains("failed to serialize route payload")
+    );
+}

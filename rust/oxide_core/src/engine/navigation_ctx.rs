@@ -1,5 +1,5 @@
-use crate::engine::navigation_runtime::NavigationRuntime;
 use crate::engine::CoreResult;
+use crate::engine::navigation_runtime::NavigationRuntime;
 use crate::navigation::{OxideRoute, OxideRouteKind, RouteContext};
 
 /// Navigation capability surface injected into reducer/effect contexts.

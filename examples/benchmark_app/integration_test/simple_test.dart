@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:benchmark_app/src/bench/bench_screen.dart';
 import 'package:benchmark_app/oxide.dart';
-import 'package:benchmark_app/src/oxide.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +19,9 @@ void main() {
         child: BenchCounterHooksOxideScope(
           child: BenchJsonHooksOxideScope(
             child: BenchSieveHooksOxideScope(
-              child: MaterialApp(home: BenchHomeScreen(route: const HomeRoute())),
+              child: MaterialApp(
+                home: BenchHomeScreen(route: const HomeRoute()),
+              ),
             ),
           ),
         ),

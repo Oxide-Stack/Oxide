@@ -80,7 +80,8 @@ where
             return Err(OxideChannelError::UnexpectedResponse);
         };
 
-        tx.send(response).map_err(|_| OxideChannelError::Unavailable)
+        tx.send(response)
+            .map_err(|_| OxideChannelError::Unavailable)
     }
 }
 
@@ -100,4 +101,3 @@ mod tests {
         assert!(runtime.pending.lock().await.is_empty());
     }
 }
-

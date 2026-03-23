@@ -2,7 +2,9 @@ use std::sync::{Arc, Mutex as StdMutex};
 
 use tokio::sync::{Mutex, mpsc, watch};
 
-use crate::engine::{Context, CoreResult, InitContext, OxideError, Reducer, StateChange, StateSnapshot};
+use crate::engine::{
+    Context, CoreResult, InitContext, OxideError, Reducer, StateChange, StateSnapshot,
+};
 
 #[cfg(feature = "navigation-binding")]
 use crate::engine::{NavigationCtx, navigation_runtime};

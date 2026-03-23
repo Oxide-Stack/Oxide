@@ -63,7 +63,10 @@ async fn sideeffect_loop_reports_missing_navigation_runtime() {
     let first = errors.next().await.expect("initial error value");
     assert!(first.is_none());
 
-    engine.sideeffect_sender().send(TestSideEffect::Tick).unwrap();
+    engine
+        .sideeffect_sender()
+        .send(TestSideEffect::Tick)
+        .unwrap();
 
     let err = tokio::time::timeout(std::time::Duration::from_secs(1), errors.next())
         .await
@@ -72,8 +75,8 @@ async fn sideeffect_loop_reports_missing_navigation_runtime() {
         .expect("expected error value");
 
     assert!(matches!(err, OxideError::Validation { .. }));
-    assert!(err
-        .to_string()
-        .contains("navigation runtime not initialized"));
+    assert!(
+        err.to_string()
+            .contains("navigation runtime not initialized")
+    );
 }
-

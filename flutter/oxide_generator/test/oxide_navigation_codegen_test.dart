@@ -122,7 +122,7 @@ void main() {
     final src = generateOxideStackSource(channels: channels);
 
     // imports should include the bridge alias when channels are present
-    expect(src, contains("import '../src/rust/api/isolated_channels_bridge.dart' as _ch;"));
+    expect(src, contains("import '../src/rust/api/isolated_channels_bridge.dart' as channels;"));
     // and the matching `show` import for pending request types should appear
     expect(src, contains('show CounterDemoDialogPendingRequest'));
     // the io variant of the FRB file gives us concrete helper types like
@@ -133,15 +133,15 @@ void main() {
 
     // verify event getter forwards correctly
     expect(src, contains('Stream<CounterDemoEvent> get counterDemoEvents =>'));
-    expect(src, contains('_ch.counterDemoEventsStream()'));
+    expect(src, contains('channels.counterDemoEventsStream()'));
     // channel import must be added so that event/callback types are visible
     expect(src, contains("isolated_channels_demo/channels.dart"));
 
     // verify callback request/response helpers
     expect(src, contains('Stream<CounterDemoDialogPendingRequest> get counterDemoDialogRequests'));
-    expect(src, contains('_ch.counterDemoDialogRequestsStream()'));
+    expect(src, contains('channels.counterDemoDialogRequestsStream()'));
     expect(src, contains('Future<void> counterDemoDialogRespond'));
-    expect(src, contains('_ch.counterDemoDialogRespond'));
+    expect(src, contains('channels.counterDemoDialogRespond'));
 
     // duplex channels are not modelled by metadata, so the generator
     // should *not* emit any helpers for them (they are added manually).
@@ -155,10 +155,10 @@ void main() {
     expect(src, contains('oxideInitChannels()'));
     // generated helper must actually call into the bridge alias so we don't
     // depend on manually named functions
-    expect(src, contains('_ch.'));
+    expect(src, contains('channels.'));
     // because we supplied a crate name with underscores, the helper should
     // call the correctly-cased init function.
-    expect(src, contains('_ch.initIsolatedChannelsDemo()'));
+    expect(src, contains('channels.initIsolatedChannelsDemo()'));
     // and navigation startup is deferred until first frame
     expect(src, contains('addPostFrameCallback'));
   });

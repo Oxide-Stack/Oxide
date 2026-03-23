@@ -110,10 +110,8 @@ mod tests {
 
     #[test]
     fn parses_no_frb_flag() {
-        let args: ReducerArgs = syn::parse_str(
-            "engine = E, snapshot = S, initial = Init::default(), no_frb",
-        )
-        .unwrap();
+        let args: ReducerArgs =
+            syn::parse_str("engine = E, snapshot = S, initial = Init::default(), no_frb").unwrap();
         assert!(!args.include_frb);
     }
 

@@ -17,7 +17,8 @@ impl syn::parse::Parse for OxideCallbackArgs {
             return Ok(Self { no_frb: false });
         }
 
-        let args = syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated(input)?;
+        let args =
+            syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated(input)?;
         let mut no_frb = false;
         for meta in args {
             match meta {
@@ -37,7 +38,10 @@ impl syn::parse::Parse for OxideCallbackArgs {
 }
 
 /// Expands `#[oxide_callback]` for `OxideCallbacking`.
-pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> syn::Result<TokenStream2> {
+pub fn expand_oxide_callback(
+    args: OxideCallbackArgs,
+    item_impl: ItemImpl,
+) -> syn::Result<TokenStream2> {
     let Some((_, trait_path, _)) = &item_impl.trait_ else {
         return Err(syn::Error::new_spanned(
             &item_impl,
@@ -84,7 +88,13 @@ pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> sy
     let stream_fn_ident = format_ident!("oxide_{service_snake}_requests_stream");
     let respond_fn_ident = format_ident!("oxide_{service_snake}_respond");
 
-    let methods = generate_callback_methods(&self_ident, &request_ty, &request_enum, &response_ty, &response_enum)?;
+    let methods = generate_callback_methods(
+        &self_ident,
+        &request_ty,
+        &request_enum,
+        &response_ty,
+        &response_enum,
+    )?;
 
     let frb_mod = if args.no_frb {
         quote! {}
@@ -144,7 +154,10 @@ pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> sy
     })
 }
 
-fn validate_request_response_parity(request_enum: &ItemEnum, response_enum: &ItemEnum) -> syn::Result<()> {
+fn validate_request_response_parity(
+    request_enum: &ItemEnum,
+    response_enum: &ItemEnum,
+) -> syn::Result<()> {
     for req_variant in &request_enum.variants {
         let name = &req_variant.ident;
         let has_match = response_enum.variants.iter().any(|v| v.ident == *name);
@@ -201,7 +214,10 @@ fn generate_callback_methods(
     })
 }
 
-fn response_match_arm(response_ty: &Type, variant: &syn::Variant) -> syn::Result<(Type, TokenStream2)> {
+fn response_match_arm(
+    response_ty: &Type,
+    variant: &syn::Variant,
+) -> syn::Result<(Type, TokenStream2)> {
     let variant_ident = &variant.ident;
     match &variant.fields {
         syn::Fields::Unit => Ok((
@@ -238,7 +254,10 @@ fn response_match_arm(response_ty: &Type, variant: &syn::Variant) -> syn::Result
     }
 }
 
-fn variant_ctor(enum_ty: &Type, variant: &syn::Variant) -> syn::Result<(TokenStream2, TokenStream2)> {
+fn variant_ctor(
+    enum_ty: &Type,
+    variant: &syn::Variant,
+) -> syn::Result<(TokenStream2, TokenStream2)> {
     let variant_ident = &variant.ident;
     match &variant.fields {
         syn::Fields::Unit => Ok((quote! {}, quote! { #enum_ty::#variant_ident })),
@@ -275,7 +294,9 @@ fn variant_ctor(enum_ty: &Type, variant: &syn::Variant) -> syn::Result<(TokenStr
 
 fn find_assoc_type(item_impl: &ItemImpl, assoc: &str) -> syn::Result<Type> {
     for item in &item_impl.items {
-        let ImplItem::Type(ty_item) = item else { continue };
+        let ImplItem::Type(ty_item) = item else {
+            continue;
+        };
         if ty_item.ident == assoc {
             return Ok(ty_item.ty.clone());
         }

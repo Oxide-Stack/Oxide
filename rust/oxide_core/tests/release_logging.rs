@@ -25,6 +25,9 @@ fn trace_macro_does_not_evaluate_arguments_in_release() {
     trace!("{}", side_effect());
 
     unsafe {
-        assert!(!SIDE_EFFECT_EXECUTED, "trace! evaluated arguments in release");
+        assert!(
+            !SIDE_EFFECT_EXECUTED,
+            "trace! evaluated arguments in release"
+        );
     }
 }

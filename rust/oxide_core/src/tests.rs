@@ -605,7 +605,8 @@ async fn callback_runtime_respond_reports_unavailable_when_waiter_dropped() {
 #[tokio::test]
 async fn callback_runtime_recv_request_returns_none_when_not_initialized() {
     let runtime = crate::CallbackRuntime::<u32, u32>::new(8);
-    let received = tokio::time::timeout(std::time::Duration::from_millis(30), runtime.recv_request()).await;
+    let received =
+        tokio::time::timeout(std::time::Duration::from_millis(30), runtime.recv_request()).await;
     assert!(received.is_err() || received.unwrap().is_none());
 }
 

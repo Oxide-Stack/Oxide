@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'package:oxide_runtime/oxide_runtime.dart';
 
 import '../../oxide.dart';
-import '../oxide.dart';
 // navigation to charts is now performed directly in Dart; the Rust bridge helper is no longer needed
 
 import 'bench_detail.dart';
@@ -34,13 +33,17 @@ Future<_Inputs> _loadInputs() async {
 final class BenchDartState {
   const BenchDartState({required this.counter, required this.checksum});
 
-  factory BenchDartState.initial() => const BenchDartState(counter: 0, checksum: fnvOffsetBasis);
+  factory BenchDartState.initial() =>
+      const BenchDartState(counter: 0, checksum: fnvOffsetBasis);
 
   final int counter;
   final int checksum;
 }
 
-final benchRiverpodDartProvider = NotifierProvider<BenchRiverpodDartNotifier, BenchDartState>(BenchRiverpodDartNotifier.new);
+final benchRiverpodDartProvider =
+    NotifierProvider<BenchRiverpodDartNotifier, BenchDartState>(
+      BenchRiverpodDartNotifier.new,
+    );
 
 class BenchRiverpodDartNotifier extends Notifier<BenchDartState> {
   @override
@@ -48,19 +51,32 @@ class BenchRiverpodDartNotifier extends Notifier<BenchDartState> {
 
   Future<void> runSmall({required int iterations}) async {
     if (iterations <= 0) return;
-    final (counter, checksum) = runCounterWorkload(counter: state.counter, checksum: state.checksum, iterations: iterations);
+    final (counter, checksum) = runCounterWorkload(
+      counter: state.counter,
+      checksum: state.checksum,
+      iterations: iterations,
+    );
     state = BenchDartState(counter: counter, checksum: checksum);
   }
 
   Future<void> runJson({required String json, required int iterations}) async {
     if (iterations <= 0) return;
-    final (counter, checksum) = runJsonWorkload(counter: state.counter, checksum: state.checksum, json: json, iterations: iterations);
+    final (counter, checksum) = runJsonWorkload(
+      counter: state.counter,
+      checksum: state.checksum,
+      json: json,
+      iterations: iterations,
+    );
     state = BenchDartState(counter: counter, checksum: checksum);
   }
 
   Future<void> runSieve({required int iterations}) async {
     if (iterations <= 0) return;
-    final (counter, checksum) = runSieveWorkload(counter: state.counter, checksum: state.checksum, iterations: iterations);
+    final (counter, checksum) = runSieveWorkload(
+      counter: state.counter,
+      checksum: state.checksum,
+      iterations: iterations,
+    );
     state = BenchDartState(counter: counter, checksum: checksum);
   }
 
@@ -74,19 +90,32 @@ class BenchDartCubit extends Cubit<BenchDartState> {
 
   Future<void> runSmall({required int iterations}) async {
     if (iterations <= 0) return;
-    final (counter, checksum) = runCounterWorkload(counter: state.counter, checksum: state.checksum, iterations: iterations);
+    final (counter, checksum) = runCounterWorkload(
+      counter: state.counter,
+      checksum: state.checksum,
+      iterations: iterations,
+    );
     emit(BenchDartState(counter: counter, checksum: checksum));
   }
 
   Future<void> runJson({required String json, required int iterations}) async {
     if (iterations <= 0) return;
-    final (counter, checksum) = runJsonWorkload(counter: state.counter, checksum: state.checksum, json: json, iterations: iterations);
+    final (counter, checksum) = runJsonWorkload(
+      counter: state.counter,
+      checksum: state.checksum,
+      json: json,
+      iterations: iterations,
+    );
     emit(BenchDartState(counter: counter, checksum: checksum));
   }
 
   Future<void> runSieve({required int iterations}) async {
     if (iterations <= 0) return;
-    final (counter, checksum) = runSieveWorkload(counter: state.counter, checksum: state.checksum, iterations: iterations);
+    final (counter, checksum) = runSieveWorkload(
+      counter: state.counter,
+      checksum: state.checksum,
+      iterations: iterations,
+    );
     emit(BenchDartState(counter: counter, checksum: checksum));
   }
 
@@ -96,7 +125,12 @@ class BenchDartCubit extends Cubit<BenchDartState> {
 }
 
 final class _BenchChartsArgs {
-  const _BenchChartsArgs({required this.samplesByVariant, required this.iterations, required this.samples, required this.warmup});
+  const _BenchChartsArgs({
+    required this.samplesByVariant,
+    required this.iterations,
+    required this.samples,
+    required this.warmup,
+  });
 
   final Map<BenchVariant, List<Duration>> samplesByVariant;
   final int iterations;
@@ -122,7 +156,10 @@ final class BenchSplashScreen extends ConsumerWidget {
     ref.watch(benchCounterRiverpodOxideProvider);
     return Scaffold(
       body: Center(
-        child: Semantics(label: 'Loading', child: const CircularProgressIndicator()),
+        child: Semantics(
+          label: 'Loading',
+          child: const CircularProgressIndicator(),
+        ),
       ),
     );
   }
@@ -134,7 +171,10 @@ class _LoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Semantics(label: 'Loading', child: const CircularProgressIndicator()),
+      child: Semantics(
+        label: 'Loading',
+        child: const CircularProgressIndicator(),
+      ),
     );
   }
 }
@@ -195,7 +235,12 @@ final class BenchChartsScreen extends StatelessWidget {
       });
       return const Scaffold(body: Center(child: Text('Missing chart args')));
     }
-    return _ChartsView(samplesByVariant: args.samplesByVariant, iterations: args.iterations, samples: args.samples, warmup: args.warmup);
+    return _ChartsView(
+      samplesByVariant: args.samplesByVariant,
+      iterations: args.iterations,
+      samples: args.samples,
+      warmup: args.warmup,
+    );
   }
 }
 
@@ -219,18 +264,7 @@ final class BenchDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Object? raw = route.id;
-    // convert value to integer safely regardless of underlying type
-    final int id;
-    if (raw is int) {
-      id = raw;
-    } else if (raw is BigInt) {
-      id = raw.toInt();
-    } else {
-      // fallback: stringify and parse
-      id = int.tryParse(raw?.toString() ?? '') ?? 0;
-    }
-    return BenchDetailScreen(id: id);
+    return BenchDetailScreen(id: route.id.toInt());
   }
 }
 
@@ -243,9 +277,11 @@ final class _BenchScreen extends StatefulWidget {
 
 final class _BenchScreenState extends State<_BenchScreen> {
   late final BenchDartCubit _dartBloc = BenchDartCubit();
-  late final BenchCounterBlocOxideCubit _rustCounterBloc = BenchCounterBlocOxideCubit();
+  late final BenchCounterBlocOxideCubit _rustCounterBloc =
+      BenchCounterBlocOxideCubit();
   late final BenchJsonBlocOxideCubit _rustJsonBloc = BenchJsonBlocOxideCubit();
-  late final BenchSieveBlocOxideCubit _rustSieveBloc = BenchSieveBlocOxideCubit();
+  late final BenchSieveBlocOxideCubit _rustSieveBloc =
+      BenchSieveBlocOxideCubit();
   late final Future<_Inputs> _inputs = _loadInputs();
 
   @override
@@ -269,13 +305,20 @@ final class _BenchScreenState extends State<_BenchScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Benchmark Dashboard'),
-          actions: [IconButton(icon: const Icon(Icons.route), onPressed: () => context.go('/routing'))],
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.route),
+              onPressed: () => context.go('/routing'),
+            ),
+          ],
         ),
         body: FutureBuilder(
           future: _inputs,
           builder: (context, snap) {
             if (!snap.hasData) {
-              if (snap.hasError) return _ErrorView('Error loading assets', snap.error);
+              if (snap.hasError) {
+                return _ErrorView('Error loading assets', snap.error);
+              }
               return const _LoadingView();
             }
             return _BenchDashboard(inputs: snap.data!);
@@ -333,13 +376,20 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
       final dartRiverpod = ref.read(benchRiverpodDartProvider.notifier);
       final dartBloc = context.read<BenchDartCubit>();
 
-      final rustCounterRiverpodView = ref.read(benchCounterRiverpodOxideProvider);
+      final rustCounterRiverpodView = ref.read(
+        benchCounterRiverpodOxideProvider,
+      );
       final rustJsonRiverpodView = ref.read(benchJsonRiverpodOxideProvider);
       final rustSieveRiverpodView = ref.read(benchSieveRiverpodOxideProvider);
 
-      final rustCounterHooksController = BenchCounterHooksOxideScope.controllerOf(context);
-      final rustJsonHooksController = BenchJsonHooksOxideScope.controllerOf(context);
-      final rustSieveHooksController = BenchSieveHooksOxideScope.controllerOf(context);
+      final rustCounterHooksController =
+          BenchCounterHooksOxideScope.controllerOf(context);
+      final rustJsonHooksController = BenchJsonHooksOxideScope.controllerOf(
+        context,
+      );
+      final rustSieveHooksController = BenchSieveHooksOxideScope.controllerOf(
+        context,
+      );
 
       final rustCounterBloc = context.read<BenchCounterBlocOxideCubit>();
       final rustJsonBloc = context.read<BenchJsonBlocOxideCubit>();
@@ -356,9 +406,15 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
               case BenchWorkload.sieve:
                 await dartRiverpod.runSieve(iterations: _iterations);
               case BenchWorkload.jsonLight:
-                await dartRiverpod.runJson(json: jsonLight, iterations: _iterations);
+                await dartRiverpod.runJson(
+                  json: jsonLight,
+                  iterations: _iterations,
+                );
               case BenchWorkload.jsonHeavy:
-                await dartRiverpod.runJson(json: jsonHeavy, iterations: _iterations);
+                await dartRiverpod.runJson(
+                  json: jsonHeavy,
+                  iterations: _iterations,
+                );
             }
           case BenchVariant.dartBloc:
             switch (_workload) {
@@ -367,24 +423,50 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
               case BenchWorkload.sieve:
                 await dartBloc.runSieve(iterations: _iterations);
               case BenchWorkload.jsonLight:
-                await dartBloc.runJson(json: jsonLight, iterations: _iterations);
+                await dartBloc.runJson(
+                  json: jsonLight,
+                  iterations: _iterations,
+                );
               case BenchWorkload.jsonHeavy:
-                await dartBloc.runJson(json: jsonHeavy, iterations: _iterations);
+                await dartBloc.runJson(
+                  json: jsonHeavy,
+                  iterations: _iterations,
+                );
             }
           case BenchVariant.rustRiverpod:
             switch (_workload) {
               case BenchWorkload.small:
-                if (rustCounterRiverpodView.isLoading || rustCounterRiverpodView.error != null) return;
-                await rustCounterRiverpodView.actions.run(iterations: _iterations);
+                if (rustCounterRiverpodView.isLoading ||
+                    rustCounterRiverpodView.error != null) {
+                  return;
+                }
+                await rustCounterRiverpodView.actions.run(
+                  iterations: _iterations,
+                );
               case BenchWorkload.sieve:
-                if (rustSieveRiverpodView.isLoading || rustSieveRiverpodView.error != null) return;
-                await rustSieveRiverpodView.actions.run(iterations: _iterations);
+                if (rustSieveRiverpodView.isLoading ||
+                    rustSieveRiverpodView.error != null) {
+                  return;
+                }
+                await rustSieveRiverpodView.actions.run(
+                  iterations: _iterations,
+                );
               case BenchWorkload.jsonLight:
-                if (rustJsonRiverpodView.isLoading || rustJsonRiverpodView.error != null) return;
-                await rustJsonRiverpodView.actions.runLight(iterations: _iterations);
+                if (rustJsonRiverpodView.isLoading ||
+                    rustJsonRiverpodView.error != null) {
+                  return;
+                }
+                await rustJsonRiverpodView.actions.runLight(
+                  iterations: _iterations,
+                );
               case BenchWorkload.jsonHeavy:
-                if (rustJsonRiverpodView.isLoading || rustJsonRiverpodView.error != null) return;
-                await rustJsonRiverpodView.actions.runHeavy(iterations: _iterations);
+                if (rustJsonRiverpodView.isLoading ||
+                    rustJsonRiverpodView.error != null) {
+                  return;
+                }
+                await rustJsonRiverpodView.actions.runHeavy(
+                  iterations: _iterations,
+                );
             }
           case BenchVariant.rustBloc:
             switch (_workload) {
@@ -400,17 +482,37 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
           case BenchVariant.rustHooks:
             switch (_workload) {
               case BenchWorkload.small:
-                if (rustCounterHooksController.isLoading || rustCounterHooksController.error != null) return;
-                await rustCounterHooksController.actions.run(iterations: _iterations);
+                if (rustCounterHooksController.isLoading ||
+                    rustCounterHooksController.error != null) {
+                  return;
+                }
+                await rustCounterHooksController.actions.run(
+                  iterations: _iterations,
+                );
               case BenchWorkload.sieve:
-                if (rustSieveHooksController.isLoading || rustSieveHooksController.error != null) return;
-                await rustSieveHooksController.actions.run(iterations: _iterations);
+                if (rustSieveHooksController.isLoading ||
+                    rustSieveHooksController.error != null) {
+                  return;
+                }
+                await rustSieveHooksController.actions.run(
+                  iterations: _iterations,
+                );
               case BenchWorkload.jsonLight:
-                if (rustJsonHooksController.isLoading || rustJsonHooksController.error != null) return;
-                await rustJsonHooksController.actions.runLight(iterations: _iterations);
+                if (rustJsonHooksController.isLoading ||
+                    rustJsonHooksController.error != null) {
+                  return;
+                }
+                await rustJsonHooksController.actions.runLight(
+                  iterations: _iterations,
+                );
               case BenchWorkload.jsonHeavy:
-                if (rustJsonHooksController.isLoading || rustJsonHooksController.error != null) return;
-                await rustJsonHooksController.actions.runHeavy(iterations: _iterations);
+                if (rustJsonHooksController.isLoading ||
+                    rustJsonHooksController.error != null) {
+                  return;
+                }
+                await rustJsonHooksController.actions.runHeavy(
+                  iterations: _iterations,
+                );
             }
         }
       }
@@ -420,7 +522,10 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
       for (var i = 0; i < _warmup + _samples; i++) {
         for (final v in variants) {
           if (!mounted) return;
-          setState(() => _status = 'Running ${_workload.label}: ${i + 1}/${_warmup + _samples} • ${v.label}');
+          setState(
+            () => _status =
+                'Running ${_workload.label}: ${i + 1}/${_warmup + _samples} • ${v.label}',
+          );
           final elapsed = await _measure(() => runVariant(v));
           if (i >= _warmup) {
             (_samplesByVariant[v] ??= []).add(elapsed);
@@ -439,27 +544,50 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final rustCounterRiverpodView = ref.watch(benchCounterRiverpodOxideProvider);
+    final rustCounterRiverpodView = ref.watch(
+      benchCounterRiverpodOxideProvider,
+    );
     final rustJsonRiverpodView = ref.watch(benchJsonRiverpodOxideProvider);
     final rustSieveRiverpodView = ref.watch(benchSieveRiverpodOxideProvider);
 
-    final rustCounterHooksController = BenchCounterHooksOxideScope.controllerOf(context);
-    final rustJsonHooksController = BenchJsonHooksOxideScope.controllerOf(context);
-    final rustSieveHooksController = BenchSieveHooksOxideScope.controllerOf(context);
+    final rustCounterHooksController = BenchCounterHooksOxideScope.controllerOf(
+      context,
+    );
+    final rustJsonHooksController = BenchJsonHooksOxideScope.controllerOf(
+      context,
+    );
+    final rustSieveHooksController = BenchSieveHooksOxideScope.controllerOf(
+      context,
+    );
 
     final rustRiverpodReady = switch (_workload) {
-      BenchWorkload.small => !rustCounterRiverpodView.isLoading && rustCounterRiverpodView.error == null,
-      BenchWorkload.sieve => !rustSieveRiverpodView.isLoading && rustSieveRiverpodView.error == null,
-      BenchWorkload.jsonLight => !rustJsonRiverpodView.isLoading && rustJsonRiverpodView.error == null,
-      BenchWorkload.jsonHeavy => !rustJsonRiverpodView.isLoading && rustJsonRiverpodView.error == null,
+      BenchWorkload.small =>
+        !rustCounterRiverpodView.isLoading &&
+            rustCounterRiverpodView.error == null,
+      BenchWorkload.sieve =>
+        !rustSieveRiverpodView.isLoading && rustSieveRiverpodView.error == null,
+      BenchWorkload.jsonLight =>
+        !rustJsonRiverpodView.isLoading && rustJsonRiverpodView.error == null,
+      BenchWorkload.jsonHeavy =>
+        !rustJsonRiverpodView.isLoading && rustJsonRiverpodView.error == null,
     };
     final rustHooksReady = switch (_workload) {
-      BenchWorkload.small => !rustCounterHooksController.isLoading && rustCounterHooksController.error == null,
-      BenchWorkload.sieve => !rustSieveHooksController.isLoading && rustSieveHooksController.error == null,
-      BenchWorkload.jsonLight => !rustJsonHooksController.isLoading && rustJsonHooksController.error == null,
-      BenchWorkload.jsonHeavy => !rustJsonHooksController.isLoading && rustJsonHooksController.error == null,
+      BenchWorkload.small =>
+        !rustCounterHooksController.isLoading &&
+            rustCounterHooksController.error == null,
+      BenchWorkload.sieve =>
+        !rustSieveHooksController.isLoading &&
+            rustSieveHooksController.error == null,
+      BenchWorkload.jsonLight =>
+        !rustJsonHooksController.isLoading &&
+            rustJsonHooksController.error == null,
+      BenchWorkload.jsonHeavy =>
+        !rustJsonHooksController.isLoading &&
+            rustJsonHooksController.error == null,
     };
-    final hasResults = _samplesByVariant.values.any((samples) => samples.isNotEmpty);
+    final hasResults = _samplesByVariant.values.any(
+      (samples) => samples.isNotEmpty,
+    );
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -488,7 +616,11 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
           },
           onRun: _runAll,
         ),
-        if (_status != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_status!)),
+        if (_status != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(_status!),
+          ),
         const SizedBox(height: 16),
         _ResultTable(samplesByVariant: _samplesByVariant),
         if (hasResults && !_running) ...[
@@ -499,8 +631,15 @@ final class _BenchDashboardState extends ConsumerState<_BenchDashboard> {
               onPressed: () {
                 // debug: log args before navigation
                 // ignore: avoid_print
-                print('[Bench] setting charts args before navigation: iterations=$_iterations, samples=$_samples, warmup=$_warmup');
-                _benchChartsArgs = _BenchChartsArgs(samplesByVariant: _samplesByVariant, iterations: _iterations, samples: _samples, warmup: _warmup);
+                print(
+                  '[Bench] setting charts args before navigation: iterations=$_iterations, samples=$_samples, warmup=$_warmup',
+                );
+                _benchChartsArgs = _BenchChartsArgs(
+                  samplesByVariant: _samplesByVariant,
+                  iterations: _iterations,
+                  samples: _samples,
+                  warmup: _warmup,
+                );
                 // log value immediately after assignment
                 // ignore: avoid_print
                 print('[Bench] _benchChartsArgs set = $_benchChartsArgs');
@@ -563,19 +702,30 @@ final class _Controls extends StatelessWidget {
               children: [
                 Expanded(
                   child: InputDecorator(
-                    decoration: const InputDecoration(labelText: 'Workload', border: OutlineInputBorder()),
+                    decoration: const InputDecoration(
+                      labelText: 'Workload',
+                      border: OutlineInputBorder(),
+                    ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<BenchWorkload>(
                         value: workload,
                         isExpanded: true,
-                        items: [for (final w in BenchWorkload.values) DropdownMenuItem(value: w, child: Text(w.label))],
-                        onChanged: running ? null : (w) => w == null ? null : onWorkloadChanged(w),
+                        items: [
+                          for (final w in BenchWorkload.values)
+                            DropdownMenuItem(value: w, child: Text(w.label)),
+                        ],
+                        onChanged: running
+                            ? null
+                            : (w) => w == null ? null : onWorkloadChanged(w),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                FilledButton(onPressed: running ? null : () => unawaited(onRun()), child: Text(running ? 'Running…' : 'Run')),
+                FilledButton(
+                  onPressed: running ? null : () => unawaited(onRun()),
+                  child: Text(running ? 'Running…' : 'Run'),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -590,8 +740,20 @@ final class _Controls extends StatelessWidget {
                   enabled: !running,
                   onChanged: onIterationsChanged,
                 ),
-                _IntChips(label: 'Samples', value: samples, options: const [5, 10, 20, 40], enabled: !running, onChanged: onSamplesChanged),
-                _IntChips(label: 'Warmup', value: warmup, options: const [0, 1, 3, 5], enabled: !running, onChanged: onWarmupChanged),
+                _IntChips(
+                  label: 'Samples',
+                  value: samples,
+                  options: const [5, 10, 20, 40],
+                  enabled: !running,
+                  onChanged: onSamplesChanged,
+                ),
+                _IntChips(
+                  label: 'Warmup',
+                  value: warmup,
+                  options: const [0, 1, 3, 5],
+                  enabled: !running,
+                  onChanged: onWarmupChanged,
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -604,16 +766,25 @@ final class _Controls extends StatelessWidget {
                 for (final v in BenchVariant.values)
                   FilterChip(
                     selected: enabled.contains(v),
-                    onSelected: running ? null : (selected) => onToggleVariant(v, selected),
+                    onSelected: running
+                        ? null
+                        : (selected) => onToggleVariant(v, selected),
                     label: Text(v.label),
                   ),
               ],
             ),
             const SizedBox(height: 8),
-            if (!rustRiverpodReady && enabled.contains(BenchVariant.rustRiverpod))
-              Text('Rust Riverpod engine not ready (loading/error).', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            if (!rustRiverpodReady &&
+                enabled.contains(BenchVariant.rustRiverpod))
+              Text(
+                'Rust Riverpod engine not ready (loading/error).',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             if (!rustHooksReady && enabled.contains(BenchVariant.rustHooks))
-              Text('Rust Hooks engine not ready (loading/error).', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(
+                'Rust Hooks engine not ready (loading/error).',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
           ],
         ),
       ),
@@ -622,7 +793,13 @@ final class _Controls extends StatelessWidget {
 }
 
 final class _IntChips extends StatelessWidget {
-  const _IntChips({required this.label, required this.value, required this.options, required this.enabled, required this.onChanged});
+  const _IntChips({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.enabled,
+    required this.onChanged,
+  });
 
   final String label;
   final int value;
@@ -640,7 +817,11 @@ final class _IntChips extends StatelessWidget {
         for (final v in options)
           Padding(
             padding: const EdgeInsets.only(right: 6),
-            child: ChoiceChip(label: Text('$v'), selected: value == v, onSelected: enabled ? (_) => onChanged(v) : null),
+            child: ChoiceChip(
+              label: Text('$v'),
+              selected: value == v,
+              onSelected: enabled ? (_) => onChanged(v) : null,
+            ),
           ),
       ],
     );
@@ -706,7 +887,12 @@ final class _ResultTable extends StatelessWidget {
 }
 
 final class _ChartsView extends StatelessWidget {
-  const _ChartsView({required this.samplesByVariant, required this.iterations, required this.samples, required this.warmup});
+  const _ChartsView({
+    required this.samplesByVariant,
+    required this.iterations,
+    required this.samples,
+    required this.warmup,
+  });
 
   final Map<BenchVariant, List<Duration>> samplesByVariant;
   final int iterations;
@@ -719,14 +905,35 @@ final class _ChartsView extends StatelessWidget {
     for (final v in BenchVariant.values) {
       final summary = summarizeDurations(samplesByVariant[v] ?? const []);
       if (summary == null) continue;
-      groups.add(BenchMetricGroup(label: v.label, median: summary.median, mean: summary.mean, p95: summary.p95));
+      groups.add(
+        BenchMetricGroup(
+          label: v.label,
+          median: summary.median,
+          mean: summary.mean,
+          p95: summary.p95,
+        ),
+      );
     }
 
-    final BenchMetricGroup? fastestMedian = groups.isEmpty ? null : groups.reduce((a, b) => a.median <= b.median ? a : b);
-    final BenchMetricGroup? slowestMedian = groups.isEmpty ? null : groups.reduce((a, b) => a.median >= b.median ? a : b);
-    final double? medianPctFaster = (fastestMedian == null || slowestMedian == null || slowestMedian.median.inMicroseconds == 0)
+    if (groups.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Benchmark Charts')),
+        body: const Center(child: Text('No benchmark data available.')),
+      );
+    }
+
+    final BenchMetricGroup fastestMedian = groups.reduce(
+      (a, b) => a.median <= b.median ? a : b,
+    );
+    final BenchMetricGroup slowestMedian = groups.reduce(
+      (a, b) => a.median >= b.median ? a : b,
+    );
+    final double? medianPctFaster = slowestMedian.median.inMicroseconds == 0
         ? null
-        : ((slowestMedian.median.inMicroseconds - fastestMedian.median.inMicroseconds) / slowestMedian.median.inMicroseconds) * 100.0;
+        : ((slowestMedian.median.inMicroseconds -
+                      fastestMedian.median.inMicroseconds) /
+                  slowestMedian.median.inMicroseconds) *
+              100.0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Benchmark Charts')),
@@ -739,7 +946,10 @@ final class _ChartsView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Median / Mean / P95', style: Theme.of(context).textTheme.titleSmall),
+                  Text(
+                    'Median / Mean / P95',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -748,15 +958,31 @@ final class _ChartsView extends StatelessWidget {
                       Chip(label: Text('Iterations: $iterations')),
                       Chip(label: Text('Samples: $samples')),
                       Chip(label: Text('Warmup: $warmup')),
-                      if (fastestMedian != null) Chip(label: Text('Fastest (median): ${fastestMedian.label} • ${_fmt(fastestMedian.median)}')),
-                      if (slowestMedian != null) Chip(label: Text('Slowest (median): ${slowestMedian.label} • ${_fmt(slowestMedian.median)}')),
-                      if (medianPctFaster != null) Chip(label: Text('Median delta: ${medianPctFaster.toStringAsFixed(0)}% faster')),
+                      Chip(
+                        label: Text(
+                          'Fastest (median): ${fastestMedian.label} • ${_fmt(fastestMedian.median)}',
+                        ),
+                      ),
+                      Chip(
+                        label: Text(
+                          'Slowest (median): ${slowestMedian.label} • ${_fmt(slowestMedian.median)}',
+                        ),
+                      ),
+                      if (medianPctFaster != null)
+                        Chip(
+                          label: Text(
+                            'Median delta: ${medianPctFaster.toStringAsFixed(0)}% faster',
+                          ),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   const _ChartLegend(),
                   const SizedBox(height: 8),
-                  Text('Tap a bar for exact values.', style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    'Tap a bar for exact values.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   const SizedBox(height: 12),
                   BenchGroupedBarChart(groups: groups),
                 ],
@@ -801,7 +1027,10 @@ final class _LegendItem extends StatelessWidget {
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
         ),
         const SizedBox(width: 6),
         Text(label),

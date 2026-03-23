@@ -104,7 +104,10 @@ where
     F::Output: Send + 'static,
 {
     if let Err(err) = ensure_initialized() {
-        debug_assert!(false, "oxide_core runtime must be initialized before spawning: {err}");
+        debug_assert!(
+            false,
+            "oxide_core runtime must be initialized before spawning: {err}"
+        );
     }
     flutter_rust_bridge::spawn(future)
 }
@@ -115,7 +118,10 @@ where
     F: Future<Output = ()> + 'static,
 {
     if let Err(err) = ensure_initialized() {
-        debug_assert!(false, "oxide_core runtime must be initialized before spawning: {err}");
+        debug_assert!(
+            false,
+            "oxide_core runtime must be initialized before spawning: {err}"
+        );
     }
     wasm_bindgen_futures::spawn_local(future);
 }
