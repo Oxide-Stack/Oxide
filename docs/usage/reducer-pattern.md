@@ -60,9 +60,9 @@ impl oxide_core::Reducer for AppReducer {
   fn reduce(
     &mut self,
     state: &mut Self::State,
-    action: Self::Action,
+    ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
   ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-    match action {
+    match ctx.input {
       AppAction::Increment => state.counter = state.counter.saturating_add(1),
     }
     Ok(oxide_core::StateChange::Full)
@@ -71,7 +71,7 @@ impl oxide_core::Reducer for AppReducer {
   fn effect(
     &mut self,
     _state: &mut Self::State,
-    _effect: Self::SideEffect,
+    _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
   ) -> oxide_core::CoreResult<oxide_core::StateChange> {
     Ok(oxide_core::StateChange::None)
   }

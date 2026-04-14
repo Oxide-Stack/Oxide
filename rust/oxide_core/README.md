@@ -57,7 +57,7 @@ impl Reducer for CounterReducer {
   fn reduce(
     &mut self,
     state: &mut Self::State,
-    ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+    ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
   ) -> CoreResult<StateChange> {
     match ctx.input {
       CounterAction::Inc => state.value = state.value.saturating_add(1),
@@ -68,7 +68,7 @@ impl Reducer for CounterReducer {
   fn effect(
     &mut self,
     _state: &mut Self::State,
-    _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
+    _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
   ) -> CoreResult<StateChange> {
     Ok(StateChange::None)
   }
@@ -105,7 +105,7 @@ use oxide_core::ReducerEngine;
 #   fn reduce(
 #     &mut self,
 #     state: &mut Self::State,
-#     ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+#     ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
 #   ) -> CoreResult<StateChange> {
 #     match ctx.input {
 #       CounterAction::Inc => state.value = state.value.saturating_add(1),
@@ -116,7 +116,7 @@ use oxide_core::ReducerEngine;
 #   fn effect(
 #     &mut self,
 #     _state: &mut Self::State,
-#     _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
+#     _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
 #   ) -> CoreResult<StateChange> {
 #     Ok(StateChange::None)
 #   }

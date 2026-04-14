@@ -53,10 +53,12 @@ pub(crate) fn find_impl_fn<'a>(item_impl: &'a ItemImpl, name: &str) -> Option<&'
 }
 
 pub(crate) fn validate_init_sig(item_fn: &syn::ImplItemFn) -> syn::Result<()> {
-    if item_fn.sig.asyncness.is_none() {
+    let is_async = item_fn.sig.asyncness.is_some();
+    let has_explicit_return = !matches!(item_fn.sig.output, syn::ReturnType::Default);
+    if !is_async && !has_explicit_return {
         return Err(syn::Error::new_spanned(
             &item_fn.sig.fn_token,
-            "`init` must be async",
+            "`init` must be async or return a Future",
         ));
     }
     if item_fn.sig.inputs.len() != 2 {
@@ -89,10 +91,10 @@ pub(crate) fn validate_init_sig(item_fn: &syn::ImplItemFn) -> syn::Result<()> {
         }
     }
 
-    if !matches!(item_fn.sig.output, syn::ReturnType::Default) {
+    if is_async && has_explicit_return {
         return Err(syn::Error::new_spanned(
             &item_fn.sig.output,
-            "`init` must not return a value",
+            "`init` must not return a value when declared as async",
         ));
     }
 
@@ -140,7 +142,7 @@ pub(crate) fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) ->
         return Err(syn::Error::new_spanned(
             &item_fn.sig.inputs,
             format!(
-                "`{name}` must take exactly 3 arguments: `&mut self`, `&mut State`, and `oxide_core::Context<...>`"
+                "`{name}` must take exactly 3 arguments: `&mut self`, `&mut State`, and `oxide_core::ReducerCtx<...>`"
             ),
         ));
     }
@@ -189,21 +191,27 @@ pub(crate) fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) ->
                 if !ok {
                     return Err(syn::Error::new_spanned(
                         p,
-                        format!("`{name}` third argument must be `oxide_core::Context<...>`"),
+                        format!(
+                            "`{name}` third argument must be `oxide_core::ReducerCtx<...>` (or `oxide_core::Context<...>`)"
+                        ),
                     ));
                 }
             }
             other => {
                 return Err(syn::Error::new_spanned(
                     other,
-                    format!("`{name}` third argument must be `oxide_core::Context<...>`"),
+                    format!(
+                        "`{name}` third argument must be `oxide_core::ReducerCtx<...>` (or `oxide_core::Context<...>`)"
+                    ),
                 ));
             }
         },
         other => {
             return Err(syn::Error::new_spanned(
                 other,
-                format!("`{name}` third argument must be `oxide_core::Context<...>` (not `self`)"),
+                format!(
+                    "`{name}` third argument must be `oxide_core::ReducerCtx<...>` (or `oxide_core::Context<...>`, not `self`)"
+                ),
             ));
         }
     }
@@ -250,12 +258,18 @@ mod tests {
         let ok_fn = find_impl_fn(&ok_impl, "init").unwrap();
         validate_init_sig(ok_fn).unwrap();
 
+        let ok_future_impl = parse_impl(
+            "impl R { fn init(&mut self, _ctx: oxide_core::InitContext<()>) -> impl core::future::Future<Output = ()> + Send { async move {} } }",
+        );
+        let ok_future_fn = find_impl_fn(&ok_future_impl, "init").unwrap();
+        validate_init_sig(ok_future_fn).unwrap();
+
         let bad_async =
             parse_impl("impl R { fn init(&mut self, _ctx: oxide_core::InitContext<()>) {} }");
         let err = validate_init_sig(find_impl_fn(&bad_async, "init").unwrap())
             .unwrap_err()
             .to_string();
-        assert!(err.contains("must be async"));
+        assert!(err.contains("must be async or return a Future"));
 
         let bad_receiver =
             parse_impl("impl R { async fn init(&self, _ctx: oxide_core::InitContext<()>) {} }");

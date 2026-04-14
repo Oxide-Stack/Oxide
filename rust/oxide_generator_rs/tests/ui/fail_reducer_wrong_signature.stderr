@@ -1,4 +1,4 @@
-error: `reduce` third argument must be `oxide_core::Context<...>`
+error: `reduce` third argument must be `oxide_core::ReducerCtx<...>` (or `oxide_core::Context<...>`)
   --> tests/ui/fail_reducer_wrong_signature.rs:19:18
    |
 19 |         _action: Self::Action,

@@ -1,6 +1,7 @@
 use tokio::sync::mpsc;
 
 use crate::engine::CoreResult;
+use crate::ReducerCtx;
 
 // Reducer and state-change contracts.
 //
@@ -105,7 +106,7 @@ where
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        ctx: crate::Context<'_, Self::Action, Self::State, StateSlice>,
+        ctx: ReducerCtx<'_, Self::Action, Self::State, StateSlice>,
     ) -> CoreResult<StateChange<StateSlice>>;
 
     /// Applies a previously-enqueued side-effect to the provided `state`.
@@ -116,7 +117,7 @@ where
     fn effect(
         &mut self,
         state: &mut Self::State,
-        ctx: crate::Context<'_, Self::SideEffect, Self::State, StateSlice>,
+        ctx: ReducerCtx<'_, Self::SideEffect, Self::State, StateSlice>,
     ) -> CoreResult<StateChange<StateSlice>>;
 
     /// Infers which slices changed between `before` and `after`.

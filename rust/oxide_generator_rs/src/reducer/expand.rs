@@ -83,7 +83,7 @@ pub(crate) fn expand_reducer_impl(
         None => {
             return syn::Error::new_spanned(
                 &item_impl.self_ty,
-                "Reducer impl is missing `async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>)`",
+                "Reducer impl is missing `init` (expected `async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>)` or `fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>) -> impl Future<Output = ()> + Send`)",
             )
             .to_compile_error();
         }
@@ -97,7 +97,7 @@ pub(crate) fn expand_reducer_impl(
         None => {
             return syn::Error::new_spanned(
                 &item_impl.self_ty,
-                "Reducer impl is missing `fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> CoreResult<StateChange<...>>`",
+                "Reducer impl is missing `fn reduce(&mut self, state: &mut Self::State, ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State, ...>) -> CoreResult<StateChange<...>>`",
             )
             .to_compile_error();
         }
@@ -111,7 +111,7 @@ pub(crate) fn expand_reducer_impl(
         None => {
             return syn::Error::new_spanned(
                 &item_impl.self_ty,
-                "Reducer impl is missing `fn effect(&mut self, state: &mut Self::State, effect: Self::SideEffect) -> CoreResult<StateChange<...>>`",
+                "Reducer impl is missing `fn effect(&mut self, state: &mut Self::State, ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State, ...>) -> CoreResult<StateChange<...>>`",
             )
             .to_compile_error();
         }
