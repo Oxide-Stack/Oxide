@@ -38,12 +38,11 @@ pub mod routes {
 Each route is a Rust struct annotated with `#[oxide_generator_rs::oxide_route(...)]`:
 
 ```rust
-use serde::{Deserialize, Serialize};
-
 #[oxide_generator_rs::oxide_route()]
-#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SplashRoute {}
 ```
+
+`#[oxide_route]` automatically adds `Clone`, `Debug`, `serde::Serialize`, and `serde::Deserialize` derives.
 
 The macro scans `src/routes/` and writes a JSON metadata file to `target/oxide_routes/`. The Dart generator reads that file.
 

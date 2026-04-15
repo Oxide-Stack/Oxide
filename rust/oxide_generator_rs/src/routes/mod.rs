@@ -79,6 +79,7 @@ pub fn expand_oxide_route_struct(
     let path_value = args.path.as_ref().map(|p| p.value());
     let ident = item_struct.ident.clone();
     validate_oxide_route_struct(&item_struct)?;
+    ensure_route_struct_derives(&mut item_struct);
     ensure_frb_non_opaque_attr(&mut item_struct);
     normalize_route_struct_fields(&mut item_struct);
     let return_ty: Type = args
@@ -283,6 +284,30 @@ fn ensure_frb_non_opaque_attr(item_struct: &mut ItemStruct) {
         .push(syn::parse_quote!(#[flutter_rust_bridge::frb(non_opaque)]));
 }
 
+fn ensure_route_struct_derives(item_struct: &mut ItemStruct) {
+    let mut missing = Vec::<syn::Path>::new();
+    if !has_derive_named(&item_struct.attrs, "Clone") {
+        missing.push(syn::parse_quote!(Clone));
+    }
+    if !has_derive_named(&item_struct.attrs, "Debug") {
+        missing.push(syn::parse_quote!(Debug));
+    }
+    if !has_derive_named(&item_struct.attrs, "Serialize") {
+        missing.push(syn::parse_quote!(serde::Serialize));
+    }
+    if !has_derive_named(&item_struct.attrs, "Deserialize") {
+        missing.push(syn::parse_quote!(serde::Deserialize));
+    }
+
+    if missing.is_empty() {
+        return;
+    }
+
+    item_struct
+        .attrs
+        .push(syn::parse_quote!(#[derive(#(#missing),*)]));
+}
+
 fn normalize_route_struct_fields(item_struct: &mut ItemStruct) {
     if matches!(&item_struct.fields, syn::Fields::Unit) {
         item_struct.fields = syn::Fields::Named(syn::FieldsNamed {
@@ -297,23 +322,6 @@ fn validate_oxide_route_struct(item_struct: &ItemStruct) -> syn::Result<()> {
         return Err(syn::Error::new_spanned(
             &item_struct.generics,
             "route structs cannot be generic; remove type parameters and where-clauses",
-        ));
-    }
-
-    let has_clone = has_derive_named(&item_struct.attrs, "Clone");
-    if !has_clone {
-        return Err(syn::Error::new_spanned(
-            &item_struct.ident,
-            "route structs must derive Clone (e.g. #[derive(Clone, ...)])",
-        ));
-    }
-
-    let has_serialize = has_derive_named(&item_struct.attrs, "Serialize");
-    let has_deserialize = has_derive_named(&item_struct.attrs, "Deserialize");
-    if !has_serialize || !has_deserialize {
-        return Err(syn::Error::new_spanned(
-            &item_struct.ident,
-            "route structs must derive serde::Serialize and serde::Deserialize (required for RoutePayload encoding)",
         ));
     }
 
@@ -1057,6 +1065,38 @@ mod tests {
         assert_eq!(route.fields.len(), 2);
         assert_eq!(route.fields[0].name, "id");
         assert_eq!(route.fields[1].name, "count");
+    }
+
+    fn derive_occurrences(attrs: &[Attribute], needle: &str) -> usize {
+        let mut count = 0usize;
+        for attr in attrs {
+            if !attr.path().is_ident("derive") {
+                continue;
+            }
+            let Ok(list) = attr.parse_args_with(
+                syn::punctuated::Punctuated::<syn::Path, Token![,]>::parse_terminated,
+            ) else {
+                continue;
+            };
+            for p in list {
+                if p.segments.last().map(|s| s.ident.to_string()) == Some(needle.to_string()) {
+                    count += 1;
+                }
+            }
+        }
+        count
+    }
+
+    #[test]
+    fn ensure_route_struct_derives_adds_missing_and_keeps_existing_once() {
+        let mut item_struct: ItemStruct =
+            syn::parse_str("#[derive(Clone, serde::Serialize)] pub struct HomeRoute {}").unwrap();
+        ensure_route_struct_derives(&mut item_struct);
+
+        assert_eq!(derive_occurrences(&item_struct.attrs, "Clone"), 1);
+        assert_eq!(derive_occurrences(&item_struct.attrs, "Debug"), 1);
+        assert_eq!(derive_occurrences(&item_struct.attrs, "Serialize"), 1);
+        assert_eq!(derive_occurrences(&item_struct.attrs, "Deserialize"), 1);
     }
 
     #[test]
