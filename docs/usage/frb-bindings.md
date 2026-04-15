@@ -8,6 +8,21 @@ Typical regeneration command (run from your Flutter app directory):
 flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 ```
 
+## Troubleshooting: `StreamSink<OxideNavCommand>::add` Trait-Bound Errors
+
+If Rust compilation fails with trait-bound errors around:
+
+- `StreamSink<OxideNavCommand>::add(...)`
+- `IntoIntoDart` for `OxideNavCommand`
+
+your FRB Rust bindings are usually stale or misaligned with generated Oxide navigation APIs.
+
+Regenerate FRB bindings from your Flutter app root, then rebuild:
+
+```bash
+flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+```
+
 ## Reducer Struct Shape: Avoid Unit Structs
 
 If your reducer is declared as a unit struct (for example `pub struct AppReducer;`), `flutter_rust_bridge_codegen` may crash or skip it.

@@ -385,18 +385,33 @@ pub fn expand_routes_module(item_mod: ItemMod) -> syn::Result<TokenStream2> {
         files_to_scan.extend(discover_rs_files(&routes_dir)?);
     }
 
-    let mut items = Vec::new();
-    if let Some((_brace, inline_items)) = &item_mod.content {
-        items.extend(inline_items.iter().cloned());
+    let module_items = if let Some((_brace, inline_items)) = &item_mod.content {
+        if inline_items.is_empty() {
+            let mod_rs = routes_dir.join("mod.rs");
+            let routes_rs = src_dir.join(format!("{mod_ident}.rs"));
+            if mod_rs.is_file() {
+                parse_items_from_file(&mod_rs)?
+            } else if routes_rs.is_file() {
+                parse_items_from_file(&routes_rs)?
+            } else {
+                Vec::new()
+            }
+        } else {
+            inline_items.iter().cloned().collect::<Vec<_>>()
+        }
     } else {
         let mod_rs = routes_dir.join("mod.rs");
         let routes_rs = src_dir.join(format!("{mod_ident}.rs"));
         if mod_rs.is_file() {
-            items.extend(parse_items_from_file(&mod_rs)?);
+            parse_items_from_file(&mod_rs)?
         } else if routes_rs.is_file() {
-            items.extend(parse_items_from_file(&routes_rs)?);
+            parse_items_from_file(&routes_rs)?
+        } else {
+            Vec::new()
         }
-    }
+    };
+
+    let mut items = module_items.clone();
 
     for file in files_to_scan {
         items.extend(parse_items_from_file(&file)?);
@@ -413,22 +428,18 @@ pub fn expand_routes_module(item_mod: ItemMod) -> syn::Result<TokenStream2> {
     let init_module = generate_oxide_init_module()?;
     let navigation_bridge_module = generate_navigation_bridge_module()?;
 
-    if item_mod.content.is_none() {
-        return Ok(quote! {
-            #item_mod
-            #kind_enum
-            #payload_enum
-            #payload_helpers
-            #navigation_module
-            #init_module
-            #navigation_bridge_module
-        });
+    let mut out_mod = item_mod;
+    if out_mod.content.is_none() {
+        out_mod.semi = None;
+        out_mod.content = Some((syn::token::Brace::default(), module_items.clone()));
     }
 
-    let mut out_mod = item_mod;
     let Some((_brace, mod_items)) = &mut out_mod.content else {
         unreachable!("checked content is_some above")
     };
+    if mod_items.is_empty() && !module_items.is_empty() {
+        mod_items.extend(module_items);
+    }
 
     mod_items.push(Item::Verbatim(kind_enum));
     mod_items.push(Item::Verbatim(payload_enum));
@@ -534,7 +545,7 @@ fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
 
                 while let Some(cmd) = rx.recv().await {
                     let out = map_nav_command(cmd)?;
-                    let _ = sink.add(out);
+                    __oxide_nav_require_fresh_frb_bindings(&sink, out);
                 }
 
                 Ok(())
@@ -591,6 +602,24 @@ fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
                 Reset {
                     routes: Vec<RoutePayload>,
                 },
+            }
+
+            /// Compile-time guardrail for stale FRB bindings.
+            ///
+            /// If this fails with trait-bound errors around `IntoIntoDart` or
+            /// `StreamSink<OxideNavCommand>::add`, regenerate FRB bindings from your
+            /// Flutter app root:
+            ///
+            /// `flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml`
+            #[inline(always)]
+            fn __oxide_nav_require_fresh_frb_bindings(
+                sink: &crate::frb_generated::StreamSink<OxideNavCommand>,
+                command: OxideNavCommand,
+            )
+            where
+                OxideNavCommand: flutter_rust_bridge::IntoIntoDart<OxideNavCommand>,
+            {
+                let _ = sink.add(command);
             }
 
             fn map_nav_command(cmd: oxide_core::navigation::NavCommand) -> oxide_core::CoreResult<OxideNavCommand> {
@@ -657,7 +686,7 @@ fn collect_routes(items: &[Item]) -> syn::Result<Vec<RouteMeta>> {
         match item {
             Item::Struct(item_struct) => {
                 if let Some(attr) = find_oxide_route_attr(&item_struct.attrs) {
-                    let args: OxideRouteArgs = attr.parse_args()?;
+                    let args = parse_oxide_route_args(attr)?;
                     let ident = item_struct.ident.to_string();
                     let fields = extract_struct_fields(item_struct);
                     annotated.insert(ident, (args, fields));
@@ -744,6 +773,17 @@ fn find_oxide_route_attr(attrs: &[Attribute]) -> Option<&Attribute> {
     attrs.iter().find(|a| {
         a.path().segments.last().map(|s| s.ident.to_string()) == Some("oxide_route".to_string())
     })
+}
+
+fn parse_oxide_route_args(attr: &Attribute) -> syn::Result<OxideRouteArgs> {
+    match &attr.meta {
+        syn::Meta::Path(_) => Ok(OxideRouteArgs::default()),
+        syn::Meta::List(_) => attr.parse_args(),
+        syn::Meta::NameValue(_) => Err(syn::Error::new_spanned(
+            attr,
+            "expected attribute arguments in parentheses: #[oxide_route(...)]",
+        )),
+    }
 }
 
 fn impl_self_ident(ty: &Type) -> Option<String> {
@@ -1067,6 +1107,16 @@ mod tests {
         assert_eq!(route.fields[1].name, "count");
     }
 
+    #[test]
+    fn parse_oxide_route_args_accepts_no_parentheses() {
+        let item_struct: ItemStruct = syn::parse_str("#[oxide_route] pub struct SplashRoute {}").unwrap();
+        let attr = find_oxide_route_attr(&item_struct.attrs).expect("oxide_route attr");
+        let args = parse_oxide_route_args(attr).unwrap();
+        assert!(args.path.is_none());
+        assert!(args.return_type.is_none());
+        assert!(args.extra_type.is_none());
+    }
+
     fn derive_occurrences(attrs: &[Attribute], needle: &str) -> usize {
         let mut count = 0usize;
         for attr in attrs {
@@ -1142,6 +1192,7 @@ mod tests {
         assert!(tokens.contains("oxide_nav_commands_stream"));
         assert!(tokens.contains("oxide_nav_emit_result"));
         assert!(tokens.contains("oxide_nav_set_current_route"));
+        assert!(tokens.contains("__oxide_nav_require_fresh_frb_bindings"));
     }
 
     #[test]
@@ -1173,6 +1224,44 @@ mod tests {
         let json = fs::read_to_string(&metadata_path).unwrap();
         assert!(json.contains("\"Home\""));
         assert!(json.contains("\"HomeRoute\""));
+
+        restore_env("CARGO_MANIFEST_DIR", prev_manifest);
+        restore_env("CARGO_PKG_NAME", prev_pkg);
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn expand_routes_module_supports_empty_inline_module_without_include() {
+        let _guard = TEST_ENV_LOCK
+            .get_or_init(|| std::sync::Mutex::new(()))
+            .lock()
+            .unwrap();
+        let dir = temp_dir("oxide_routes_inline_empty");
+        let prev_manifest = std::env::var("CARGO_MANIFEST_DIR").ok();
+        let prev_pkg = std::env::var("CARGO_PKG_NAME").ok();
+        unsafe { std::env::set_var("CARGO_MANIFEST_DIR", &dir) };
+        unsafe { std::env::set_var("CARGO_PKG_NAME", "oxide_routes_inline_empty_test") };
+
+        let src_dir = dir.join("src");
+        let routes_dir = src_dir.join("routes");
+        fs::create_dir_all(&routes_dir).unwrap();
+        fs::write(
+            routes_dir.join("mod.rs"),
+            "pub mod splash_route; pub use splash_route::SplashRoute;",
+        )
+        .unwrap();
+        fs::write(
+            routes_dir.join("splash_route.rs"),
+            "use oxide_generator_rs::oxide_route; #[oxide_route] pub struct SplashRoute {}",
+        )
+        .unwrap();
+
+        let item_mod: ItemMod = syn::parse_str("pub mod routes {}").unwrap();
+        let out = expand_routes_module(item_mod).unwrap().to_string();
+        assert!(out.contains("pub mod routes"));
+        assert!(out.contains("pub mod splash_route"));
+        assert!(out.contains("RouteKind"));
+        assert!(out.contains("RoutePayload"));
 
         restore_env("CARGO_MANIFEST_DIR", prev_manifest);
         restore_env("CARGO_PKG_NAME", prev_pkg);

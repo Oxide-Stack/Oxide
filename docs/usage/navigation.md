@@ -30,10 +30,10 @@ Create a `routes/` module and apply `#[oxide_generator_rs::routes]` to the modul
 ```rust
 #[cfg(feature = "navigation-binding")]
 #[oxide_generator_rs::routes]
-pub mod routes {
-    include!("routes/mod.rs");
-}
+pub mod routes {}
 ```
+
+No `include!("routes/mod.rs")` is required; the macro discovers and loads `src/routes/mod.rs`.
 
 Each route is a Rust struct annotated with `#[oxide_generator_rs::oxide_route(...)]`:
 
