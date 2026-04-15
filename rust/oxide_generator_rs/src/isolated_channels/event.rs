@@ -125,12 +125,30 @@ fn expand_event_channel(
                     loop {
                         match rx.recv().await {
                             Ok(event) => {
-                                let _ = sink.add(event);
+                                __oxide_require_fresh_event_stream_bindings(&sink, event);
                             }
                             Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
                             Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Closed) => break,
                         }
                     }
+                }
+
+                /// Compile-time guardrail for stale FRB bindings on isolated event streams.
+                ///
+                /// If this fails with trait-bound errors around `IntoIntoDart` or
+                /// `StreamSink<#events_ty>::add`, regenerate FRB bindings from your
+                /// Flutter app root:
+                ///
+                /// `flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml`
+                #[inline(always)]
+                fn __oxide_require_fresh_event_stream_bindings(
+                    sink: &crate::frb_generated::StreamSink<#events_ty>,
+                    event: #events_ty,
+                )
+                where
+                    #events_ty: flutter_rust_bridge::IntoIntoDart<#events_ty>,
+                {
+                    let _ = sink.add(event);
                 }
             }
         }
@@ -226,12 +244,30 @@ fn expand_duplex_channel(
                     loop {
                         match rx.recv().await {
                             Ok(event) => {
-                                let _ = sink.add(event);
+                                __oxide_require_fresh_duplex_outgoing_bindings(&sink, event);
                             }
                             Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
                             Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Closed) => break,
                         }
                     }
+                }
+
+                /// Compile-time guardrail for stale FRB bindings on duplex outgoing streams.
+                ///
+                /// If this fails with trait-bound errors around `IntoIntoDart` or
+                /// `StreamSink<#outgoing_ty>::add`, regenerate FRB bindings from your
+                /// Flutter app root:
+                ///
+                /// `flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml`
+                #[inline(always)]
+                fn __oxide_require_fresh_duplex_outgoing_bindings(
+                    sink: &crate::frb_generated::StreamSink<#outgoing_ty>,
+                    event: #outgoing_ty,
+                )
+                where
+                    #outgoing_ty: flutter_rust_bridge::IntoIntoDart<#outgoing_ty>,
+                {
+                    let _ = sink.add(event);
                 }
 
                 #[flutter_rust_bridge::frb]

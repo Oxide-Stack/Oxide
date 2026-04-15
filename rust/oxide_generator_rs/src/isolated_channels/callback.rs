@@ -103,6 +103,23 @@ pub fn expand_oxide_callback(
             pub mod frb {
                 use super::*;
 
+                /// Compile-time guardrail for stale FRB bindings.
+                ///
+                /// If this fails with trait-bound errors around `IntoIntoDart` or
+                /// `StreamSink<...>::add`, regenerate FRB bindings from your Flutter app root:
+                ///
+                /// `flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml`
+                #[inline(always)]
+                fn __oxide_callback_require_fresh_frb_bindings(
+                    sink: &crate::frb_generated::StreamSink<#envelope_ident>,
+                    envelope: #envelope_ident,
+                )
+                where
+                    #envelope_ident: flutter_rust_bridge::IntoIntoDart<#envelope_ident>,
+                {
+                    let _ = sink.add(envelope);
+                }
+
                 #[flutter_rust_bridge::frb]
                 pub async fn #stream_fn_ident(
                     sink: crate::frb_generated::StreamSink<#envelope_ident>,
@@ -111,7 +128,8 @@ pub fn expand_oxide_callback(
                         let Some((id, request)) = super::runtime().recv_request().await else {
                             break;
                         };
-                        let _ = sink.add(#envelope_ident { id, request });
+                        let envelope = #envelope_ident { id, request };
+                        __oxide_callback_require_fresh_frb_bindings(&sink, envelope);
                     }
                 }
 

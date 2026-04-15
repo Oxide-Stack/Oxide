@@ -8,20 +8,25 @@ Typical regeneration command (run from your Flutter app directory):
 flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 ```
 
-## Troubleshooting: `StreamSink<OxideNavCommand>::add` Trait-Bound Errors
+## Troubleshooting: `StreamSink<...>::add` Trait-Bound Errors
 
-If Rust compilation fails with trait-bound errors around:
+If Rust compilation fails with trait-bound errors around generated stream sinks, for example:
 
 - `StreamSink<OxideNavCommand>::add(...)`
-- `IntoIntoDart` for `OxideNavCommand`
+- `StreamSink<YourEvent>::add(...)` from `#[oxide_event_channel]`
+- `IntoIntoDart` for generated isolated-channel payload types
 
-your FRB Rust bindings are usually stale or misaligned with generated Oxide navigation APIs.
+your FRB bindings are usually stale or out of sync with generated Oxide APIs (navigation or isolated channels).
 
 Regenerate FRB bindings from your Flutter app root, then rebuild:
 
 ```bash
 flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
 ```
+
+If you just changed isolated-channel declarations (`#[oxide_event_channel]` / `#[oxide_callback]`), always run regeneration before `cargo check`/`cargo test` in the Rust crate.
+
+For callback channels, prefer `#[oxide_callback(no_frb)]` plus explicit bridge functions in your API module for a stable FRB surface.
 
 ## Reducer Struct Shape: Avoid Unit Structs
 

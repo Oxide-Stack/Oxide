@@ -53,6 +53,57 @@ fn event_channel_generates_variant_helpers() {
 }
 
 #[test]
+fn event_channel_generates_frb_stream_guard_helper() {
+    let _guard = TEST_ENV_LOCK
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap();
+
+    let dir = make_temp_manifest_dir("oxide_isolated_channels_event_frb_guard");
+    write_src_lib(
+        &dir,
+        r#"
+        #[derive(Clone)]
+        pub enum AnalyticsEvent {
+            Track { name: String },
+        }
+        "#,
+    );
+
+    unsafe { std::env::set_var("CARGO_MANIFEST_DIR", &dir) };
+
+    let item_impl: ItemImpl = syn::parse_str(
+        r#"
+        impl oxide_core::OxideEventChannel for AnalyticsChannel {
+            type Events = AnalyticsEvent;
+        }
+        "#,
+    )
+    .unwrap();
+
+    let ts = expand_oxide_event_channel(
+        OxideEventChannelArgs {
+            orphaned: false,
+            no_frb: false,
+        },
+        item_impl,
+    )
+    .unwrap();
+
+    let out = ts.to_string();
+    assert!(
+        out.contains("__oxide_require_fresh_event_stream_bindings"),
+        "expected event stream FRB guard helper, got: {out}"
+    );
+    assert!(
+        out.matches("__oxide_require_fresh_event_stream_bindings")
+            .count()
+            >= 2,
+        "expected event stream path and helper declaration, got: {out}"
+    );
+}
+
+#[test]
 fn callbacking_enforces_variant_parity() {
     let _guard = TEST_ENV_LOCK
         .get_or_init(|| std::sync::Mutex::new(()))
@@ -144,6 +195,53 @@ fn callbacking_generates_methods_and_runtime_module() {
 }
 
 #[test]
+fn callbacking_frb_stream_includes_sink_guard_helper() {
+    let _guard = TEST_ENV_LOCK
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap();
+
+    let dir = make_temp_manifest_dir("oxide_isolated_channels_callback_guard");
+    write_src_lib(
+        &dir,
+        r#"
+        pub enum DialogRequest {
+            Confirm { title: String },
+        }
+
+        pub enum DialogResponse {
+            Confirm(bool),
+        }
+        "#,
+    );
+
+    unsafe { std::env::set_var("CARGO_MANIFEST_DIR", &dir) };
+
+    let item_impl: ItemImpl = syn::parse_str(
+        r#"
+        impl oxide_core::OxideCallbacking for DialogService {
+            type Request = DialogRequest;
+            type Response = DialogResponse;
+        }
+        "#,
+    )
+    .unwrap();
+
+    let ts = expand_oxide_callback(OxideCallbackArgs { no_frb: false }, item_impl).unwrap();
+    let out = ts.to_string();
+    let compact: String = out.chars().filter(|c| !c.is_whitespace()).collect();
+
+    assert!(
+        compact.contains("fn__oxide_callback_require_fresh_frb_bindings"),
+        "expected callback FRB guard helper, got: {out}"
+    );
+    assert!(
+        compact.contains("__oxide_callback_require_fresh_frb_bindings(&sink,envelope)"),
+        "expected stream sink to use callback guard helper, got: {out}"
+    );
+}
+
+#[test]
 fn callbacking_rejects_unsupported_args_and_non_callback_trait() {
     let bad_args = match syn::parse_str::<OxideCallbackArgs>("other = true") {
         Ok(_) => panic!("expected parse error"),
@@ -215,6 +313,61 @@ fn event_channel_duplex_generates_send_and_register_helpers() {
     assert!(
         out.contains("register_incoming"),
         "expected register helper, got: {out}"
+    );
+}
+
+#[test]
+fn event_channel_duplex_generates_outgoing_frb_guard_helper() {
+    let _guard = TEST_ENV_LOCK
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap();
+
+    let dir = make_temp_manifest_dir("oxide_isolated_channels_duplex_frb_guard");
+    write_src_lib(
+        &dir,
+        r#"
+        pub enum OutgoingEvent {
+            Tick(u64),
+        }
+
+        pub enum IncomingEvent {
+            Start,
+        }
+        "#,
+    );
+
+    unsafe { std::env::set_var("CARGO_MANIFEST_DIR", &dir) };
+
+    let item_impl: ItemImpl = syn::parse_str(
+        r#"
+        impl oxide_core::OxideEventDuplexChannel for DuplexChannel {
+            type Outgoing = OutgoingEvent;
+            type Incoming = IncomingEvent;
+        }
+        "#,
+    )
+    .unwrap();
+
+    let ts = expand_oxide_event_channel(
+        OxideEventChannelArgs {
+            orphaned: false,
+            no_frb: false,
+        },
+        item_impl,
+    )
+    .unwrap();
+
+    let out = ts.to_string();
+    assert!(
+        out.contains("__oxide_require_fresh_duplex_outgoing_bindings"),
+        "expected duplex outgoing FRB guard helper, got: {out}"
+    );
+    assert!(
+        out.matches("__oxide_require_fresh_duplex_outgoing_bindings")
+            .count()
+            >= 2,
+        "expected duplex outgoing stream path and helper declaration, got: {out}"
     );
 }
 

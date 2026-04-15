@@ -74,7 +74,7 @@ Declare a callback service:
 ```rust
 pub struct DialogService;
 
-#[oxide_generator_rs::oxide_callback]
+#[oxide_generator_rs::oxide_callback(no_frb)]
 impl oxide_core::OxideCallbacking for DialogService {
   type Request = DialogRequest;
   type Response = DialogResponse;
@@ -90,6 +90,8 @@ pub enum DialogResponse {
   Confirm(bool),
 }
 ```
+
+For a stable FRB surface, prefer `no_frb` and expose bridge functions from your own API module (as shown in `examples/api_browser_app` and `examples/counter_app`).
 
 For each request variant, the macro generates one async method. The response variant must exist with the **same name** or compilation fails.
 
