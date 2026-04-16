@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'rust_lib_showcase_app'
-  s.version          = '0.0.1'
+  s.version          = '0.4.0'  s.version          = 
   s.summary          = 'A new Flutter FFI plugin project.'
   s.description      = <<-DESC
 A new Flutter FFI plugin project.
