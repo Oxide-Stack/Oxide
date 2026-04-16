@@ -43,7 +43,7 @@ where
     R: Reducer<StateSlice>,
     StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
 {
-    state: Mutex<EngineState<R, StateSlice>>,
+    engine_state: Mutex<EngineState<R, StateSlice>>,
     tx: watch::Sender<StateSnapshot<R::State, StateSlice>>,
     error_tx: watch::Sender<Option<OxideError>>,
     sideeffect_tx: mpsc::UnboundedSender<R::SideEffect>,
@@ -173,7 +173,7 @@ where
         reducer.init(init_ctx).await;
 
         let shared = Arc::new(Shared {
-            state: Mutex::new(EngineState {
+            engine_state: Mutex::new(EngineState {
                 state: initial_state,
                 revision: 0,
                 reducer,
@@ -217,10 +217,10 @@ where
         action: R::Action,
     ) -> CoreResult<StateSnapshot<R::State, StateSlice>> {
         tracing::debug!(target: "oxide::engine", "Dispatching action");
-        let mut state = self.shared.state.lock().await;
+        let mut engine_state = self.shared.engine_state.lock().await;
         let before_snapshot = StateSnapshot {
-            revision: state.revision,
-            state: state.state.clone(),
+            revision: engine_state.revision,
+            state: engine_state.state.clone(),
             slices: Vec::new(),
         };
 
@@ -233,14 +233,14 @@ where
 
         // Apply reducer logic against a cloned state so failures never partially
         // mutate the committed state.
-        let mut next_state = state.state.clone();
+        let mut next_state = engine_state.state.clone();
         let ctx = Context {
             input: &action,
             state_snapshot: &before_snapshot,
             #[cfg(feature = "navigation-binding")]
             nav: NavigationCtx::new(runtime, &route_ctx),
         };
-        let change = state.reducer.reduce(&mut next_state, ctx)?;
+        let change = engine_state.reducer.reduce(&mut next_state, ctx)?;
 
         match change {
             // "no externally-visible change" should not spam watchers.
@@ -250,12 +250,12 @@ where
             }
             StateChange::Full => {
                 tracing::debug!(target: "oxide::engine", "Action applied, full state update");
-                state.state = next_state;
-                state.revision = state.revision.saturating_add(1);
+                engine_state.state = next_state;
+                engine_state.revision = engine_state.revision.saturating_add(1);
 
                 let snapshot = StateSnapshot {
-                    revision: state.revision,
-                    state: state.state.clone(),
+                    revision: engine_state.revision,
+                    state: engine_state.state.clone(),
                     slices: Vec::new(),
                 };
                 let _ = self.shared.tx.send(snapshot.clone());
@@ -263,15 +263,17 @@ where
                 Ok(snapshot)
             }
             StateChange::Infer => {
-                let slices = state.reducer.infer_slices(&state.state, &next_state);
+                let slices = engine_state
+                    .reducer
+                    .infer_slices(&engine_state.state, &next_state);
                 tracing::debug!(target: "oxide::engine", "Action applied, slice inferred update: {} slices", slices.len());
 
-                state.state = next_state;
-                state.revision = state.revision.saturating_add(1);
+                engine_state.state = next_state;
+                engine_state.revision = engine_state.revision.saturating_add(1);
 
                 let snapshot = StateSnapshot {
-                    revision: state.revision,
-                    state: state.state.clone(),
+                    revision: engine_state.revision,
+                    state: engine_state.state.clone(),
                     slices,
                 };
                 let _ = self.shared.tx.send(snapshot.clone());
@@ -280,12 +282,12 @@ where
             }
             StateChange::Slices(slices) => {
                 tracing::debug!(target: "oxide::engine", "Action applied, explicit slices matched: {} slices", slices.len());
-                state.state = next_state;
-                state.revision = state.revision.saturating_add(1);
+                engine_state.state = next_state;
+                engine_state.revision = engine_state.revision.saturating_add(1);
 
                 let snapshot = StateSnapshot {
-                    revision: state.revision,
-                    state: state.state.clone(),
+                    revision: engine_state.revision,
+                    state: engine_state.state.clone(),
                     slices: slices.to_vec(),
                 };
                 let _ = self.shared.tx.send(snapshot.clone());
@@ -297,10 +299,10 @@ where
 
     /// Returns the current snapshot without dispatching an action.
     pub async fn current(&self) -> StateSnapshot<R::State, StateSlice> {
-        let state = self.shared.state.lock().await;
+        let engine_state = self.shared.engine_state.lock().await;
         StateSnapshot {
-            revision: state.revision,
-            state: state.state.clone(),
+            revision: engine_state.revision,
+            state: engine_state.state.clone(),
             slices: Vec::new(),
         }
     }
@@ -346,10 +348,10 @@ async fn sideeffect_loop<R, StateSlice>(
     StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
 {
     while let Some(effect) = rx.recv().await {
-        let mut state = shared.state.lock().await;
+        let mut engine_state = shared.engine_state.lock().await;
         let before_snapshot = StateSnapshot {
-            revision: state.revision,
-            state: state.state.clone(),
+            revision: engine_state.revision,
+            state: engine_state.state.clone(),
             slices: Vec::new(),
         };
 
@@ -364,14 +366,14 @@ async fn sideeffect_loop<R, StateSlice>(
                 continue;
             }
         };
-        let mut next_state = state.state.clone();
+        let mut next_state = engine_state.state.clone();
         let ctx = Context {
             input: &effect,
             state_snapshot: &before_snapshot,
             #[cfg(feature = "navigation-binding")]
             nav: NavigationCtx::new(runtime, &route_ctx),
         };
-        let change = match state.reducer.effect(&mut next_state, ctx) {
+        let change = match engine_state.reducer.effect(&mut next_state, ctx) {
             Ok(change) => change,
             Err(err) => {
                 let _ = shared.error_tx.send(Some(err));
@@ -384,16 +386,18 @@ async fn sideeffect_loop<R, StateSlice>(
                 continue;
             }
             StateChange::Full => Vec::new(),
-            StateChange::Infer => state.reducer.infer_slices(&state.state, &next_state),
+            StateChange::Infer => engine_state
+                .reducer
+                .infer_slices(&engine_state.state, &next_state),
             StateChange::Slices(slices) => slices.to_vec(),
         };
 
-        state.state = next_state;
-        state.revision = state.revision.saturating_add(1);
+        engine_state.state = next_state;
+        engine_state.revision = engine_state.revision.saturating_add(1);
 
         let snapshot = StateSnapshot {
-            revision: state.revision,
-            state: state.state.clone(),
+            revision: engine_state.revision,
+            state: engine_state.state.clone(),
             slices,
         };
         let _ = shared.tx.send(snapshot.clone());
