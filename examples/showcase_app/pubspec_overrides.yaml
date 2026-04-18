@@ -1,0 +1,7 @@
+dependency_overrides:
+  oxide_runtime:
+    path: ../../flutter/oxide_runtime
+  oxide_generator:
+    path: ../../flutter/oxide_generator
+  oxide_annotations:
+    path: ../../flutter/oxide_annotations

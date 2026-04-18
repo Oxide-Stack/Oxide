@@ -37,6 +37,7 @@ dependencies:
     path: rust_builder
   flutter_rust_bridge: 2.11.1
   freezed_annotation: ^3.0.0
+  oxide_annotations: ^0.4.0
   oxide_runtime:
     path: ../../flutter/oxide_runtime
   flutter_hooks: ^0.21.3+1

@@ -1,7 +1,8 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{ToTokens, format_ident, quote};
-use syn::{ImplItem, ItemEnum, ItemImpl, LitBool, Type};
+use syn::{ItemEnum, ItemImpl, LitBool, Type};
 
+use super::common::{find_assoc_type, impl_self_ident};
 use super::naming::to_snake_case;
 use super::scan::find_enum_in_crate_src;
 use super::validate::{type_to_simple_ident, validate_enum_payload};
@@ -401,29 +402,4 @@ fn variant_ctor(
             ))
         }
     }
-}
-
-fn find_assoc_type(item_impl: &ItemImpl, assoc: &str) -> syn::Result<Type> {
-    for item in &item_impl.items {
-        let ImplItem::Type(ty_item) = item else {
-            continue;
-        };
-        if ty_item.ident == assoc {
-            return Ok(ty_item.ty.clone());
-        }
-    }
-    Err(syn::Error::new_spanned(
-        item_impl,
-        format!("missing associated type `{assoc}`"),
-    ))
-}
-
-fn impl_self_ident(ty: &Type) -> syn::Result<syn::Ident> {
-    let Type::Path(type_path) = ty else {
-        return Err(syn::Error::new_spanned(ty, "expected a concrete self type"));
-    };
-    let Some(seg) = type_path.path.segments.last() else {
-        return Err(syn::Error::new_spanned(ty, "expected a concrete self type"));
-    };
-    Ok(seg.ident.clone())
 }

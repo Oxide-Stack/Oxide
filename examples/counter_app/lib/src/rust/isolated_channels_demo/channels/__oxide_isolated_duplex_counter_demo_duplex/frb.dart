@@ -7,6 +7,8 @@ import '../../../frb_generated.dart';
 import '../../channels.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `__oxide_require_fresh_duplex_outgoing_bindings`
+
 Stream<CounterDemoOut> oxideOutgoingStream() => RustLib.instance.api
     .crateIsolatedChannelsDemoChannelsOxideIsolatedDuplexCounterDemoDuplexFrbOxideOutgoingStream();
 

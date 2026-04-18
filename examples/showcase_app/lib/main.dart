@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:showcase_app/oxide_generated/oxide_stack.g.dart'
-    show runOxideApp;
-import 'package:showcase_app/src/rust/frb_generated.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:showcase_app/app.dart';
+import 'package:showcase_app/oxide.dart';
 
 Future<void> main() async {
-  runOxideApp(const MyApp());
+  await runOxideApp(const ProviderScope(child: MyApp()));
 }

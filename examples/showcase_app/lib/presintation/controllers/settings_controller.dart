@@ -4,7 +4,14 @@ import 'package:oxide_runtime/oxide_runtime.dart';
 import 'package:showcase_app/src/rust/api/settings/actions.dart'
     show SettingsAction;
 import 'package:showcase_app/src/rust/api/settings/reducer.dart'
-    show SettingsStateSnapshot, ArcSettingsEngine;
+    show
+        SettingsStateSnapshot,
+        ArcSettingsEngine,
+        createEngine,
+        disposeEngine,
+        dispatch,
+        current,
+        stateStream;
 import 'package:showcase_app/src/rust/api/settings/state.dart'
     show SettingsState;
 import 'package:showcase_app/src/rust/config/enums/theme_type.dart';

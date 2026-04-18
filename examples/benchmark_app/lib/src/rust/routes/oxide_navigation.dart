@@ -15,7 +15,7 @@ import 'routing_bench_route.dart';
 import 'splash_route.dart';
 part 'oxide_navigation.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `map_nav_command`, `nav_route_to_route_payload`
+// These functions are ignored because they are not marked as `pub`: `__oxide_nav_require_fresh_frb_bindings`, `map_nav_command`, `nav_route_to_route_payload`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
 
 Future<void> initNavigation() =>

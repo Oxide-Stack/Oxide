@@ -4,6 +4,7 @@
 //! `OxideIsolatedChannels` specification.
 
 mod callback;
+mod common;
 mod event;
 mod naming;
 mod scan;

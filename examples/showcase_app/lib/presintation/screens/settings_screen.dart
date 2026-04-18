@@ -1,127 +1,159 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:showcase_app/presintation/color_utils.dart';
 import 'package:showcase_app/presintation/controllers/settings_controller.dart';
+import 'package:showcase_app/src/rust/config/enums/theme_type.dart'
+    as rust_theme;
 
-class SettingsWidget extends HookConsumerWidget {
-  const SettingsWidget({super.key});
+class SettingsScreen extends HookConsumerWidget {
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsControllerProvider);
+    final state = settings.state;
+    final colorController = useTextEditingController(
+      text: state?.mainColor ?? '',
+    );
+    final imagePathController = useTextEditingController();
 
-    final colors = <Color>[
-      Colors.red,
-      Colors.pink,
-      Colors.purple,
-      Colors.deepPurple,
-      Colors.indigo,
-      Colors.blue,
-      Colors.teal,
-      Colors.green,
-      Colors.orange,
-      Colors.amber,
-      Colors.brown,
-      Colors.grey,
-      Colors.black,
-    ];
+    useEffect(() {
+      final value = state?.mainColor ?? '';
+      if (colorController.text != value) {
+        colorController.text = value;
+        colorController.selection = TextSelection.collapsed(
+          offset: value.length,
+        );
+      }
+      return null;
+    }, [state?.mainColor]);
 
-    final languages = <Map<String, String>>[
-      {'code': 'en', 'label': 'English'},
-      {'code': 'es', 'label': 'Español'},
-      {'code': 'fr', 'label': 'Français'},
-      {'code': 'de', 'label': 'Deutsch'},
-      {'code': 'ar', 'label': 'العربية'},
-    ];
+    final currentTheme = state?.theme ?? rust_theme.Theme.light;
+    final currentColor =
+        parseHexColor(state?.mainColor) ??
+        Theme.of(context).colorScheme.primary;
+    final colorLabel = state != null && state.mainColor.isNotEmpty
+        ? state.mainColor
+        : 'Unset';
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
-          'Settings',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
+        Text('Settings', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 24),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Infer color from image'),
-          subtitle: const Text(
-            'Automatically use a color extracted from the selected image',
-          ),
-          value: settings.inferColorFromImage,
-          onChanged: (value) {
-            ref
-                .read(settingsControllerProvider.notifier)
-                .setInferColorFromImage(value);
-          },
-        ),
-        const SizedBox(height: 16),
-        Text(
-          settings.inferColorFromImage
-              ? 'Color selection disabled while inferring from image'
-              : 'Choose app color',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: colors.map((color) {
-            final selected = settings.color == color;
-            return GestureDetector(
-              onTap: settings.inferColorFromImage
-                  ? null
-                  : () => ref
-                        .read(settingsControllerProvider.notifier)
-                        .setColor(color),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: selected
-                        ? Theme.of(context).colorScheme.onSurface
-                        : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-                child: selected
-                    ? const Icon(Icons.check, color: Colors.white, size: 20)
-                    : null,
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 24),
-        DropdownButtonFormField<String>(
-          value: settings.languageCode,
+        DropdownButtonFormField<rust_theme.Theme>(
+          key: ValueKey(currentTheme),
+          initialValue: currentTheme,
           decoration: const InputDecoration(
-            labelText: 'Language',
+            labelText: 'Theme',
             border: OutlineInputBorder(),
           ),
-          items: languages
+          items: rust_theme.Theme.values
               .map(
-                (language) => DropdownMenuItem<String>(
-                  value: language['code'],
-                  child: Text(language['label']!),
+                (theme) => DropdownMenuItem<rust_theme.Theme>(
+                  value: theme,
+                  child: Text(_themeLabel(theme)),
                 ),
               )
               .toList(),
           onChanged: (value) {
             if (value != null) {
-              ref.read(settingsControllerProvider.notifier).setLanguage(value);
+              settings.actions.setTheme(value);
             }
           },
         ),
         const SizedBox(height: 24),
+        Text('Main color', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 12),
+        TextField(
+          controller: colorController,
+          decoration: const InputDecoration(
+            labelText: 'Hex color',
+            border: OutlineInputBorder(),
+            hintText: '#336699',
+          ),
+          onSubmitted: (value) =>
+              _applyMainColor(context, settings.actions, value),
+        ),
+        const SizedBox(height: 12),
+        FilledButton(
+          onPressed: () =>
+              _applyMainColor(context, settings.actions, colorController.text),
+          child: const Text('Apply color'),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children:
+              <Color>[
+                Colors.red,
+                Colors.pink,
+                Colors.purple,
+                Colors.indigo,
+                Colors.blue,
+                Colors.teal,
+                Colors.green,
+                Colors.orange,
+                Colors.amber,
+                Colors.brown,
+                Colors.grey,
+                Colors.black,
+              ].map((color) {
+                final selected = currentColor.toARGB32() == color.toARGB32();
+                return GestureDetector(
+                  onTap: () => settings.actions.setMainColor(colorToHex(color)),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: selected
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Colors.transparent,
+                        width: 3,
+                      ),
+                    ),
+                    child: selected
+                        ? const Icon(Icons.check, color: Colors.white, size: 20)
+                        : null,
+                  ),
+                );
+              }).toList(),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Extract color from an image',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: imagePathController,
+          decoration: const InputDecoration(
+            labelText: 'Image path',
+            border: OutlineInputBorder(),
+            hintText: r'C:\images\showcase.png',
+          ),
+        ),
+        const SizedBox(height: 12),
+        FilledButton.tonal(
+          onPressed: () => _extractMainColor(
+            context,
+            settings.actions,
+            imagePathController.text,
+          ),
+          child: const Text('Extract main color'),
+        ),
+        const SizedBox(height: 24),
         Card(
           child: ListTile(
-            leading: CircleAvatar(backgroundColor: settings.color),
+            leading: CircleAvatar(backgroundColor: currentColor),
             title: const Text('Preview'),
             subtitle: Text(
-              'Color: ${settings.inferColorFromImage ? 'From image' : 'Selected'} • Language: ${settings.languageCode}',
+              'Theme: ${_themeLabel(currentTheme)} • Color: $colorLabel',
             ),
           ),
         ),
@@ -129,3 +161,40 @@ class SettingsWidget extends HookConsumerWidget {
     );
   }
 }
+
+void _applyMainColor(
+  BuildContext context,
+  SettingsControllerActions actions,
+  String value,
+) {
+  final parsed = parseHexColor(value);
+  if (parsed == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Enter a valid hex color, like #336699')),
+    );
+    return;
+  }
+
+  actions.setMainColor(colorToHex(parsed));
+}
+
+void _extractMainColor(
+  BuildContext context,
+  SettingsControllerActions actions,
+  String value,
+) {
+  final path = value.trim();
+  if (path.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Enter an image path to extract from')),
+    );
+    return;
+  }
+
+  actions.extractMainColor(path);
+}
+
+String _themeLabel(rust_theme.Theme theme) => switch (theme) {
+  rust_theme.Theme.light => 'Light',
+  rust_theme.Theme.dark => 'Dark',
+};

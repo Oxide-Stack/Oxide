@@ -1,7 +1,7 @@
 use tokio::sync::mpsc;
 
-use crate::engine::CoreResult;
 use crate::ReducerCtx;
+use crate::engine::CoreResult;
 
 // Reducer and state-change contracts.
 //

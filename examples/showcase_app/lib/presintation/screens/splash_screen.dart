@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:oxide_runtime/oxide_runtime.dart';
-import 'package:showcase_app/src/rust/routes.dart';
+import 'package:showcase_app/presintation/screens/home_screen.dart';
 
-@OxideRoutePage(RouteKind.splashScreen)
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 

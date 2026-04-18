@@ -1,43 +1,106 @@
-# Oxide Usage Guide
+# Oxide Usage Guide (Step-by-Step)
 
-Oxide fits into a Flutter app that already uses Flutter Rust Bridge (FRB).
+Use this page as the **single ordered path** for integrating Oxide in a Flutter + Rust app.
 
-This folder splits the guide into feature-specific pages.
+If you follow the steps in order, you should end with:
 
-## Working Examples
+1. A Rust reducer engine exposed over FRB.
+2. A generated Dart store adapter.
+3. A Flutter UI wired to Oxide runtime/state updates.
 
-Use the example apps as the source of truth:
+## 0. Start From a Known-Good Base
+
+You need an FRB-integrated app first (or start from an example):
 
 - [counter_app](../../examples/counter_app)
 - [todos_app](../../examples/todos_app)
 - [ticker_app](../../examples/ticker_app)
 - [benchmark_app](../../examples/benchmark_app)
 - [api_browser_app](../../examples/api_browser_app)
-- Benchmarks write-up: [BENCHMARKS.md](../BENCHMARKS.md)
 
-## Prerequisites
+Reference: FRB docs https://fzyzcjy.github.io/flutter_rust_bridge/
 
-Start from an FRB-integrated Flutter app or copy one of the examples. Oxide assumes you already have FRB set up for:
+## 1. Define Rust State + Actions + Reducer
 
-- building Rust
-- generating bindings
-- initializing Rust from Flutter
+Follow: [reducer-pattern.md](./reducer-pattern.md)
 
-FRB docs: https://fzyzcjy.github.io/flutter_rust_bridge/
+At the end of this step, your Rust crate has:
 
-Before using Oxide APIs, call `OxideStack.init()` from `main()` (see [init-oxide.md](./init-oxide.md)).
+- `#[state]` state model
+- `#[actions]` action enum
+- `#[reducer(...)] impl Reducer` with `reduce` and `effect`
 
-## Topics
+## 2. Add Optional Reducer Features (If Needed)
 
-- Reducer pattern (Rust state/actions/reducer): [reducer-pattern.md](./reducer-pattern.md)
-- Sliced updates (targeted UI rebuilds): [sliced-updates.md](./sliced-updates.md)
-- Generate FRB bindings (Rust ↔ Dart): [frb-bindings.md](./frb-bindings.md)
-- Unified async initialization (`OxideStack.init`): [init-oxide.md](./init-oxide.md)
-- Runtime logging and diagnostics: [init-oxide.md](./init-oxide.md#logging-usage)
-- Flutter deps + codegen (`build_runner`): [flutter-codegen.md](./flutter-codegen.md)
-- Declare a store (`@OxideStore`): [declare-store.md](./declare-store.md)
-- Use the generated adapter in UI: [ui-backends.md](./ui-backends.md)
-- Persistence (optional): [persistence.md](./persistence.md)
-- Navigation (Rust-driven): [navigation.md](./navigation.md)
-- Navigation migration notes: [navigation-migration.md](./navigation-migration.md)
-- Isolated channels (feature-gated): [isolated-channels.md](./isolated-channels.md)
+Apply only what your app needs:
+
+- Sliced updates: [sliced-updates.md](./sliced-updates.md)
+- Persistence: [persistence.md](./persistence.md)
+- Navigation routes: [navigation.md](./navigation.md)
+- Isolated channels: [isolated-channels.md](./isolated-channels.md)
+
+## 3. Generate/Renew Rust <-> Dart Bindings
+
+Follow: [frb-bindings.md](./frb-bindings.md)
+
+When reducer signatures or exported Rust API changes, regenerate FRB bindings before continuing.
+
+## 4. Configure Flutter-Side Generator Inputs
+
+Follow: [flutter-codegen.md](./flutter-codegen.md)
+
+This wires package dependencies and build-runner setup for Oxide adapter generation.
+
+## 5. Declare the Store Contract in Dart
+
+Follow: [declare-store.md](./declare-store.md)
+
+At the end of this step, `@OxideStore(...)` points to your Rust bridge/model types and selected runtime options.
+
+## 6. Run Dart Code Generation
+
+Use build_runner to generate/update adapter files.
+
+The exact command and expected generated files are covered in [flutter-codegen.md](./flutter-codegen.md).
+
+## 7. Initialize Oxide Before Any Store Usage
+
+Follow: [init-oxide.md](./init-oxide.md)
+
+Rule: call `await OxideStack.init()` during app startup before using generated Oxide APIs.
+
+## 8. Wire the Generated Adapter to UI State Management
+
+Follow: [ui-backends.md](./ui-backends.md)
+
+This binds Oxide state stream and actions to your chosen UI integration path.
+
+## 9. Validate End-to-End Behavior
+
+Minimum checks:
+
+1. App starts with `OxideStack.init()` and no init-time errors.
+2. Dispatching actions updates state as expected.
+3. Stream/state rebuilds happen in Flutter.
+4. Optional features (navigation/persistence/channels) execute correctly.
+
+## 10. Debugging and Deep Runtime Tracing
+
+Use startup/log guidance in [init-oxide.md](./init-oxide.md#logging-usage), including:
+
+- `OXIDE_DEBUG_LOGS=true`
+- `ENABLE_ADVANCED_LOGS=true`
+
+For internal pipeline details (macro expansion -> runtime -> generated adapters), see:
+
+- [misc/rust-core-generator-workflow.md](../../misc/rust-core-generator-workflow.md)
+
+## Common Pitfalls Checklist
+
+If integration fails, verify in this order:
+
+1. FRB bindings are regenerated after Rust API changes.
+2. Dart build_runner outputs are regenerated after annotation/signature changes.
+3. `OxideStack.init()` runs before any Oxide engine/store access.
+4. Enabled Rust/Dart features match (navigation/persistence/channels).
+5. Generated files are committed and in sync with source macros/annotations.

@@ -27,6 +27,8 @@
 //!     type Extra = NoExtra;
 //! }
 //! ```
+#[cfg(feature = "navigation-binding")]
+pub(crate) mod context;
 mod default_extra;
 mod default_return;
 mod nav_command;
@@ -38,6 +40,8 @@ mod route;
 mod route_context;
 mod route_extra;
 mod route_return;
+#[cfg(feature = "navigation-binding")]
+pub(crate) mod runtime;
 
 pub use default_extra::DefaultExtra;
 pub use default_return::DefaultReturn;

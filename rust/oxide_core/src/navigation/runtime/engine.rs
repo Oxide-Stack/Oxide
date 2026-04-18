@@ -2,7 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use tokio::sync::{Mutex, mpsc, watch};
 
-use crate::engine::navigation_ticket_registry::TicketRegistry;
+use super::ticket_registry::TicketRegistry;
 use crate::engine::{CoreResult, OxideError};
 use crate::navigation::{
     NavCommand, NavRoute, OxideRoute, OxideRouteKind, OxideRoutePayload, RouteContext,

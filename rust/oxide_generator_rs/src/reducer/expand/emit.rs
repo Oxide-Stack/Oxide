@@ -1,23 +1,26 @@
 use quote::{format_ident, quote};
-use syn::{ImplItem, ItemImpl};
+use syn::ItemImpl;
 
-// Token emission for `#[reducer(...)]`.
-//
-// keep all generated Rust/FRB surface construction in one place so it can
-// be reviewed as a coherent output contract.
 use crate::meta::{ReducerMeta, push_meta_doc};
-use crate::reducer::args::ReducerArgs;
-use crate::reducer::sliced_usage::fn_uses_sliced_state_change;
-use crate::reducer::validate::{
-    find_impl_fn, impl_assoc_type, impl_reducer_ident, is_reducer_trait, type_path_last_segment,
-    validate_init_sig, validate_reduce_like_sig,
-};
+use crate::reducer::expand::analysis::ReducerAnalysis;
+use crate::reducer::validate::type_path_last_segment;
 
-pub(crate) fn expand_reducer_impl(
-    args: ReducerArgs,
-    mut item_impl: ItemImpl,
+pub(super) struct EmitArgs {
+    pub(super) engine_ident: syn::Ident,
+    pub(super) snapshot_ident: syn::Ident,
+    pub(super) initial_state: syn::Expr,
+    pub(super) reducer_expr: Option<syn::Expr>,
+    pub(super) include_frb: bool,
+    pub(super) persist_key: Option<syn::LitStr>,
+    pub(super) persist_min_interval_ms: Option<u64>,
+}
+
+pub(super) fn emit_reducer_tokens(
+    item_impl: ItemImpl,
+    analysis: ReducerAnalysis,
+    args: EmitArgs,
 ) -> proc_macro2::TokenStream {
-    let ReducerArgs {
+    let EmitArgs {
         engine_ident,
         snapshot_ident,
         initial_state,
@@ -26,183 +29,14 @@ pub(crate) fn expand_reducer_impl(
         persist_key,
         persist_min_interval_ms,
     } = args;
-
-    let Some((_, trait_path, _)) = &item_impl.trait_ else {
-        return syn::Error::new_spanned(
-            &item_impl.impl_token,
-            "#[reducer(...)] must be applied to an `impl oxide_core::Reducer for <Type>` block",
-        )
-        .to_compile_error();
-    };
-    if !is_reducer_trait(trait_path) {
-        return syn::Error::new_spanned(
-            trait_path,
-            "#[reducer(...)] must be applied to an `impl oxide_core::Reducer for <Type>` block",
-        )
-        .to_compile_error();
-    }
-
-    let reducer_ident = match impl_reducer_ident(&item_impl) {
-        Ok(v) => v,
-        Err(e) => return e.to_compile_error(),
-    };
-
-    let state_ty = match impl_assoc_type(&item_impl, "State") {
-        Some(v) => v,
-        None => {
-            return syn::Error::new_spanned(
-                &item_impl.self_ty,
-                "Reducer impl is missing `type State = ...;`",
-            )
-            .to_compile_error();
-        }
-    };
-    let action_ty = match impl_assoc_type(&item_impl, "Action") {
-        Some(v) => v,
-        None => {
-            return syn::Error::new_spanned(
-                &item_impl.self_ty,
-                "Reducer impl is missing `type Action = ...;`",
-            )
-            .to_compile_error();
-        }
-    };
-    let _sideeffect_ty = match impl_assoc_type(&item_impl, "SideEffect") {
-        Some(v) => v,
-        None => {
-            return syn::Error::new_spanned(
-                &item_impl.self_ty,
-                "Reducer impl is missing `type SideEffect = ...;`",
-            )
-            .to_compile_error();
-        }
-    };
-
-    let init_fn = match find_impl_fn(&item_impl, "init") {
-        Some(v) => v,
-        None => {
-            return syn::Error::new_spanned(
-                &item_impl.self_ty,
-                "Reducer impl is missing `init` (expected `async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>)` or `fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>) -> impl Future<Output = ()> + Send`)",
-            )
-            .to_compile_error();
-        }
-    };
-    if let Err(e) = validate_init_sig(init_fn) {
-        return e.to_compile_error();
-    }
-
-    let reduce_fn = match find_impl_fn(&item_impl, "reduce") {
-        Some(v) => v,
-        None => {
-            return syn::Error::new_spanned(
-                &item_impl.self_ty,
-                "Reducer impl is missing `fn reduce(&mut self, state: &mut Self::State, ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State, ...>) -> CoreResult<StateChange<...>>`",
-            )
-            .to_compile_error();
-        }
-    };
-    if let Err(e) = validate_reduce_like_sig(reduce_fn, "reduce") {
-        return e.to_compile_error();
-    }
-
-    let effect_fn = match find_impl_fn(&item_impl, "effect") {
-        Some(v) => v,
-        None => {
-            return syn::Error::new_spanned(
-                &item_impl.self_ty,
-                "Reducer impl is missing `fn effect(&mut self, state: &mut Self::State, ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State, ...>) -> CoreResult<StateChange<...>>`",
-            )
-            .to_compile_error();
-        }
-    };
-    if let Err(e) = validate_reduce_like_sig(effect_fn, "effect") {
-        return e.to_compile_error();
-    }
-
-    let uses_sliced_updates =
-        fn_uses_sliced_state_change(reduce_fn) || fn_uses_sliced_state_change(effect_fn);
-
-    let sliced_state_assert = if uses_sliced_updates {
-        quote! {
-            const _: () = {
-                assert!(#state_ty::__OXIDE_SLICED_STATE);
-            };
-        }
-    } else {
-        quote!()
-    };
-
-    let state_slice_ty: Option<syn::Type> = if uses_sliced_updates {
-        let syn::Type::Path(state_path) = &state_ty else {
-            return syn::Error::new_spanned(
-                &state_ty,
-                "state type must be a path type to enable sliced updates",
-            )
-            .to_compile_error();
-        };
-        let mut slice_path = state_path.clone();
-        if let Some(last) = slice_path.path.segments.last_mut() {
-            last.ident = format_ident!("{}Slice", last.ident);
-            last.arguments = syn::PathArguments::None;
-        }
-        Some(syn::Type::Path(slice_path))
-    } else {
-        None
-    };
-
-    if let (true, Some(state_slice_ty)) = (uses_sliced_updates, state_slice_ty.as_ref()) {
-        let Some((_, trait_path, _)) = item_impl.trait_.as_mut() else {
-            return syn::Error::new_spanned(
-                &item_impl.impl_token,
-                "#[reducer(...)] must be applied to an `impl oxide_core::Reducer for <Type>` block",
-            )
-            .to_compile_error();
-        };
-        if let Some(last) = trait_path.segments.last_mut() {
-            let args: syn::AngleBracketedGenericArguments = syn::parse_quote!(<#state_slice_ty>);
-            last.arguments = syn::PathArguments::AngleBracketed(args);
-        }
-    }
-
-    let has_infer_slices = item_impl.items.iter().any(|item| match item {
-        ImplItem::Fn(f) if f.sig.ident == "infer_slices" => true,
-        _ => false,
-    });
-    if let (true, Some(state_slice_ty)) = (uses_sliced_updates, state_slice_ty.as_ref()) {
-        if !has_infer_slices {
-            let body: syn::Expr = syn::parse_quote!(Self::State::infer_slices_impl(before, after));
-            item_impl.items.push(syn::parse_quote!(
-                fn infer_slices(
-                    &self,
-                    before: &Self::State,
-                    after: &Self::State,
-                ) -> ::std::vec::Vec<#state_slice_ty> {
-                    #body
-                }
-            ));
-        }
-    }
-
-    if let (true, Some(state_slice_ty)) = (uses_sliced_updates, state_slice_ty.as_ref()) {
-        for item in item_impl.items.iter_mut() {
-            let ImplItem::Fn(f) = item else {
-                continue;
-            };
-            if f.sig.ident != "reduce" && f.sig.ident != "effect" {
-                continue;
-            }
-            f.sig.output = syn::parse_quote!(
-                -> ::oxide_core::CoreResult<::oxide_core::StateChange<#state_slice_ty>>
-            );
-        }
-    }
-
-    if persist_key.is_some() && !cfg!(feature = "state-persistence") {
-        return quote! {
-            compile_error!("oxide_generator_rs: reducer persistence requires enabling the `state-persistence` feature on oxide_generator_rs and oxide_core");
-        };
-    }
+    let ReducerAnalysis {
+        reducer_ident,
+        state_ty,
+        action_ty,
+        uses_sliced_updates,
+        state_slice_ty,
+        sliced_state_assert,
+    } = analysis;
 
     let reducer_name = reducer_ident.to_string();
     let state_name = type_path_last_segment(&state_ty);
