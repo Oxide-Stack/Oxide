@@ -12,11 +12,11 @@ pub(super) fn emit_metadata_json(
     fs::create_dir_all(&target_dir)
         .map_err(|e| syn::Error::new(manifest_dir.span(), e.to_string()))?;
     let file_path = target_dir.join(format!("{crate_name}.json"));
-    let json = serde_json::to_string_pretty(&RouteMetadataFile {
+    let json = RouteMetadataFile {
         crate_name: crate_name.to_string(),
         routes: routes.to_vec(),
-    })
-    .map_err(|e| syn::Error::new(manifest_dir.span(), e.to_string()))?;
+    }
+    .to_json();
     fs::write(&file_path, json).map_err(|e| syn::Error::new(file_path.span(), e.to_string()))?;
     Ok(())
 }

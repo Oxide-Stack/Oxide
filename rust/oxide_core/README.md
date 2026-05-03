@@ -191,7 +191,7 @@ If you are not using sliced updates, you can ignore `snapshot.slices` (it will r
 ## Feature Flags
 
 - `frb-spawn` (default): enables FRB’s `spawn` helper for cross-platform task spawning
-- `state-persistence`: enables bincode encode/decode helpers in `oxide_core::persistence`
+- `state-persistence`: enables bincode encode/decode helpers in `oxide_core::persistence` (no `serde_json` dependency)
 - `persistence-json`: adds JSON encode/decode helpers (requires `state-persistence`)
 - `full`: enables all persistence features
 - `internal-runtime` (default): enables a global Tokio runtime fallback on native targets

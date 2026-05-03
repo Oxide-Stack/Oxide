@@ -20,4 +20,11 @@ sealed class SettingsAction with _$SettingsAction {
       SettingsAction_SetMainColor;
   const factory SettingsAction.extractMainColor(String field0) =
       SettingsAction_ExtractMainColor;
+  const factory SettingsAction.resetState() = SettingsAction_ResetState;
+  const factory SettingsAction.openHome() = SettingsAction_OpenHome;
+  const factory SettingsAction.openSettings() = SettingsAction_OpenSettings;
+  const factory SettingsAction.openChannels() = SettingsAction_OpenChannels;
+  const factory SettingsAction.openBackendMatrix() =
+      SettingsAction_OpenBackendMatrix;
+  const factory SettingsAction.pop() = SettingsAction_Pop;
 }

@@ -1,6 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:oxide_annotations/oxide_annotations.dart';
 import 'package:showcase_app/oxide.dart';
+import 'package:showcase_app/presintation/screens/backend_matrix_screen.dart'
+    as backend_matrix_screen;
+import 'package:showcase_app/presintation/screens/channels_screen.dart'
+    as channels_screen;
 import 'package:showcase_app/presintation/screens/home_screen.dart'
     as home_screen;
 import 'package:showcase_app/presintation/screens/settings_screen.dart'
@@ -41,5 +45,29 @@ final class SplashPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const splash_screen.SplashScreen();
+  }
+}
+
+@OxideRoutePage(RouteKind.channelsScreen)
+final class ChannelsPage extends StatelessWidget {
+  const ChannelsPage({super.key, required this.route});
+
+  final ChannelsScreen route;
+
+  @override
+  Widget build(BuildContext context) {
+    return const channels_screen.ChannelsScreen();
+  }
+}
+
+@OxideRoutePage(RouteKind.backendMatrixScreen)
+final class BackendMatrixPage extends StatelessWidget {
+  const BackendMatrixPage({super.key, required this.route});
+
+  final BackendMatrixScreen route;
+
+  @override
+  Widget build(BuildContext context) {
+    return const backend_matrix_screen.BackendMatrixScreen();
   }
 }

@@ -11,16 +11,16 @@
 //! - `#[reducer(...)]` emits `ReducerMeta`
 
 use quote::quote;
-use serde::Serialize;
+use std::fmt::Write as _;
 use syn::{Attribute, ItemEnum, ItemStruct};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub(crate) struct FieldMeta {
     pub(crate) name: Option<String>,
     pub(crate) ty: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub(crate) struct StateMeta {
     pub(crate) kind: &'static str,
     pub(crate) name: String,
@@ -29,14 +29,14 @@ pub(crate) struct StateMeta {
     pub(crate) variants: Option<Vec<VariantMeta>>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub(crate) struct VariantMeta {
     pub(crate) name: String,
     pub(crate) docs: Vec<String>,
     pub(crate) fields: Vec<FieldMeta>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub(crate) struct ActionsMeta {
     pub(crate) kind: &'static str,
     pub(crate) name: String,
@@ -44,13 +44,186 @@ pub(crate) struct ActionsMeta {
     pub(crate) variants: Vec<VariantMeta>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub(crate) struct ReducerMeta {
     pub(crate) kind: &'static str,
     pub(crate) name: String,
     pub(crate) docs: Vec<String>,
     pub(crate) state: Option<String>,
     pub(crate) actions: Option<String>,
+}
+
+pub(crate) trait MetaDocJson {
+    fn write_json(&self, out: &mut String);
+
+    fn to_json(&self) -> String {
+        let mut out = String::new();
+        self.write_json(&mut out);
+        out
+    }
+}
+
+fn push_json_string(out: &mut String, value: &str) {
+    out.push('"');
+    for ch in value.chars() {
+        match ch {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            '\u{08}' => out.push_str("\\b"),
+            '\u{0C}' => out.push_str("\\f"),
+            c if c <= '\u{1F}' => {
+                let _ = write!(out, "\\u{:04x}", c as u32);
+            }
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+}
+
+fn push_json_string_array(out: &mut String, values: &[String]) {
+    out.push('[');
+    for (idx, value) in values.iter().enumerate() {
+        if idx > 0 {
+            out.push(',');
+        }
+        push_json_string(out, value);
+    }
+    out.push(']');
+}
+
+fn push_json_array<T: MetaDocJson>(out: &mut String, values: &[T]) {
+    out.push('[');
+    for (idx, value) in values.iter().enumerate() {
+        if idx > 0 {
+            out.push(',');
+        }
+        value.write_json(out);
+    }
+    out.push(']');
+}
+
+impl MetaDocJson for FieldMeta {
+    fn write_json(&self, out: &mut String) {
+        out.push('{');
+        push_json_string(out, "name");
+        out.push(':');
+        match &self.name {
+            Some(name) => push_json_string(out, name),
+            None => out.push_str("null"),
+        }
+        out.push(',');
+        push_json_string(out, "ty");
+        out.push(':');
+        push_json_string(out, &self.ty);
+        out.push('}');
+    }
+}
+
+impl MetaDocJson for VariantMeta {
+    fn write_json(&self, out: &mut String) {
+        out.push('{');
+        push_json_string(out, "name");
+        out.push(':');
+        push_json_string(out, &self.name);
+        out.push(',');
+        push_json_string(out, "docs");
+        out.push(':');
+        push_json_string_array(out, &self.docs);
+        out.push(',');
+        push_json_string(out, "fields");
+        out.push(':');
+        push_json_array(out, &self.fields);
+        out.push('}');
+    }
+}
+
+impl MetaDocJson for StateMeta {
+    fn write_json(&self, out: &mut String) {
+        out.push('{');
+        push_json_string(out, "kind");
+        out.push(':');
+        push_json_string(out, self.kind);
+        out.push(',');
+        push_json_string(out, "name");
+        out.push(':');
+        push_json_string(out, &self.name);
+        out.push(',');
+        push_json_string(out, "docs");
+        out.push(':');
+        push_json_string_array(out, &self.docs);
+        out.push(',');
+        push_json_string(out, "fields");
+        out.push(':');
+        match &self.fields {
+            Some(fields) => push_json_array(out, fields),
+            None => out.push_str("null"),
+        }
+        out.push(',');
+        push_json_string(out, "variants");
+        out.push(':');
+        match &self.variants {
+            Some(variants) => push_json_array(out, variants),
+            None => out.push_str("null"),
+        }
+        out.push('}');
+    }
+}
+
+impl MetaDocJson for ActionsMeta {
+    fn write_json(&self, out: &mut String) {
+        out.push('{');
+        push_json_string(out, "kind");
+        out.push(':');
+        push_json_string(out, self.kind);
+        out.push(',');
+        push_json_string(out, "name");
+        out.push(':');
+        push_json_string(out, &self.name);
+        out.push(',');
+        push_json_string(out, "docs");
+        out.push(':');
+        push_json_string_array(out, &self.docs);
+        out.push(',');
+        push_json_string(out, "variants");
+        out.push(':');
+        push_json_array(out, &self.variants);
+        out.push('}');
+    }
+}
+
+impl MetaDocJson for ReducerMeta {
+    fn write_json(&self, out: &mut String) {
+        out.push('{');
+        push_json_string(out, "kind");
+        out.push(':');
+        push_json_string(out, self.kind);
+        out.push(',');
+        push_json_string(out, "name");
+        out.push(':');
+        push_json_string(out, &self.name);
+        out.push(',');
+        push_json_string(out, "docs");
+        out.push(':');
+        push_json_string_array(out, &self.docs);
+        out.push(',');
+        push_json_string(out, "state");
+        out.push(':');
+        match &self.state {
+            Some(state) => push_json_string(out, state),
+            None => out.push_str("null"),
+        }
+        out.push(',');
+        push_json_string(out, "actions");
+        out.push(':');
+        match &self.actions {
+            Some(actions) => push_json_string(out, actions),
+            None => out.push_str("null"),
+        }
+        out.push('}');
+    }
 }
 
 pub(crate) fn collect_doc_lines(attrs: &[Attribute]) -> Vec<String> {
@@ -78,10 +251,9 @@ pub(crate) fn collect_doc_lines(attrs: &[Attribute]) -> Vec<String> {
         .collect()
 }
 
-pub(crate) fn push_meta_doc(attrs: &mut Vec<Attribute>, meta: &impl Serialize) {
+pub(crate) fn push_meta_doc(attrs: &mut Vec<Attribute>, meta: &impl MetaDocJson) {
     // Serialize metadata into a single doc string to keep it easy to locate and parse.
-    let meta_json =
-        serde_json::to_string(meta).expect("oxide_generator_rs: failed to serialize metadata");
+    let meta_json = meta.to_json();
     let meta_doc = syn::LitStr::new(
         &format!("oxide:meta:{meta_json}"),
         proc_macro2::Span::call_site(),
@@ -161,12 +333,6 @@ pub(crate) fn enum_variants(item: &ItemEnum) -> Vec<VariantMeta> {
 mod tests {
     use super::*;
 
-    #[derive(Serialize)]
-    struct DummyMeta {
-        kind: &'static str,
-        name: &'static str,
-    }
-
     #[test]
     fn collect_doc_lines_filters_oxide_markers() {
         let item: ItemStruct =
@@ -183,15 +349,18 @@ mod tests {
         let mut attrs: Vec<Attribute> = Vec::new();
         push_meta_doc(
             &mut attrs,
-            &DummyMeta {
-                kind: "state",
-                name: "AppState",
+            &ReducerMeta {
+                kind: "reducer",
+                name: "AppReducer".to_string(),
+                docs: Vec::new(),
+                state: Some("AppState".to_string()),
+                actions: Some("AppAction".to_string()),
             },
         );
         assert_eq!(attrs.len(), 1);
         let rendered = quote::quote!(#(#attrs)*).to_string();
         assert!(rendered.contains("oxide:meta:"));
-        assert!(rendered.contains("AppState"));
+        assert!(rendered.contains("AppReducer"));
     }
 
     #[test]

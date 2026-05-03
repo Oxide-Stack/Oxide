@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/isolated_channels_bridge.dart';
 import 'api/settings/actions.dart';
 import 'api/settings/dialogs.dart';
 import 'api/settings/dialogs/__oxide_isolated_callback_dialog_service.dart';
@@ -14,8 +15,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'frb_generated.dart';
+import 'isolated_channels_demo.dart';
+import 'isolated_channels_demo/channels.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_callback_showcase_demo_dialog.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_showcase_demo_duplex.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_duplex_showcase_demo_duplex/frb.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_showcase_demo_events.dart';
+import 'isolated_channels_demo/channels/__oxide_isolated_events_showcase_demo_events/frb.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 import 'routes.dart';
+import 'routes/backend_matrix_screen.dart';
+import 'routes/channels_screen.dart';
 import 'routes/home_screen.dart';
 import 'routes/oxide_navigation.dart';
 import 'routes/settings_screen.dart';
@@ -100,10 +110,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_StreamSink_settings_state_snapshot_Sse(dynamic raw);
 
   @protected
+  RustStreamSink<ShowcaseDemoDialogPendingRequest>
+  dco_decode_StreamSink_showcase_demo_dialog_pending_request_Sse(dynamic raw);
+
+  @protected
+  RustStreamSink<ShowcaseDemoEvent>
+  dco_decode_StreamSink_showcase_demo_event_Sse(dynamic raw);
+
+  @protected
+  RustStreamSink<ShowcaseDemoOut> dco_decode_StreamSink_showcase_demo_out_Sse(
+    dynamic raw,
+  );
+
+  @protected
   String dco_decode_String(dynamic raw);
 
   @protected
+  BackendMatrixScreen dco_decode_backend_matrix_screen(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  BackendMatrixScreen dco_decode_box_autoadd_backend_matrix_screen(dynamic raw);
+
+  @protected
+  ChannelsScreen dco_decode_box_autoadd_channels_screen(dynamic raw);
 
   @protected
   HomeScreen dco_decode_box_autoadd_home_screen(dynamic raw);
@@ -124,7 +156,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SettingsState dco_decode_box_autoadd_settings_state(dynamic raw);
 
   @protected
+  ShowcaseDemoDialogResponse
+  dco_decode_box_autoadd_showcase_demo_dialog_response(dynamic raw);
+
+  @protected
+  ShowcaseDemoIn dco_decode_box_autoadd_showcase_demo_in(dynamic raw);
+
+  @protected
+  ShowcaseDemoOut dco_decode_box_autoadd_showcase_demo_out(dynamic raw);
+
+  @protected
   SplashScreen dco_decode_box_autoadd_splash_screen(dynamic raw);
+
+  @protected
+  ChannelsScreen dco_decode_channels_screen(dynamic raw);
 
   @protected
   DialogService dco_decode_dialog_service(dynamic raw);
@@ -179,6 +224,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SettingsStateSnapshot dco_decode_settings_state_snapshot(dynamic raw);
+
+  @protected
+  ShowcaseDemoDialog dco_decode_showcase_demo_dialog(dynamic raw);
+
+  @protected
+  ShowcaseDemoDialogPendingRequest
+  dco_decode_showcase_demo_dialog_pending_request(dynamic raw);
+
+  @protected
+  ShowcaseDemoDialogRequest dco_decode_showcase_demo_dialog_request(
+    dynamic raw,
+  );
+
+  @protected
+  ShowcaseDemoDialogResponse dco_decode_showcase_demo_dialog_response(
+    dynamic raw,
+  );
+
+  @protected
+  ShowcaseDemoDuplex dco_decode_showcase_demo_duplex(dynamic raw);
+
+  @protected
+  ShowcaseDemoEvent dco_decode_showcase_demo_event(dynamic raw);
+
+  @protected
+  ShowcaseDemoEvents dco_decode_showcase_demo_events(dynamic raw);
+
+  @protected
+  ShowcaseDemoIn dco_decode_showcase_demo_in(dynamic raw);
+
+  @protected
+  ShowcaseDemoOut dco_decode_showcase_demo_out(dynamic raw);
 
   @protected
   SplashScreen dco_decode_splash_screen(dynamic raw);
@@ -261,10 +338,40 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<ShowcaseDemoDialogPendingRequest>
+  sse_decode_StreamSink_showcase_demo_dialog_pending_request_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<ShowcaseDemoEvent>
+  sse_decode_StreamSink_showcase_demo_event_Sse(SseDeserializer deserializer);
+
+  @protected
+  RustStreamSink<ShowcaseDemoOut> sse_decode_StreamSink_showcase_demo_out_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  BackendMatrixScreen sse_decode_backend_matrix_screen(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  BackendMatrixScreen sse_decode_box_autoadd_backend_matrix_screen(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ChannelsScreen sse_decode_box_autoadd_channels_screen(
+    SseDeserializer deserializer,
+  );
 
   @protected
   HomeScreen sse_decode_box_autoadd_home_screen(SseDeserializer deserializer);
@@ -293,9 +400,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ShowcaseDemoDialogResponse
+  sse_decode_box_autoadd_showcase_demo_dialog_response(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ShowcaseDemoIn sse_decode_box_autoadd_showcase_demo_in(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ShowcaseDemoOut sse_decode_box_autoadd_showcase_demo_out(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SplashScreen sse_decode_box_autoadd_splash_screen(
     SseDeserializer deserializer,
   );
+
+  @protected
+  ChannelsScreen sse_decode_channels_screen(SseDeserializer deserializer);
 
   @protected
   DialogService sse_decode_dialog_service(SseDeserializer deserializer);
@@ -364,6 +490,46 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SettingsStateSnapshot sse_decode_settings_state_snapshot(
     SseDeserializer deserializer,
   );
+
+  @protected
+  ShowcaseDemoDialog sse_decode_showcase_demo_dialog(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ShowcaseDemoDialogPendingRequest
+  sse_decode_showcase_demo_dialog_pending_request(SseDeserializer deserializer);
+
+  @protected
+  ShowcaseDemoDialogRequest sse_decode_showcase_demo_dialog_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ShowcaseDemoDialogResponse sse_decode_showcase_demo_dialog_response(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ShowcaseDemoDuplex sse_decode_showcase_demo_duplex(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ShowcaseDemoEvent sse_decode_showcase_demo_event(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ShowcaseDemoEvents sse_decode_showcase_demo_events(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ShowcaseDemoIn sse_decode_showcase_demo_in(SseDeserializer deserializer);
+
+  @protected
+  ShowcaseDemoOut sse_decode_showcase_demo_out(SseDeserializer deserializer);
 
   @protected
   SplashScreen sse_decode_splash_screen(SseDeserializer deserializer);
@@ -457,10 +623,46 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_showcase_demo_dialog_pending_request_Sse(
+    RustStreamSink<ShowcaseDemoDialogPendingRequest> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_showcase_demo_event_Sse(
+    RustStreamSink<ShowcaseDemoEvent> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_showcase_demo_out_Sse(
+    RustStreamSink<ShowcaseDemoOut> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_backend_matrix_screen(
+    BackendMatrixScreen self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_backend_matrix_screen(
+    BackendMatrixScreen self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_channels_screen(
+    ChannelsScreen self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_home_screen(
@@ -499,8 +701,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_showcase_demo_dialog_response(
+    ShowcaseDemoDialogResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_showcase_demo_in(
+    ShowcaseDemoIn self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_showcase_demo_out(
+    ShowcaseDemoOut self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_splash_screen(
     SplashScreen self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_channels_screen(
+    ChannelsScreen self,
     SseSerializer serializer,
   );
 
@@ -588,6 +814,60 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_settings_state_snapshot(
     SettingsStateSnapshot self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_showcase_demo_dialog(
+    ShowcaseDemoDialog self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_showcase_demo_dialog_pending_request(
+    ShowcaseDemoDialogPendingRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_showcase_demo_dialog_request(
+    ShowcaseDemoDialogRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_showcase_demo_dialog_response(
+    ShowcaseDemoDialogResponse self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_showcase_demo_duplex(
+    ShowcaseDemoDuplex self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_showcase_demo_event(
+    ShowcaseDemoEvent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_showcase_demo_events(
+    ShowcaseDemoEvents self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_showcase_demo_in(
+    ShowcaseDemoIn self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_showcase_demo_out(
+    ShowcaseDemoOut self,
     SseSerializer serializer,
   );
 

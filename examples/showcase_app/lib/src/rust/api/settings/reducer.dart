@@ -10,8 +10,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'state.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `SettingsReducer`, `__OxideReducerMarker_SettingsReducer`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `effect`, `from`, `init`, `reduce`
-// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `dispatch`, `new`, `subscribe`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `effect`, `from`, `infer_slices`, `init`, `reduce`
+// These functions are ignored (category: IgnoreBecauseExplicitAttribute): `current`, `decode_state_value`, `dispatch`, `encode_current_state`, `encode_state_value`, `new`, `subscribe`
 // These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `default`
 
 Future<ArcSettingsEngine> createEngine() =>
@@ -47,11 +47,16 @@ abstract class OxideError implements RustOpaqueInterface {}
 class SettingsStateSnapshot {
   final BigInt revision;
   final SettingsState state;
+  final List<SettingsStateSlice> slices;
 
-  const SettingsStateSnapshot({required this.revision, required this.state});
+  const SettingsStateSnapshot({
+    required this.revision,
+    required this.state,
+    required this.slices,
+  });
 
   @override
-  int get hashCode => revision.hashCode ^ state.hashCode;
+  int get hashCode => revision.hashCode ^ state.hashCode ^ slices.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -59,5 +64,6 @@ class SettingsStateSnapshot {
       other is SettingsStateSnapshot &&
           runtimeType == other.runtimeType &&
           revision == other.revision &&
-          state == other.state;
+          state == other.state &&
+          slices == other.slices;
 }

@@ -6,15 +6,19 @@
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+import 'routes/backend_matrix_screen.dart';
+import 'routes/channels_screen.dart';
 import 'routes/home_screen.dart';
 import 'routes/settings_screen.dart';
 import 'routes/splash_screen.dart';
 part 'routes.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `from_kind_and_payload`, `payload_json`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `as_str`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `from`, `from`, `from`, `hash`, `into_payload`, `into_payload`, `into_payload`, `kind`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `as_str`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `hash`, `into_payload`, `into_payload`, `into_payload`, `into_payload`, `into_payload`, `kind`
 
 enum RouteKind {
+  backendMatrixScreen,
+  channelsScreen,
   homeScreen,
   settingsScreen,
   splashScreen;
@@ -30,6 +34,10 @@ enum RouteKind {
 sealed class RoutePayload with _$RoutePayload {
   const RoutePayload._();
 
+  const factory RoutePayload.backendMatrixScreen(BackendMatrixScreen field0) =
+      RoutePayload_BackendMatrixScreen;
+  const factory RoutePayload.channelsScreen(ChannelsScreen field0) =
+      RoutePayload_ChannelsScreen;
   const factory RoutePayload.homeScreen(HomeScreen field0) =
       RoutePayload_HomeScreen;
   const factory RoutePayload.settingsScreen(SettingsScreen field0) =

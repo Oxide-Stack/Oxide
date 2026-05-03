@@ -1,17 +1,50 @@
 # showcase_app
 
-A new Flutter project.
+End-to-end Oxide showcase application demonstrating the full platform surface:
 
-## Getting Started
+- Rust-driven navigation (`@OxideApp`, `@OxideRoutePage`, route payloads)
+- Reducer state + sliced updates (`#[state(sliced = true)]`, `StateChange::Infer`)
+- Isolated channels (event, callbacking, duplex)
+- State persistence (`state-persistence` feature + reducer persistence config)
+- Multiple generated Flutter backends (Inherited, Hooks, Riverpod, BLoC)
 
-This project is a starting point for a Flutter application.
+## Feature Tour
 
-A few resources to get you started if this is your first Flutter project:
+1. **Splash -> Home (Rust navigation)**
+   - App starts on `SplashScreen` route and transitions using Rust-dispatched actions.
+2. **Settings**
+   - Change theme and main color.
+   - Extract dominant color from an image path.
+   - Reset/reload persisted state.
+3. **Isolated Channels Demo**
+   - Emit Rust -> Dart events.
+   - Handle Rust -> Dart -> Rust callback confirmations.
+   - Exercise duplex outgoing/incoming channels.
+4. **Backend Matrix**
+   - Compare the same Rust state/actions across Inherited, Hooks, Riverpod, and BLoC integrations.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Run Locally (Windows fast gate)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+From `examples/showcase_app/`:
+
+```powershell
+flutter pub get
+flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+Set-Location rust; cargo test; Set-Location ..
+dart run build_runner build -d
+flutter build windows --debug
+```
+
+## Start the App
+
+From `examples/showcase_app/`:
+
+```powershell
+flutter run -d windows
+```
+
+## Notes
+
+- If you change Rust API surface, rerun FRB codegen.
+- If you change `@OxideStore` / route annotations, rerun `build_runner`.
+- Friction points and workarounds are tracked in the repository root at [`friction.md`](../../friction.md).

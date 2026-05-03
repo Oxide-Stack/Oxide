@@ -828,8 +828,6 @@ dependencies = [
  "oxide_core",
  "proc-macro2",
  "quote",
- "serde",
- "serde_json",
  "syn",
  "trybuild",
 ]

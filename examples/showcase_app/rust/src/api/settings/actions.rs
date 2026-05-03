@@ -6,4 +6,10 @@ pub enum SettingsAction {
     SetTheme(Theme),
     SetMainColor(String),     // color hex value
     ExtractMainColor(String), // Path to the image
+    ResetState,
+    OpenHome,
+    OpenSettings,
+    OpenChannels,
+    OpenBackendMatrix,
+    Pop,
 }

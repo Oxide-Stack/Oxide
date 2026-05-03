@@ -42,6 +42,8 @@ dependencies:
     path: ../../flutter/oxide_runtime
   flutter_hooks: ^0.21.3+1
   hooks_riverpod: ^3.3.1
+  bloc: ^9.0.0
+  flutter_bloc: ^9.1.1
 
 dev_dependencies:
   flutter_test:

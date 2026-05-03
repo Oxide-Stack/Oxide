@@ -39,6 +39,8 @@ The macro ensures these derives exist:
 
 Serialization derives (`Serialize`, `Deserialize`) are only added when the `state-persistence` feature is enabled on `oxide_generator_rs`. When enabled, the macro also injects `#[serde(crate = "oxide_core::serde")]` so downstream crates do not need to depend on `serde` directly.
 
+If your persisted state references nested custom structs/enums (for example, a `Theme` enum field), annotate those nested types with `#[state]` as well to get the same automatic derive behavior and avoid manual serde derive friction.
+
 Example (struct state):
 
 ```rust,ignore

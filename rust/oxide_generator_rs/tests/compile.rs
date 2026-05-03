@@ -10,6 +10,7 @@ fn ui() {
     t.pass("tests/ui/pass_reducer_infer_glob_import.rs");
     if cfg!(feature = "state-persistence") {
         t.pass("tests/ui/pass_reducer_persistence.rs");
+        t.pass("tests/ui/pass_reducer_persistence_nested_type.rs");
     }
 
     t.compile_fail("tests/ui/fail_state_wrong_target.rs");

@@ -7,7 +7,7 @@ import '../../config/enums/theme_type.dart';
 import '../../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `infer_slices`
 
 ///oxide:state
 ///oxide:meta:{"kind":"state","name":"SettingsState","docs":[],"fields":[{"name":"theme","ty":"Theme"},{"name":"main_color","ty":"String"}],"variants":null}
@@ -37,4 +37,7 @@ class SettingsState {
           mainColor == other.mainColor;
 }
 
-enum SettingsStateSlice { oxideUnused }
+/// Slice identifiers for top-level segments of this state.
+///
+/// This enum is generated when `#[state(sliced = true)]` is enabled.
+enum SettingsStateSlice { theme, mainColor }
