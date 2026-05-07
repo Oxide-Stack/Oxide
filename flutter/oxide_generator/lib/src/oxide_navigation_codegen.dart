@@ -767,6 +767,30 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
       '  setCurrentRoute: (route) => rust_nav.oxideNavSetCurrentRoute('
       'route: route == null ? null : _toRustRoutePayload(route)),',
     )
+    ..writeln('  emitRouteUpdate: (update) {')
+    ..writeln('    final rustOperation = switch (update.operation) {')
+    ..writeln('      OxideRouteOperation.push => rust_nav.RouteOperation.push,')
+    ..writeln('      OxideRouteOperation.pop => rust_nav.RouteOperation.pop,')
+    ..writeln('      OxideRouteOperation.popUntil => rust_nav.RouteOperation.popUntil,')
+    ..writeln('      OxideRouteOperation.reset => rust_nav.RouteOperation.reset,')
+    ..writeln('      OxideRouteOperation.sync => rust_nav.RouteOperation.sync,')
+    ..writeln('    };')
+    ..writeln('    return rust_nav.oxideNavRouteUpdate(')
+    ..writeln('      update: rust_nav.RouteUpdateContext(')
+    ..writeln('        operation: rustOperation,')
+    ..writeln(
+      '        route: update.route == null ? null : _toRustRoutePayload(update.route!),',
+    )
+    ..writeln(
+      '        resultJson: update.result == null ? null : jsonEncode(update.result),',
+    )
+    ..writeln(
+      '        argumentsJson: update.arguments == null ? null : jsonEncode(update.arguments),',
+    )
+    ..writeln('        firstPush: update.firstPush,')
+    ..writeln('      ),')
+    ..writeln('    );')
+    ..writeln('  },')
     ..writeln(');')
     ..writeln()
     ..writeln(

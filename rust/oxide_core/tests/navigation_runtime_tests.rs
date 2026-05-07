@@ -3,7 +3,7 @@
 use oxide_core::OxideError;
 use oxide_core::navigation::{
     DefaultExtra, DefaultReturn, NavCommand, NavRoute, NoExtra, NoReturn, OxideRoute,
-    OxideRouteKind, OxideRoutePayload, Route, RouteContext,
+    OxideRouteKind, OxideRoutePayload, Route, RouteContext, RouteOperation, RouteUpdate,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -462,6 +462,37 @@ fn set_current_route_updates_context() {
     );
 }
 
+#[test]
+fn set_route_update_persists_transition_context() {
+    let runtime = oxide_core::NavigationRuntime::new();
+    runtime.set_route_update(RouteUpdate {
+        operation: RouteOperation::Push,
+        route: Some(NavRoute {
+            kind: "Home".to_string(),
+            payload: serde_json::json!({"id": 1}),
+            extras: None,
+        }),
+        result: None,
+        arguments: Some(serde_json::json!({"source": "deeplink"})),
+        first_push: true,
+    });
+
+    let context = runtime.current_route_context();
+    assert_eq!(context.current.as_ref().map(|route| route.kind.as_str()), Some("Home"));
+    assert!(context.last_update.is_some());
+    assert_eq!(
+        context.last_update.as_ref().map(|update| update.operation),
+        Some(RouteOperation::Push)
+    );
+    assert_eq!(
+        context
+            .last_update
+            .as_ref()
+            .and_then(|update| update.arguments.clone()),
+        Some(serde_json::json!({"source": "deeplink"}))
+    );
+}
+
 #[tokio::test]
 async fn navigation_ctx_emits_commands_and_exposes_route() {
     let runtime = oxide_core::NavigationRuntime::new();
@@ -471,6 +502,7 @@ async fn navigation_ctx_emits_commands_and_exposes_route() {
             payload: serde_json::json!({"id": 3}),
             extras: None,
         }),
+        last_update: None,
     };
     let nav = oxide_core::NavigationCtx::new(&runtime, &context);
 

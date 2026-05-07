@@ -284,6 +284,38 @@ void main() {
     expect(commandError.error, isA<StateError>());
     expect(streamError.error, isA<StateError>());
   });
+
+  test('route updates include operation metadata and first push marker', () async {
+    final controller = StreamController<OxideNavigationCommand<String, String>>();
+    final handler = _TestHandler();
+    final updates = <OxideRouteUpdate<String, String>>[];
+
+    final runtime = OxideNavigationRuntime<String, String>(
+      commands: controller.stream,
+      handler: handler,
+      emitResult: (_, __) async {},
+      setCurrentRoute: (_) async {},
+      kindOf: (r) => r,
+      emitRouteUpdate: (update) async => updates.add(update),
+    );
+
+    runtime.start();
+    controller.add(OxideNavigationCommand.push(route: 'A', ticket: null));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    controller.add(OxideNavigationCommand.pop(result: 7));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    handler.completePush('A', 7);
+
+    expect(updates.length, greaterThanOrEqualTo(2));
+    expect(updates.first.operation, OxideRouteOperation.push);
+    expect(updates.first.firstPush, isTrue);
+    expect(updates[1].operation, OxideRouteOperation.pop);
+    expect(updates[1].result, 7);
+
+    await controller.close();
+    await runtime.dispose();
+  });
 }
 
 final class _FailingPushHandler implements OxideNavigationHandler<String, String> {

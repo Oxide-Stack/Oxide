@@ -1,6 +1,5 @@
 use oxide_generator_rs::{oxide_callback, oxide_event_channel};
 
-#[allow(unused_imports)]
 pub use oxide_core::OxideChannelError;
 
 use crate::isolated_channels_demo::set_last_incoming_text;

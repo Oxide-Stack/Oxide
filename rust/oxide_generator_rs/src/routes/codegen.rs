@@ -2,6 +2,7 @@ use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::quote;
 use syn::LitStr;
 
+use crate::routes::args::RoutesArgs;
 use crate::routes::model::RouteMeta;
 
 pub(super) fn generate_navigation_module(routes: &[RouteMeta]) -> syn::Result<TokenStream2> {
@@ -75,7 +76,57 @@ pub(super) fn generate_oxide_init_module() -> syn::Result<TokenStream2> {
     })
 }
 
-pub(super) fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
+pub(super) fn generate_route_context_types() -> syn::Result<TokenStream2> {
+    Ok(quote! {
+        #[flutter_rust_bridge::frb(non_opaque)]
+        #[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+        pub enum RouteOperation {
+            Push,
+            Pop,
+            PopUntil,
+            Reset,
+            Sync,
+        }
+
+        #[flutter_rust_bridge::frb(non_opaque)]
+        #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+        pub struct RouteInitContext {
+            pub route: RoutePayload,
+        }
+
+        #[flutter_rust_bridge::frb(non_opaque)]
+        #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+        pub struct RouteUpdateContext {
+            pub operation: RouteOperation,
+            pub route: Option<RoutePayload>,
+            pub result_json: Option<String>,
+            pub arguments_json: Option<String>,
+            pub first_push: bool,
+        }
+    })
+}
+
+pub(super) fn generate_navigation_bridge_module(args: &RoutesArgs) -> syn::Result<TokenStream2> {
+    let init_hook_call = if let Some(path) = &args.init {
+        quote! {
+            super::#path(ctx)
+        }
+    } else {
+        quote! {
+            Ok(())
+        }
+    };
+
+    let on_change_hook_call = if let Some(path) = &args.on_route_change {
+        quote! {
+            super::#path(ctx)
+        }
+    } else {
+        quote! {
+            Ok(())
+        }
+    };
+
     Ok(quote! {
         pub mod oxide_navigation {
             pub use crate::routes::{RouteKind, RoutePayload};
@@ -134,6 +185,53 @@ pub(super) fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
                     payload,
                     extras: None,
                 }));
+                Ok(())
+            }
+
+            #[flutter_rust_bridge::frb]
+            pub fn oxide_nav_route_update(
+                update: crate::routes::RouteUpdateContext,
+            ) -> Result<(), oxide_core::OxideError> {
+                crate::navigation::runtime::init()?;
+                let runtime = oxide_core::navigation_runtime()?;
+                let crate::routes::RouteUpdateContext {
+                    operation,
+                    route,
+                    result_json,
+                    arguments_json,
+                    first_push,
+                } = update.clone();
+
+                if first_push {
+                    if let Some(route_payload) = route.clone() {
+                        __oxide_nav_call_init(crate::routes::RouteInitContext { route: route_payload })?;
+                    }
+                }
+                __oxide_nav_call_on_route_change(update)?;
+
+                let route_for_runtime = match route {
+                    Some(route) => {
+                        let kind = route.kind().as_str().to_string();
+                        let payload = route.payload_json()?;
+                        Some(oxide_core::navigation::NavRoute {
+                            kind,
+                            payload,
+                            extras: None,
+                        })
+                    }
+                    None => None,
+                };
+                let result = parse_optional_json(result_json, "result_json")?;
+                let arguments = parse_optional_json(arguments_json, "arguments_json")?;
+
+                runtime.set_route_update(oxide_core::navigation::RouteUpdate {
+                    operation: map_route_operation(operation),
+                    route: route_for_runtime.clone(),
+                    result,
+                    arguments,
+                    first_push,
+                });
+                runtime.set_current_route(route_for_runtime);
                 Ok(())
             }
 
@@ -202,6 +300,50 @@ pub(super) fn generate_navigation_bridge_module() -> syn::Result<TokenStream2> {
             ) -> ::oxide_core::CoreResult<RoutePayload> {
                 let ::oxide_core::navigation::NavRoute { kind, payload, .. } = route;
                 RoutePayload::from_kind_and_payload(&kind, payload)
+            }
+
+            fn map_route_operation(
+                operation: crate::routes::RouteOperation,
+            ) -> oxide_core::navigation::RouteOperation {
+                match operation {
+                    crate::routes::RouteOperation::Push => oxide_core::navigation::RouteOperation::Push,
+                    crate::routes::RouteOperation::Pop => oxide_core::navigation::RouteOperation::Pop,
+                    crate::routes::RouteOperation::PopUntil => oxide_core::navigation::RouteOperation::PopUntil,
+                    crate::routes::RouteOperation::Reset => oxide_core::navigation::RouteOperation::Reset,
+                    crate::routes::RouteOperation::Sync => oxide_core::navigation::RouteOperation::Sync,
+                }
+            }
+
+            fn parse_optional_json(
+                value: Option<String>,
+                field_name: &str,
+            ) -> Result<Option<::serde_json::Value>, oxide_core::OxideError> {
+                let Some(value) = value else {
+                    return Ok(None);
+                };
+                let parsed = ::serde_json::from_str::<::serde_json::Value>(&value).map_err(|e| {
+                    oxide_core::OxideError::Validation {
+                        message: format!("invalid {field_name} JSON: {e}"),
+                    }
+                })?;
+                Ok(Some(parsed))
+            }
+
+            fn __oxide_nav_call_init(ctx: crate::routes::RouteInitContext) -> oxide_core::CoreResult<()> {
+                static INIT_HOOK_TRIGGERED: ::std::sync::OnceLock<()> = ::std::sync::OnceLock::new();
+                if INIT_HOOK_TRIGGERED.get().is_some() {
+                    return Ok(());
+                }
+                if INIT_HOOK_TRIGGERED.set(()).is_err() {
+                    return Ok(());
+                }
+                #init_hook_call
+            }
+
+            fn __oxide_nav_call_on_route_change(
+                ctx: crate::routes::RouteUpdateContext,
+            ) -> oxide_core::CoreResult<()> {
+                #on_change_hook_call
             }
         }
     })

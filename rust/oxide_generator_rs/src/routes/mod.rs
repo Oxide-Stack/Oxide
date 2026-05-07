@@ -7,6 +7,7 @@ mod model;
 mod route_struct;
 
 pub use args::OxideRouteArgs;
+pub use args::RoutesArgs;
 pub use expand::expand_routes_module;
 pub use route_struct::expand_oxide_route_struct;
 

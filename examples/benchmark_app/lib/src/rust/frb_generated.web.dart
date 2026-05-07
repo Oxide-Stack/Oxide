@@ -188,6 +188,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BenchDetailRoute dco_decode_bench_detail_route(dynamic raw);
 
   @protected
+  bool dco_decode_bool(dynamic raw);
+
+  @protected
   BenchDetailRoute dco_decode_box_autoadd_bench_detail_route(dynamic raw);
 
   @protected
@@ -213,6 +216,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RoutePayload dco_decode_box_autoadd_route_payload(dynamic raw);
+
+  @protected
+  RouteUpdateContext dco_decode_box_autoadd_route_update_context(dynamic raw);
 
   @protected
   RoutingBenchRoute dco_decode_box_autoadd_routing_bench_route(dynamic raw);
@@ -296,7 +302,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RouteKind dco_decode_route_kind(dynamic raw);
 
   @protected
+  RouteOperation dco_decode_route_operation(dynamic raw);
+
+  @protected
   RoutePayload dco_decode_route_payload(dynamic raw);
+
+  @protected
+  RouteUpdateContext dco_decode_route_update_context(dynamic raw);
 
   @protected
   RoutingBenchRoute dco_decode_routing_bench_route(dynamic raw);
@@ -462,6 +474,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BenchDetailRoute sse_decode_bench_detail_route(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
   BenchDetailRoute sse_decode_box_autoadd_bench_detail_route(
     SseDeserializer deserializer,
   );
@@ -493,6 +508,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RoutePayload sse_decode_box_autoadd_route_payload(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RouteUpdateContext sse_decode_box_autoadd_route_update_context(
     SseDeserializer deserializer,
   );
 
@@ -600,7 +620,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RouteKind sse_decode_route_kind(SseDeserializer deserializer);
 
   @protected
+  RouteOperation sse_decode_route_operation(SseDeserializer deserializer);
+
+  @protected
   RoutePayload sse_decode_route_payload(SseDeserializer deserializer);
+
+  @protected
+  RouteUpdateContext sse_decode_route_update_context(
+    SseDeserializer deserializer,
+  );
 
   @protected
   RoutingBenchRoute sse_decode_routing_bench_route(
@@ -638,9 +666,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
-
-  @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
   void sse_encode_AnyhowException(
@@ -800,6 +825,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_bench_detail_route(
     BenchDetailRoute self,
     SseSerializer serializer,
@@ -850,6 +878,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_route_payload(
     RoutePayload self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_route_update_context(
+    RouteUpdateContext self,
     SseSerializer serializer,
   );
 
@@ -986,7 +1020,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_route_kind(RouteKind self, SseSerializer serializer);
 
   @protected
+  void sse_encode_route_operation(
+    RouteOperation self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_route_payload(RoutePayload self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_route_update_context(
+    RouteUpdateContext self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_routing_bench_route(
@@ -1029,9 +1075,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
 }
 
 // Section: wire_class

@@ -210,6 +210,7 @@ fn expand_duplex_channel(
         "__oxide_isolated_duplex_{}",
         to_snake_case(&self_ident.to_string())
     );
+    let channel_error_alias_ident = format_ident!("OxideChannelError{}", self_ident);
     let send_helpers = generate_duplex_outgoing_helpers(
         &self_ident,
         &outgoing_ty,
@@ -274,7 +275,7 @@ fn expand_duplex_channel(
                 #[flutter_rust_bridge::frb]
                 pub fn #incoming_fn_ident(
                     event: #incoming_ty,
-                ) -> Result<(), oxide_core::OxideChannelError> {
+                ) -> Result<(), #channel_error_alias_ident> {
                     super::incoming().handle(event)
                 }
             }
@@ -283,6 +284,8 @@ fn expand_duplex_channel(
 
     let expanded = quote! {
         #item_impl
+
+        pub type #channel_error_alias_ident = ::oxide_core::OxideChannelError;
 
         #send_helpers
 

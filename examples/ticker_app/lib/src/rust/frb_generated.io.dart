@@ -120,6 +120,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RoutePayload dco_decode_box_autoadd_route_payload(dynamic raw);
 
   @protected
+  RouteUpdateContext dco_decode_box_autoadd_route_update_context(dynamic raw);
+
+  @protected
   SplashRoute dco_decode_box_autoadd_splash_route(dynamic raw);
 
   @protected
@@ -176,7 +179,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RouteKind dco_decode_route_kind(dynamic raw);
 
   @protected
+  RouteOperation dco_decode_route_operation(dynamic raw);
+
+  @protected
   RoutePayload dco_decode_route_payload(dynamic raw);
+
+  @protected
+  RouteUpdateContext dco_decode_route_update_context(dynamic raw);
 
   @protected
   SplashRoute dco_decode_splash_route(dynamic raw);
@@ -298,6 +307,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RouteUpdateContext sse_decode_box_autoadd_route_update_context(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SplashRoute sse_decode_box_autoadd_splash_route(SseDeserializer deserializer);
 
   @protected
@@ -368,7 +382,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RouteKind sse_decode_route_kind(SseDeserializer deserializer);
 
   @protected
+  RouteOperation sse_decode_route_operation(SseDeserializer deserializer);
+
+  @protected
   RoutePayload sse_decode_route_payload(SseDeserializer deserializer);
+
+  @protected
+  RouteUpdateContext sse_decode_route_update_context(
+    SseDeserializer deserializer,
+  );
 
   @protected
   SplashRoute sse_decode_splash_route(SseDeserializer deserializer);
@@ -521,6 +543,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_route_update_context(
+    RouteUpdateContext self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_splash_route(
     SplashRoute self,
     SseSerializer serializer,
@@ -611,7 +639,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_route_kind(RouteKind self, SseSerializer serializer);
 
   @protected
+  void sse_encode_route_operation(
+    RouteOperation self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_route_payload(RoutePayload self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_route_update_context(
+    RouteUpdateContext self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_splash_route(SplashRoute self, SseSerializer serializer);

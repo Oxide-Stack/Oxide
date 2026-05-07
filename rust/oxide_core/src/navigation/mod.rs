@@ -51,6 +51,6 @@ pub use no_extra::NoExtra;
 pub use no_return::NoReturn;
 pub use oxide_route_traits::{OxideRoute, OxideRouteKind, OxideRoutePayload};
 pub use route::Route;
-pub use route_context::RouteContext;
+pub use route_context::{RouteContext, RouteOperation, RouteUpdate};
 pub use route_extra::RouteExtra;
 pub use route_return::RouteReturn;

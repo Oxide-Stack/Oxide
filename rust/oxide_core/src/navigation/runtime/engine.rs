@@ -5,7 +5,7 @@ use tokio::sync::{Mutex, mpsc, watch};
 use super::ticket_registry::TicketRegistry;
 use crate::engine::{CoreResult, OxideError};
 use crate::navigation::{
-    NavCommand, NavRoute, OxideRoute, OxideRouteKind, OxideRoutePayload, RouteContext,
+    NavCommand, NavRoute, OxideRoute, OxideRouteKind, OxideRoutePayload, RouteContext, RouteUpdate,
 };
 
 /// Rust-side navigation runtime.
@@ -84,7 +84,19 @@ impl NavigationRuntime {
 
     /// Sets the current route context (called by Dart).
     pub fn set_current_route(&self, route: Option<NavRoute>) {
-        let _ = self.route_tx.send(RouteContext { current: route });
+        let previous_update = self.route_tx.borrow().last_update.clone();
+        self.route_tx.send_replace(RouteContext {
+            current: route,
+            last_update: previous_update,
+        });
+    }
+
+    /// Sets a full route update context (called by Dart navigation middleware).
+    pub fn set_route_update(&self, update: RouteUpdate) {
+        self.route_tx.send_replace(RouteContext {
+            current: update.route.clone(),
+            last_update: Some(update),
+        });
     }
 
     /// Emits a push command without expecting a result.

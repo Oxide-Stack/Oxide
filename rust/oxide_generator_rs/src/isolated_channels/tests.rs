@@ -183,6 +183,7 @@ fn callbacking_generates_methods_and_runtime_module() {
 
     let ts = expand_oxide_callback(OxideCallbackArgs { no_frb: true }, item_impl).unwrap();
     let out = ts.to_string();
+    let compact: String = out.chars().filter(|c| !c.is_whitespace()).collect();
     assert!(
         out.contains("pub async fn confirm"),
         "expected confirm method, got: {out}"
@@ -192,6 +193,14 @@ fn callbacking_generates_methods_and_runtime_module() {
         "expected ping method, got: {out}"
     );
     assert!(out.contains("__oxide_isolated_callback_dialog_service"));
+    assert!(
+        compact.contains("pubtypeOxideChannelErrorDialogService=::oxide_core::OxideChannelError;"),
+        "expected generated OxideChannelError alias for callback service, got: {out}"
+    );
+    assert!(
+        compact.contains("->Result<bool,OxideChannelErrorDialogService>"),
+        "expected callback methods to use generated OxideChannelError alias, got: {out}"
+    );
 }
 
 #[test]
@@ -368,6 +377,15 @@ fn event_channel_duplex_generates_outgoing_frb_guard_helper() {
             .count()
             >= 2,
         "expected duplex outgoing stream path and helper declaration, got: {out}"
+    );
+    let compact: String = out.chars().filter(|c| !c.is_whitespace()).collect();
+    assert!(
+        compact.contains("pubtypeOxideChannelErrorDuplexChannel=::oxide_core::OxideChannelError;"),
+        "expected generated OxideChannelError alias for duplex channel, got: {out}"
+    );
+    assert!(
+        compact.contains("->Result<(),OxideChannelErrorDuplexChannel>"),
+        "expected duplex incoming bridge to use generated OxideChannelError alias, got: {out}"
     );
 }
 

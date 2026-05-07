@@ -23,6 +23,24 @@ sealed class OxideNavigationCommand<RouteT extends Object, KindT extends Object>
   const factory OxideNavigationCommand.reset({required List<RouteT> routes}) = OxideNavigationReset<RouteT, KindT>;
 }
 
+enum OxideRouteOperation { push, pop, popUntil, reset, sync }
+
+final class OxideRouteUpdate<RouteT extends Object, KindT extends Object> {
+  const OxideRouteUpdate({
+    required this.operation,
+    this.route,
+    this.result,
+    this.arguments,
+    this.firstPush = false,
+  });
+
+  final OxideRouteOperation operation;
+  final RouteT? route;
+  final Object? result;
+  final Object? arguments;
+  final bool firstPush;
+}
+
 /// Push command.
 final class OxideNavigationPush<RouteT extends Object, KindT extends Object> extends OxideNavigationCommand<RouteT, KindT> {
   const OxideNavigationPush({required this.route, this.ticket});

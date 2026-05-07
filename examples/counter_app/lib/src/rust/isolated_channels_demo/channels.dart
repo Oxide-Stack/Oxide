@@ -16,7 +16,7 @@ part 'channels.freezed.dart';
 Future<void> installDuplexIncomingHandler() => RustLib.instance.api
     .crateIsolatedChannelsDemoChannelsInstallDuplexIncomingHandler();
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner< OxideChannelError>>
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<:: OxideChannelError>>
 abstract class OxideChannelError implements RustOpaqueInterface {}
 
 /// Demo callback service used to request user confirmation from Dart.

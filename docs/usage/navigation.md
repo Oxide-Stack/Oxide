@@ -46,7 +46,28 @@ pub struct SplashRoute {}
 
 The macro scans `src/routes/` and writes a JSON metadata file to `target/oxide_routes/`. The Dart generator reads that file.
 
-When `navigation-binding` is enabled, the macro generates FRB-ready navigation endpoints under `crate::routes::oxide_navigation` (for example: `init_navigation`, `oxide_nav_commands_stream`, `oxide_nav_emit_result`, `oxide_nav_set_current_route`). Do not hand-write these bindings; the examples re-export them through `crate::api::oxide_navigation` for FRB discovery.
+When `navigation-binding` is enabled, the macro generates FRB-ready navigation endpoints under `crate::routes::oxide_navigation` (for example: `init_navigation`, `oxide_nav_commands_stream`, `oxide_nav_emit_result`, `oxide_nav_set_current_route`, `oxide_nav_route_update`). Do not hand-write these bindings; the examples re-export them through `crate::api::oxide_navigation` for FRB discovery.
+
+Optional route hooks can be configured directly on `#[routes(...)]`:
+
+```rust
+#[oxide_generator_rs::routes(init = on_nav_init, on_route_change = on_route_changed)]
+pub mod routes {
+    fn on_nav_init(ctx: RouteInitContext) -> oxide_core::CoreResult<()> {
+        let _ = ctx;
+        Ok(())
+    }
+
+    fn on_route_changed(ctx: RouteUpdateContext) -> oxide_core::CoreResult<()> {
+        let _ = ctx;
+        Ok(())
+    }
+}
+```
+
+Hook signatures are validated by the macro with explicit diagnostics:
+- `init` must be a function in the same `routes` module with signature `fn(RouteInitContext) -> oxide_core::CoreResult<()>`.
+- `on_route_change` must be a function in the same `routes` module with signature `fn(RouteUpdateContext) -> oxide_core::CoreResult<()>`.
 
 ## Bind Routes to Widgets in Dart
 

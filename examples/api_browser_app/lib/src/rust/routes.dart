@@ -12,7 +12,8 @@ import 'routes/user_detail_route.dart';
 part 'routes.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `from_kind_and_payload`, `payload_json`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `as_str`, `assert_receiver_is_total_eq`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `from`, `from`, `from`, `hash`, `into_payload`, `into_payload`, `into_payload`, `kind`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `RouteInitContext`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `as_str`, `assert_receiver_is_total_eq`, `assert_receiver_is_total_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `hash`, `into_payload`, `into_payload`, `into_payload`, `kind`
 
 enum RouteKind {
   home,
@@ -26,6 +27,8 @@ enum RouteKind {
       RustLib.instance.api.crateRoutesRouteKindFromStr(s: s);
 }
 
+enum RouteOperation { push, pop, popUntil, reset, sync_ }
+
 @freezed
 sealed class RoutePayload with _$RoutePayload {
   const RoutePayload._();
@@ -37,4 +40,39 @@ sealed class RoutePayload with _$RoutePayload {
 
   Future<RouteKind> kind() =>
       RustLib.instance.api.crateRoutesRoutePayloadKind(that: this);
+}
+
+class RouteUpdateContext {
+  final RouteOperation operation;
+  final RoutePayload? route;
+  final String? resultJson;
+  final String? argumentsJson;
+  final bool firstPush;
+
+  const RouteUpdateContext({
+    required this.operation,
+    this.route,
+    this.resultJson,
+    this.argumentsJson,
+    required this.firstPush,
+  });
+
+  @override
+  int get hashCode =>
+      operation.hashCode ^
+      route.hashCode ^
+      resultJson.hashCode ^
+      argumentsJson.hashCode ^
+      firstPush.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RouteUpdateContext &&
+          runtimeType == other.runtimeType &&
+          operation == other.operation &&
+          route == other.route &&
+          resultJson == other.resultJson &&
+          argumentsJson == other.argumentsJson &&
+          firstPush == other.firstPush;
 }

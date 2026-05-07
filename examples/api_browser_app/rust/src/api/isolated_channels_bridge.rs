@@ -2,7 +2,6 @@
 //!
 //! This API is additive and feature-gated behind `isolated-channels`.
 
-/// Re-exported so FRB-generated glue code can refer to the type unqualified.
 pub use oxide_core::OxideChannelError;
 
 use flutter_rust_bridge::DartFnFuture;

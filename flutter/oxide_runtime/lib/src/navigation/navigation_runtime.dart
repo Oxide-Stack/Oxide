@@ -21,6 +21,7 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
     required this.emitResult,
     required this.setCurrentRoute,
     required this.kindOf,
+    this.emitRouteUpdate,
     this.onCommandError,
     this.onStreamError,
   });
@@ -36,6 +37,9 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
 
   /// Callback invoked to keep Rust route context in sync.
   final Future<void> Function(RouteT? route) setCurrentRoute;
+
+  /// Optional callback invoked with detailed route transition metadata.
+  final Future<void> Function(OxideRouteUpdate<RouteT, KindT> update)? emitRouteUpdate;
 
   final KindT Function(RouteT route) kindOf;
 
@@ -109,22 +113,45 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
   Future<void> _handle(OxideNavigationCommand<RouteT, KindT> cmd) async {
     switch (cmd) {
       case OxideNavigationPush<RouteT, KindT>(:final route, :final ticket):
+        final wasEmpty = _stack.isEmpty;
         // ignore duplicate push if the top of our stack already matches the
         // requested route. This prevents spurious startup duplicate pushes and
         // other coalesces.
         if (!(_stack.isNotEmpty && _stack.last == route)) {
           _pushRoute(route);
           await _syncCurrentRoute();
+          await _emitRouteUpdate(
+            OxideRouteUpdate<RouteT, KindT>(
+              operation: OxideRouteOperation.push,
+              route: route,
+              arguments: route,
+              firstPush: wasEmpty,
+            ),
+          );
           unawaited(_completePush(route, ticket, cmd));
         }
       case OxideNavigationPop<RouteT, KindT>(:final result):
+        final popped = _stack.isNotEmpty ? _stack.last : null;
         handler.pop(result);
         _popRoute();
         await _syncCurrentRoute();
+        await _emitRouteUpdate(
+          OxideRouteUpdate<RouteT, KindT>(
+            operation: OxideRouteOperation.pop,
+            route: popped,
+            result: result,
+          ),
+        );
       case OxideNavigationPopUntil<RouteT, KindT>(:final kind):
         handler.popUntil(kind);
         _popUntil(kind);
         await _syncCurrentRoute();
+        await _emitRouteUpdate(
+          OxideRouteUpdate<RouteT, KindT>(
+            operation: OxideRouteOperation.popUntil,
+            route: _stack.isEmpty ? null : _stack.last,
+          ),
+        );
       case OxideNavigationReset<RouteT, KindT>(:final routes):
         // ignore redundant resets to avoid unnecessary navigator churn and
         // flicker. equality is based on route sequence, preserving order.
@@ -132,6 +159,13 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
           await handler.reset(routes);
           _reset(routes);
           await _syncCurrentRoute();
+          await _emitRouteUpdate(
+            OxideRouteUpdate<RouteT, KindT>(
+              operation: OxideRouteOperation.reset,
+              route: _stack.isEmpty ? null : _stack.last,
+              arguments: routes,
+            ),
+          );
         }
     }
   }
@@ -212,5 +246,11 @@ final class OxideNavigationRuntime<RouteT extends Object, KindT extends Object> 
       handler.setCurrentRoute(current);
     }
     await setCurrentRoute(current);
+  }
+
+  Future<void> _emitRouteUpdate(OxideRouteUpdate<RouteT, KindT> update) async {
+    final callback = emitRouteUpdate;
+    if (callback == null) return;
+    await callback(update);
   }
 }

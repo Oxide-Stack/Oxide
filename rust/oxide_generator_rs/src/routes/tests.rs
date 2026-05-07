@@ -3,9 +3,10 @@ use std::fs;
 use std::path::PathBuf;
 use syn::{Attribute, ItemImpl, ItemMod, ItemStruct, Token};
 
+use super::args::RoutesArgs;
 use super::codegen::{
-    generate_navigation_bridge_module, generate_payload_helpers, generate_route_kind_enum,
-    generate_route_payload_enum,
+    generate_navigation_bridge_module, generate_payload_helpers, generate_route_context_types,
+    generate_route_kind_enum, generate_route_payload_enum,
 };
 use super::discovery::{
     collect_routes, discover_rs_files, extract_path, find_oxide_route_attr, parse_items_from_file,
@@ -159,11 +160,22 @@ fn generated_tokens_include_variants() {
 
 #[test]
 fn navigation_bridge_module_contains_bindings() {
-    let tokens = generate_navigation_bridge_module().unwrap().to_string();
+    let tokens = generate_navigation_bridge_module(&RoutesArgs::default())
+        .unwrap()
+        .to_string();
     assert!(tokens.contains("oxide_nav_commands_stream"));
     assert!(tokens.contains("oxide_nav_emit_result"));
     assert!(tokens.contains("oxide_nav_set_current_route"));
+    assert!(tokens.contains("oxide_nav_route_update"));
     assert!(tokens.contains("__oxide_nav_require_fresh_frb_bindings"));
+}
+
+#[test]
+fn route_context_types_include_operation_and_update_payload() {
+    let tokens = generate_route_context_types().unwrap().to_string();
+    assert!(tokens.contains("pub enum RouteOperation"));
+    assert!(tokens.contains("pub struct RouteInitContext"));
+    assert!(tokens.contains("pub struct RouteUpdateContext"));
 }
 
 #[test]
@@ -186,7 +198,7 @@ fn expand_routes_module_writes_metadata_file() {
     )
     .unwrap();
 
-    let _ = expand_routes_module(item_mod).unwrap();
+    let _ = expand_routes_module(RoutesArgs::default(), item_mod).unwrap();
 
     let metadata_path = dir
         .join("target")
@@ -228,7 +240,9 @@ fn expand_routes_module_supports_empty_inline_module_without_include() {
     .unwrap();
 
     let item_mod: ItemMod = syn::parse_str("pub mod routes {}").unwrap();
-    let out = expand_routes_module(item_mod).unwrap().to_string();
+    let out = expand_routes_module(RoutesArgs::default(), item_mod)
+        .unwrap()
+        .to_string();
     assert!(out.contains("pub mod routes"));
     assert!(out.contains("pub mod splash_route"));
     assert!(out.contains("RouteKind"));
@@ -256,5 +270,46 @@ fn discover_and_parse_routes_files() {
     let items = parse_items_from_file(&files[0]).unwrap();
     assert!(!items.is_empty());
 
+    fs::remove_dir_all(&dir).unwrap();
+}
+
+#[test]
+fn routes_args_parse_hook_names() {
+    let args: RoutesArgs = syn::parse_str("init = nav_init, on_route_change = nav_changed").unwrap();
+    assert_eq!(
+        args.init
+            .as_ref()
+            .and_then(|path| path.segments.last().map(|s| s.ident.to_string()))
+            .as_deref(),
+        Some("nav_init")
+    );
+    assert_eq!(
+        args.on_route_change
+            .as_ref()
+            .and_then(|path| path.segments.last().map(|s| s.ident.to_string()))
+            .as_deref(),
+        Some("nav_changed")
+    );
+}
+
+#[test]
+fn routes_hooks_emit_clear_missing_function_error() {
+    let _guard = TEST_ENV_LOCK
+        .get_or_init(|| std::sync::Mutex::new(()))
+        .lock()
+        .unwrap();
+    let dir = temp_dir("oxide_routes_missing_hook");
+    let prev_manifest = std::env::var("CARGO_MANIFEST_DIR").ok();
+    let prev_pkg = std::env::var("CARGO_PKG_NAME").ok();
+    unsafe { std::env::set_var("CARGO_MANIFEST_DIR", &dir) };
+    unsafe { std::env::set_var("CARGO_PKG_NAME", "oxide_routes_missing_hook_test") };
+
+    let item_mod: ItemMod = syn::parse_str("pub mod routes {}").unwrap();
+    let args: RoutesArgs = syn::parse_str("init = missing_init").unwrap();
+    let err = expand_routes_module(args, item_mod).unwrap_err().to_string();
+    assert!(err.contains("routes hook `init = missing_init` not found"));
+
+    restore_env("CARGO_MANIFEST_DIR", prev_manifest);
+    restore_env("CARGO_PKG_NAME", prev_pkg);
     fs::remove_dir_all(&dir).unwrap();
 }

@@ -84,7 +84,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -402169642;
+  int get rustContentHash => -2073982268;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -177,6 +177,10 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateRoutesOxideNavigationOxideNavEmitResult({
     required String ticket,
     required String resultJson,
+  });
+
+  Future<void> crateRoutesOxideNavigationOxideNavRouteUpdate({
+    required RouteUpdateContext update,
   });
 
   Future<void> crateRoutesOxideNavigationOxideNavSetCurrentRoute({
@@ -1109,6 +1113,40 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateRoutesOxideNavigationOxideNavRouteUpdate({
+    required RouteUpdateContext update,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_route_update_context(update, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 27,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOxideError,
+        ),
+        constMeta: kCrateRoutesOxideNavigationOxideNavRouteUpdateConstMeta,
+        argValues: [update],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRoutesOxideNavigationOxideNavRouteUpdateConstMeta =>
+      const TaskConstMeta(
+        debugName: "oxide_nav_route_update",
+        argNames: ["update"],
+      );
+
+  @override
   Future<void> crateRoutesOxideNavigationOxideNavSetCurrentRoute({
     RoutePayload? route,
   }) {
@@ -1120,7 +1158,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1153,7 +1191,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 28,
+            funcId: 29,
             port: port_,
           );
         },
@@ -1181,7 +1219,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 29,
+            funcId: 30,
             port: port_,
           );
         },
@@ -1209,7 +1247,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 30,
+            funcId: 31,
             port: port_,
           );
         },
@@ -1242,7 +1280,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 31,
+              funcId: 32,
               port: port_,
             );
           },
@@ -1277,7 +1315,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 32,
+              funcId: 33,
               port: port_,
             );
           },
@@ -1312,7 +1350,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 33,
+              funcId: 34,
               port: port_,
             );
           },
@@ -1346,7 +1384,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 34,
+            funcId: 35,
             port: port_,
           );
         },
@@ -1376,7 +1414,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 35,
+            funcId: 36,
             port: port_,
           );
         },
@@ -1412,7 +1450,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 36,
+              funcId: 37,
               port: port_,
             );
           },
@@ -1453,7 +1491,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 37,
+              funcId: 38,
               port: port_,
             );
           },
@@ -1494,7 +1532,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 38,
+              funcId: 39,
               port: port_,
             );
           },
@@ -1771,6 +1809,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
   BenchDetailRoute dco_decode_box_autoadd_bench_detail_route(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_bench_detail_route(raw);
@@ -1822,6 +1866,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RoutePayload dco_decode_box_autoadd_route_payload(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_route_payload(raw);
+  }
+
+  @protected
+  RouteUpdateContext dco_decode_box_autoadd_route_update_context(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_route_update_context(raw);
   }
 
   @protected
@@ -2053,6 +2103,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RouteOperation dco_decode_route_operation(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return RouteOperation.values[raw as int];
+  }
+
+  @protected
   RoutePayload dco_decode_route_payload(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
@@ -2073,6 +2129,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  @protected
+  RouteUpdateContext dco_decode_route_update_context(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return RouteUpdateContext(
+      operation: dco_decode_route_operation(arr[0]),
+      route: dco_decode_opt_box_autoadd_route_payload(arr[1]),
+      resultJson: dco_decode_opt_String(arr[2]),
+      argumentsJson: dco_decode_opt_String(arr[3]),
+      firstPush: dco_decode_bool(arr[4]),
+    );
   }
 
   @protected
@@ -2418,6 +2489,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
   BenchDetailRoute sse_decode_box_autoadd_bench_detail_route(
     SseDeserializer deserializer,
   ) {
@@ -2479,6 +2556,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_route_payload(deserializer));
+  }
+
+  @protected
+  RouteUpdateContext sse_decode_box_autoadd_route_update_context(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_route_update_context(deserializer));
   }
 
   @protected
@@ -2762,6 +2847,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RouteOperation sse_decode_route_operation(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return RouteOperation.values[inner];
+  }
+
+  @protected
   RoutePayload sse_decode_route_payload(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2789,6 +2881,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
+  }
+
+  @protected
+  RouteUpdateContext sse_decode_route_update_context(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_operation = sse_decode_route_operation(deserializer);
+    var var_route = sse_decode_opt_box_autoadd_route_payload(deserializer);
+    var var_resultJson = sse_decode_opt_String(deserializer);
+    var var_argumentsJson = sse_decode_opt_String(deserializer);
+    var var_firstPush = sse_decode_bool(deserializer);
+    return RouteUpdateContext(
+      operation: var_operation,
+      route: var_route,
+      resultJson: var_resultJson,
+      argumentsJson: var_argumentsJson,
+      firstPush: var_firstPush,
+    );
   }
 
   @protected
@@ -2871,12 +2982,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BigInt sse_decode_usize(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getBigUint64();
-  }
-
-  @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
   }
 
   @protected
@@ -3201,6 +3306,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
   void sse_encode_box_autoadd_bench_detail_route(
     BenchDetailRoute self,
     SseSerializer serializer,
@@ -3279,6 +3390,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_route_payload(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_route_update_context(
+    RouteUpdateContext self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_route_update_context(self, serializer);
   }
 
   @protected
@@ -3555,6 +3675,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_route_operation(
+    RouteOperation self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
   void sse_encode_route_payload(RoutePayload self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
@@ -3574,6 +3703,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(4, serializer);
         sse_encode_box_autoadd_splash_route(field0, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_route_update_context(
+    RouteUpdateContext self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_route_operation(self.operation, serializer);
+    sse_encode_opt_box_autoadd_route_payload(self.route, serializer);
+    sse_encode_opt_String(self.resultJson, serializer);
+    sse_encode_opt_String(self.argumentsJson, serializer);
+    sse_encode_bool(self.firstPush, serializer);
   }
 
   @protected
@@ -3652,12 +3794,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
-  }
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
   }
 }
 

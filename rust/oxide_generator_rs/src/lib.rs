@@ -102,10 +102,10 @@ pub fn reducer(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// # Errors
 /// Emits a compile error if route files cannot be scanned or metadata cannot be emitted.
 pub fn routes(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let _ = parse_macro_input!(attr as syn::parse::Nothing);
+    let args = parse_macro_input!(attr as routes::RoutesArgs);
     let input = parse_macro_input!(item as Item);
     match input {
-        Item::Mod(item_mod) => match routes::expand_routes_module(item_mod) {
+        Item::Mod(item_mod) => match routes::expand_routes_module(args, item_mod) {
             Ok(ts) => ts.into(),
             Err(e) => e.to_compile_error().into(),
         },
