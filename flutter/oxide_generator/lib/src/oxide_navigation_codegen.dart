@@ -877,6 +877,7 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
   }
   buf
     ..writeln("import '../src/rust/frb_generated.dart';")
+    ..writeln("import '../src/rust/api/bridge.dart';")
     ..writeln()
     ..writeln("import 'navigation/navigation_runtime.g.dart';")
     ..writeln("import 'routes/route_kind.g.dart';")
@@ -900,6 +901,7 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     )
     ..writeln('    WidgetsFlutterBinding.ensureInitialized();')
     ..writeln('    await RustLib.init();')
+    ..writeln('    setPersistenceDebugJsonEnabled(OxideLogger.isDebugJsonEnabled);')
     ..writeln(
       '    _initialized = true;',
     ) // when channels are generated we need to make sure they are initialized too;

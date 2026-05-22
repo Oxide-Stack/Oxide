@@ -30,6 +30,10 @@ class OxideLogger {
   /// `true` only when logging is active and advanced payload logs are enabled.
   static bool get isAdvancedLoggingEnabled => _shouldLog && _isAdvancedLogEnabled;
 
+  /// `true` when debug JSON persistence copies should be enabled in Rust.
+  static bool get isDebugJsonEnabled =>
+      !kReleaseMode || _isLogEnabled || _isAdvancedLogEnabled;
+
   static void _log(LogLevel level, String source, String message, {Object? error, StackTrace? stackTrace}) {
     if (!_shouldLog) return;
 

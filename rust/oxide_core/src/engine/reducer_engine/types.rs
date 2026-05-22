@@ -30,6 +30,13 @@ where
 pub(super) struct PersistenceHooks<S> {
     pub(super) worker: FilePersistenceWorker,
     pub(super) encode: Box<dyn Fn(&S) -> CoreResult<Vec<u8>> + Send + Sync>,
+    pub(super) debug: StdMutex<Option<DebugPersistenceHooks<S>>>,
+}
+
+#[cfg(feature = "state-persistence")]
+pub(super) struct DebugPersistenceHooks<S> {
+    pub(super) worker: FilePersistenceWorker,
+    pub(super) encode: Box<dyn Fn(&S, &[u8]) -> CoreResult<Vec<u8>> + Send + Sync>,
 }
 
 pub(super) struct Shared<R, StateSlice>

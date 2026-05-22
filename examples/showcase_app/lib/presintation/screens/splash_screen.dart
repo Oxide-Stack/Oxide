@@ -1,54 +1,39 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:showcase_app/presintation/controllers/settings_controller.dart';
 
-class SplashScreen extends ConsumerStatefulWidget {
+class SplashScreen extends HookConsumerWidget {
   const SplashScreen({super.key});
 
   @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends ConsumerState<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scaleAnimation;
-  late final Animation<double> _opacityAnimation;
-  Timer? _navigationTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Setup
+    final controller = useAnimationController(
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
+    final scaleAnimation = useAnimation<double>(
+      Tween<double>(
+        begin: 0.9,
+        end: 1.1,
+      ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut)),
+    );
+    final opacityAnimation = useAnimation<double>(
+      Tween<double>(
+        begin: 0.6,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut)),
+    );
+    useEffect(() {
+      final timer = Timer(const Duration(seconds: 2), () {
+        if (!context.mounted) return;
+        ref.read(settingsControllerProvider).actions.openHome();
+      });
+      return timer.cancel;
+    }, []);
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.9,
-      end: 1.1,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-    _opacityAnimation = Tween<double>(
-      begin: 0.6,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    _navigationTimer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      ref.read(settingsControllerProvider).actions.openHome();
-    });
-  }
-
-  @override
-  void dispose() {
-    _navigationTimer?.cancel();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+    // Build Start
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -65,14 +50,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               AnimatedBuilder(
-                animation: _controller,
+                animation: controller,
                 builder: (context, child) {
                   return Transform.scale(
-                    scale: _scaleAnimation.value,
-                    child: Opacity(
-                      opacity: _opacityAnimation.value,
-                      child: child,
-                    ),
+                    scale: scaleAnimation,
+                    child: Opacity(opacity: opacityAnimation, child: child),
                   );
                 },
                 child: const FlutterLogo(size: 96),

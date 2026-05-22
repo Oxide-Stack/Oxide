@@ -118,6 +118,14 @@ pub(super) fn emit_reducer_tokens(
             }
 
             #[flutter_rust_bridge::frb]
+            pub fn set_persistence_debug_json_enabled(enabled: bool) {
+                #[cfg(feature = "state-persistence")]
+                {
+                    oxide_core::persistence::set_debug_json_enabled(enabled);
+                }
+            }
+
+            #[flutter_rust_bridge::frb]
             pub async fn dispatch(
                 engine: &std::sync::Arc<#engine_ident>,
                 action: #action_ty,

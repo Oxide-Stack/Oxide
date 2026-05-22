@@ -137,7 +137,23 @@ where
         {
             if let Some(persistence) = &self.shared.persistence {
                 match (persistence.encode)(&_snapshot.state) {
-                    Ok(bytes) => persistence.worker.queue(bytes),
+                    Ok(bytes) => {
+                        if crate::persistence::debug_json_enabled() {
+                            let debug_guard = persistence
+                                .debug
+                                .lock()
+                                .unwrap_or_else(|e| e.into_inner());
+                            if let Some(debug) = debug_guard.as_ref() {
+                                match (debug.encode)(&_snapshot.state, &bytes) {
+                                    Ok(json_bytes) => debug.worker.queue(json_bytes),
+                                    Err(err) => {
+                                        let _ = self.shared.error_tx.send(Some(err));
+                                    }
+                                }
+                            }
+                        }
+                        persistence.worker.queue(bytes);
+                    }
                     Err(err) => {
                         let _ = self.shared.error_tx.send(Some(err));
                     }

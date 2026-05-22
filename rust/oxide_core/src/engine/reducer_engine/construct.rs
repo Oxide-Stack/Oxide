@@ -1,4 +1,6 @@
 use std::sync::Arc;
+#[cfg(feature = "state-persistence")]
+use std::sync::Mutex as StdMutex;
 
 use tokio::sync::{mpsc, watch};
 
@@ -6,10 +8,12 @@ use crate::engine::{CoreResult, InitContext, Reducer, StateSnapshot};
 
 #[cfg(feature = "state-persistence")]
 use crate::persistence::{
-    FilePersistenceWorker, PersistenceConfig, decode, default_persistence_path, encode,
-    try_read_bytes,
+    FilePersistenceWorker, PersistenceConfig, decode, default_persistence_debug_json_path,
+    default_persistence_path, encode, encode_debug_json_and_validate, try_read_bytes,
 };
 
+#[cfg(feature = "state-persistence")]
+use super::types::DebugPersistenceHooks;
 use super::{EngineState, ReducerEngine, Shared, sideeffect_loop};
 #[cfg(feature = "state-persistence")]
 use super::PersistenceHooks;
@@ -56,9 +60,15 @@ where
         let restored = restored_bytes.and_then(|bytes| decode(&bytes).ok());
         let state = restored.unwrap_or(initial_state);
         let worker = FilePersistenceWorker::new(path, config.min_interval)?;
+        let debug_path = default_persistence_debug_json_path(&config.key);
+        let debug = Some(DebugPersistenceHooks {
+            worker: FilePersistenceWorker::new(debug_path, config.min_interval)?,
+            encode: Box::new(|state, bytes| encode_debug_json_and_validate(state, bytes)),
+        });
         let persistence = PersistenceHooks {
             worker,
             encode: Box::new(|state| encode(state)),
+            debug: StdMutex::new(debug),
         };
         Self::new_inner(reducer, state, Some(persistence)).await
     }
