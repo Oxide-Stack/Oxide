@@ -61,9 +61,9 @@ fi
 qa_run "$SCRIPT_DIR/00-verify-versions.sh"
 qa_run "$SCRIPT_DIR/10-setup-toolchains.sh" 1 1 1
 
-"$SCRIPT_DIR/20-rust.sh" "$skip_coverage" &
+qa_run "$SCRIPT_DIR/20-rust.sh" "$skip_coverage" &
 pid_rust="$!"
-"$SCRIPT_DIR/30-flutter-packages.sh" "$skip_coverage" &
+qa_run "$SCRIPT_DIR/30-flutter-packages.sh" "$skip_coverage" &
 pid_flutter="$!"
 
 core_failed="0"

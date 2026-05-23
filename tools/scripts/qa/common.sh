@@ -14,7 +14,18 @@ qa_root_dir() {
 }
 
 qa_run() {
-  "$@"
+  local cmd="${1:-}"
+  if [[ -z "$cmd" ]]; then
+    echo "qa_run requires a command" >&2
+    return 2
+  fi
+  shift
+
+  if [[ "$cmd" == *.sh ]]; then
+    bash "$cmd" "$@"
+  else
+    "$cmd" "$@"
+  fi
 }
 
 qa_calc_lcov_pct() {

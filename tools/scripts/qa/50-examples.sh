@@ -74,6 +74,7 @@ examples=(
   "examples/ticker_app"
   "examples/benchmark_app"
   "examples/api_browser_app"
+  "examples/showcase_app"
 )
 
 supports_wait_n="0"
@@ -114,7 +115,7 @@ for dir in "${examples[@]}"; do
     example_args+=(--skip-frb-diff-check)
   fi
 
-  "$SCRIPT_DIR/40-example.sh" "${example_args[@]}" &
+  qa_run "$SCRIPT_DIR/40-example.sh" "${example_args[@]}" &
   pids+=("$!")
   running="$((running + 1))"
 done

@@ -72,6 +72,13 @@ fn persistence_decode_rejects_invalid_payload() {
 
 #[tokio::test]
 async fn debug_json_copy_matches_bincode_payload() {
+    struct DebugJsonFlagGuard;
+    impl Drop for DebugJsonFlagGuard {
+        fn drop(&mut self) {
+            persistence::set_debug_json_enabled(false);
+        }
+    }
+
     fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
         static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
             std::sync::OnceLock::new();
@@ -82,8 +89,15 @@ async fn debug_json_copy_matches_bincode_payload() {
     let _ = oxide_core::init_navigation();
 
     persistence::set_debug_json_enabled(true);
+    let _debug_json_guard = DebugJsonFlagGuard;
 
-    let key = "oxide_core.test.debug_json_copy.v1".to_string();
+    let key = format!(
+        "oxide_core.test.debug_json_copy.v1.{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock before unix epoch")
+            .as_nanos()
+    );
     let bin_path = default_persistence_path(&key);
     let json_path = default_persistence_debug_json_path(&key);
     let _ = std::fs::remove_file(&bin_path);
@@ -103,13 +117,33 @@ async fn debug_json_copy_matches_bincode_payload() {
     .await
     .unwrap();
 
-    let _ = engine.dispatch(Action::Set(42)).await.expect("dispatch");
+    let error_rx = engine.subscribe_errors();
 
-    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(2);
-    loop {
-        if tokio::time::Instant::now() >= deadline {
-            break;
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(8);
+    for value in 1..=12 {
+        let _ = engine
+            .dispatch(Action::Set(value))
+            .await
+            .expect("dispatch");
+
+        let mut poll_count = 0;
+        while poll_count < 8 {
+            if std::fs::metadata(&bin_path)
+                .map(|m| m.len() > 0)
+                .unwrap_or(false)
+                && std::fs::metadata(&json_path)
+                    .map(|m| m.len() > 0)
+                    .unwrap_or(false)
+            {
+                break;
+            }
+            if tokio::time::Instant::now() >= deadline {
+                break;
+            }
+            poll_count += 1;
+            tokio::time::sleep(std::time::Duration::from_millis(20)).await;
         }
+
         if std::fs::metadata(&bin_path)
             .map(|m| m.len() > 0)
             .unwrap_or(false)
@@ -119,8 +153,29 @@ async fn debug_json_copy_matches_bincode_payload() {
         {
             break;
         }
-        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        if tokio::time::Instant::now() >= deadline {
+            break;
+        }
     }
+
+    if let Some(err) = error_rx.borrow().as_ref() {
+        panic!("persistence error while writing debug JSON copy: {err}");
+    }
+
+    assert!(
+        std::fs::metadata(&bin_path)
+            .map(|m| m.len() > 0)
+            .unwrap_or(false),
+        "bincode persistence file was not written: {}",
+        bin_path.display()
+    );
+    assert!(
+        std::fs::metadata(&json_path)
+            .map(|m| m.len() > 0)
+            .unwrap_or(false),
+        "debug json persistence file was not written: {}",
+        json_path.display()
+    );
 
     let bin_bytes = std::fs::read(&bin_path).expect("read bincode");
     let json_bytes = std::fs::read(&json_path).expect("read json");
@@ -128,7 +183,6 @@ async fn debug_json_copy_matches_bincode_payload() {
     let json_state: Model = serde_json::from_slice(&json_bytes).expect("decode json");
     assert_eq!(bin_state, json_state);
 
-    persistence::set_debug_json_enabled(false);
     let _ = std::fs::remove_file(&bin_path);
     let _ = std::fs::remove_file(&json_path);
 }
