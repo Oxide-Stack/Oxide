@@ -23,6 +23,11 @@ Future<void> disposeEngine({required ArcCommentsEngine engine}) =>
 Stream<(String, String, String)> setupRustLogs() =>
     RustLib.instance.api.crateApiCommentsBridgeSetupRustLogs();
 
+Future<void> setPersistenceDebugJsonEnabled({required bool enabled}) => RustLib
+    .instance
+    .api
+    .crateApiCommentsBridgeSetPersistenceDebugJsonEnabled(enabled: enabled);
+
 Future<CommentsStateSnapshot> dispatch({
   required ArcCommentsEngine engine,
   required CommentsAction action,

@@ -91,6 +91,7 @@ Sliced updates let Flutter stores rebuild only when specific *top-level* parts o
 - [todos_app](./examples/todos_app) — CRUD list state + errors + persistence
 - [ticker_app](./examples/ticker_app) — periodic tick dispatch + snapshot stream into Flutter
 - [benchmark_app](./examples/benchmark_app) — performance comparison against Dart-only approaches
+- [showcase_app](./examples/showcase_app) — multi-feature end-to-end demo app
 - [api_browser_app](./examples/api_browser_app) — browse a JSON API with multiple reducers
 
 ## Demos

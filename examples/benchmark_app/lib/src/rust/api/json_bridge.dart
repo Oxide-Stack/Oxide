@@ -24,6 +24,11 @@ Future<void> disposeEngine({required ArcJsonEngine engine}) =>
 Stream<(String, String, String)> setupRustLogs() =>
     RustLib.instance.api.crateApiJsonBridgeSetupRustLogs();
 
+Future<void> setPersistenceDebugJsonEnabled({required bool enabled}) => RustLib
+    .instance
+    .api
+    .crateApiJsonBridgeSetPersistenceDebugJsonEnabled(enabled: enabled);
+
 Future<JsonStateSnapshot> dispatch({
   required ArcJsonEngine engine,
   required JsonAction action,

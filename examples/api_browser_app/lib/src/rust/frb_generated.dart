@@ -89,7 +89,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 988434692;
+  int get rustContentHash => 598898055;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -271,6 +271,18 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateIsolatedChannelsDemoStateSetLastIncomingText({
     required String text,
+  });
+
+  Future<void> crateApiCommentsBridgeSetPersistenceDebugJsonEnabled({
+    required bool enabled,
+  });
+
+  Future<void> crateApiPostsBridgeSetPersistenceDebugJsonEnabled({
+    required bool enabled,
+  });
+
+  Future<void> crateApiUsersBridgeSetPersistenceDebugJsonEnabled({
+    required bool enabled,
   });
 
   Stream<(String, String, String)> crateApiCommentsBridgeSetupRustLogs();
@@ -2048,6 +2060,109 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiCommentsBridgeSetPersistenceDebugJsonEnabled({
+    required bool enabled,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_bool(enabled, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 52,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiCommentsBridgeSetPersistenceDebugJsonEnabledConstMeta,
+        argValues: [enabled],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiCommentsBridgeSetPersistenceDebugJsonEnabledConstMeta =>
+      const TaskConstMeta(
+        debugName: "set_persistence_debug_json_enabled",
+        argNames: ["enabled"],
+      );
+
+  @override
+  Future<void> crateApiPostsBridgeSetPersistenceDebugJsonEnabled({
+    required bool enabled,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_bool(enabled, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 53,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPostsBridgeSetPersistenceDebugJsonEnabledConstMeta,
+        argValues: [enabled],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiPostsBridgeSetPersistenceDebugJsonEnabledConstMeta =>
+      const TaskConstMeta(
+        debugName: "set_persistence_debug_json_enabled",
+        argNames: ["enabled"],
+      );
+
+  @override
+  Future<void> crateApiUsersBridgeSetPersistenceDebugJsonEnabled({
+    required bool enabled,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_bool(enabled, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 54,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiUsersBridgeSetPersistenceDebugJsonEnabledConstMeta,
+        argValues: [enabled],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiUsersBridgeSetPersistenceDebugJsonEnabledConstMeta =>
+      const TaskConstMeta(
+        debugName: "set_persistence_debug_json_enabled",
+        argNames: ["enabled"],
+      );
+
+  @override
   Stream<(String, String, String)> crateApiCommentsBridgeSetupRustLogs() {
     final sink = RustStreamSink<(String, String, String)>();
     unawaited(
@@ -2062,7 +2177,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 52,
+              funcId: 55,
               port: port_,
             );
           },
@@ -2097,7 +2212,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 53,
+              funcId: 56,
               port: port_,
             );
           },
@@ -2132,7 +2247,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 54,
+              funcId: 57,
               port: port_,
             );
           },
@@ -2170,7 +2285,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 55,
+              funcId: 58,
               port: port_,
             );
           },
@@ -2211,7 +2326,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 56,
+              funcId: 59,
               port: port_,
             );
           },
@@ -2252,7 +2367,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 57,
+              funcId: 60,
               port: port_,
             );
           },
@@ -2289,7 +2404,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 58,
+            funcId: 61,
             port: port_,
           );
         },

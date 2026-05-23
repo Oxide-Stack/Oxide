@@ -24,6 +24,11 @@ Future<void> disposeEngine({required ArcSieveEngine engine}) =>
 Stream<(String, String, String)> setupRustLogs() =>
     RustLib.instance.api.crateApiSieveBridgeSetupRustLogs();
 
+Future<void> setPersistenceDebugJsonEnabled({required bool enabled}) => RustLib
+    .instance
+    .api
+    .crateApiSieveBridgeSetPersistenceDebugJsonEnabled(enabled: enabled);
+
 Future<SieveStateSnapshot> dispatch({
   required ArcSieveEngine engine,
   required SieveAction action,

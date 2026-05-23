@@ -82,7 +82,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1144784709;
+  int get rustContentHash => 123222033;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -219,6 +219,10 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateIsolatedChannelsDemoStateSetLastIncomingText({
     required String text,
+  });
+
+  Future<void> crateApiBridgeSetPersistenceDebugJsonEnabled({
+    required bool enabled,
   });
 
   Stream<(String, String, String)> crateApiBridgeSetupRustLogs();
@@ -1568,6 +1572,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiBridgeSetPersistenceDebugJsonEnabled({
+    required bool enabled,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_bool(enabled, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 40,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiBridgeSetPersistenceDebugJsonEnabledConstMeta,
+        argValues: [enabled],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiBridgeSetPersistenceDebugJsonEnabledConstMeta =>
+      const TaskConstMeta(
+        debugName: "set_persistence_debug_json_enabled",
+        argNames: ["enabled"],
+      );
+
+  @override
   Stream<(String, String, String)> crateApiBridgeSetupRustLogs() {
     final sink = RustStreamSink<(String, String, String)>();
     unawaited(
@@ -1582,7 +1619,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 40,
+              funcId: 41,
               port: port_,
             );
           },
@@ -1620,7 +1657,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 41,
+              funcId: 42,
               port: port_,
             );
           },

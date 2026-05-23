@@ -17,6 +17,7 @@ You need an FRB-integrated app first (or start from an example):
 - [ticker_app](../../examples/ticker_app)
 - [benchmark_app](../../examples/benchmark_app)
 - [api_browser_app](../../examples/api_browser_app)
+- [showcase_app](../../examples/showcase_app)
 
 Reference: FRB docs https://fzyzcjy.github.io/flutter_rust_bridge/
 

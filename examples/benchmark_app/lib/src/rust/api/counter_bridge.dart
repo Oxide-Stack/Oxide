@@ -23,6 +23,11 @@ Future<void> disposeEngine({required ArcCounterEngine engine}) =>
 Stream<(String, String, String)> setupRustLogs() =>
     RustLib.instance.api.crateApiCounterBridgeSetupRustLogs();
 
+Future<void> setPersistenceDebugJsonEnabled({required bool enabled}) => RustLib
+    .instance
+    .api
+    .crateApiCounterBridgeSetPersistenceDebugJsonEnabled(enabled: enabled);
+
 Future<CounterStateSnapshot> dispatch({
   required ArcCounterEngine engine,
   required CounterAction action,
