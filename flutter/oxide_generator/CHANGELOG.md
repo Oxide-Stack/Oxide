@@ -1,3 +1,9 @@
+## 0.5.0
+- Updated navigation codegen to use web-safe FRB imports for isolated channels.
+- Mapped route update payload generation through `routes.dart` bindings.
+- Added FRB guard helpers for isolated-channel generation paths.
+- Updated version sync to preserve original line endings when updating files.
+
 ## 0.4.0
 - Integrate oxide generator for navigation and route definitions:
   - Add `#[oxide_route]` macro support and generation of typed route bindings

@@ -10,12 +10,12 @@ In your Flutter app:
 
 ```yaml
 dependencies:
-  oxide_annotations: ^0.4.0
-  oxide_runtime: ^0.4.0
+  oxide_annotations: ^0.5.0
+  oxide_runtime: ^0.5.0
 
 dev_dependencies:
   build_runner: ^2.0.0
-  oxide_generator: ^0.4.0
+  oxide_generator: ^0.5.0
 ```
 
 Then fetch packages:

@@ -1,3 +1,8 @@
+## 0.5.0
+- Added optional `#[routes(...)]` hook support with signature validation for navigation init and route change callbacks.
+- Added implicit routes module discovery and FRB metadata checks.
+- Added auto-derived standard traits for `#[oxide_route]` types.
+
 ## 0.4.0
 - Add navigation & route generation: support attribute-driven route definitions via a new `#[oxide_route]`-style surface and generate a unified `oxide.dart` entrypoint that exports the runtime and generated routes.
 - Emit initialization scaffolding to support the unified `OxideStack.init()` pattern and simplify app-level startup wiring (replaces prior `RustLib.init()` + `initOxide()` flows in generated outputs).

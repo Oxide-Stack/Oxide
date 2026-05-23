@@ -1,3 +1,10 @@
+## 0.5.0
+- Added Dart-to-Rust debug JSON persistence toggle wiring through `OxideStack.init` and debug logging flags.
+- Refactored initialization and navigation startup handling to reduce init false positives.
+- Added structured runtime logging around initialization, dispatch, and error paths.
+- Updated persistence behavior/docs alignment for bincode snapshots with optional validated debug JSON copies.
+- Added/expanded runtime tests for isolated channels, reducer arguments, persistence worker, and navigation behaviors.
+
 ## 0.4.0
 - Unified initialization: add `OxideStack.init()` as a single initialization point replacing older `RustLib.init()` + `initOxide()` flows
 - Navigator 1.0 integration and confirm-route handling: improved GoRouter handler, route stack synchronization, and fail-fast behavior for navigation command timeouts

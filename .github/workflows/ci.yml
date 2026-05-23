@@ -2,8 +2,8 @@ name: Basic CI
 
 on:
   push:
-    branches:
-      - "**"
+    branches-ignore:
+      - main
     tags-ignore:
       - "v*"
   workflow_dispatch:
