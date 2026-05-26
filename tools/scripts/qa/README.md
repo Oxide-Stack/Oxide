@@ -57,6 +57,11 @@ Stages:
 - `50-examples.*`: all example apps with bounded parallelism
 - `qa.*`: master orchestrators
 
+Targeted runs:
+
+- `20-rust.*` accepts `--crate <oxide_core|oxide_generator_rs>` to scope Rust QA.
+- `30-flutter-packages.*` accepts `--package <oxide_runtime|oxide_generator|oxide_annotations>` to scope Flutter/Dart QA.
+
 ## Entry Points
 
 Compatibility wrappers still exist:

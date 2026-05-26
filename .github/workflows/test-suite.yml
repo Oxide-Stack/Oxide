@@ -21,30 +21,143 @@ env:
   FLUTTER_ROOT: ""
 
 jobs:
-  pr-gate:
+  rust-crate-tests:
+    name: Rust QA (${{ matrix.crate }})
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      should_run: ${{ steps.check.outputs.should_run }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        crate:
+          - oxide_core
+          - oxide_generator_rs
     steps:
-      - name: Validate PR source branch
-        id: check
-        run: |
-          if [[ "${{ github.event.pull_request.head.ref }}" == "develop" ]]; then
-            echo "Running full test suite for PR from develop into main."
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Skipping full test suite for non-develop branch."
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-          fi
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  full-qa-linux:
-    needs: pr-gate
-    # Use always() so GitHub evaluates this job even if pr-gate skipped or changed behavior
-    if: always() && needs.pr-gate.outputs.should_run == 'true'
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build (Linux)
+        if: runner.os != 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cache Cargo registry and build (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\.cargo\registry
+            ~\.cargo\git
+            rust\target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Verify versions
+        run: bash ./tools/scripts/qa/00-verify-versions.sh
+
+      - name: Setup Rust toolchains
+        run: bash ./tools/scripts/qa/10-setup-toolchains.sh 0 0 1
+
+      - name: Run Rust QA
+        run: bash ./tools/scripts/qa/20-rust.sh 0 --crate ${{ matrix.crate }}
+
+  flutter-package-tests:
+    name: Flutter package QA (${{ matrix.package }})
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - oxide_runtime
+          - oxide_generator
+          - oxide_annotations
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache Flutter pub dependencies (Linux)
+        if: runner.os != 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Cache Flutter pub dependencies (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\Pub\Cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Verify versions
+        run: bash ./tools/scripts/qa/00-verify-versions.sh
+
+      - name: Setup toolchains
+        run: bash ./tools/scripts/qa/10-setup-toolchains.sh 1 1 0
+
+      - name: Run Flutter package QA
+        run: bash ./tools/scripts/qa/30-flutter-packages.sh 0 --package ${{ matrix.package }}
+
+  examples-tests:
+    name: Examples QA (${{ matrix.os_name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            os_name: linux
+          - os: windows-latest
+            os_name: windows
+    steps:
+      - name: Configure git line endings
+        if: runner.os == 'Windows'
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -79,83 +192,35 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-
 
-      - name: Run full QA on Linux
-        env:
-          QA_EXAMPLE_MAX_PARALLEL: "2"
-        shell: bash
-        run: |
-          set -euo pipefail
-          bash ./tools/scripts/qa/qa.sh
+      - name: Verify versions (Linux)
+        if: runner.os != 'Windows'
+        run: bash ./tools/scripts/qa/00-verify-versions.sh
 
-  full-qa-windows:
-    needs: pr-gate
-    if: always() && needs.pr-gate.outputs.should_run == 'true'
-    runs-on: windows-latest
-    timeout-minutes: 240
-    steps:
-      - name: Configure git line endings
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
+      - name: Setup toolchains (Linux)
+        if: runner.os != 'Windows'
+        run: bash ./tools/scripts/qa/10-setup-toolchains.sh 1 1 1
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Run examples QA (Linux)
+        if: runner.os != 'Windows'
+        run: bash ./tools/scripts/qa/50-examples.sh --max-parallel 2
 
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Cargo registry and build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~\.cargo\registry
-            ~\.cargo\git
-            rust/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Cache Flutter pub dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~\AppData\Local\Pub\Cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-
-      - name: Run full QA on Windows
-        env:
-          QA_EXAMPLE_MAX_PARALLEL: "2"
+      - name: Verify versions (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          .\tools\scripts\qa.ps1 -ExampleMaxParallel 2
+          .\tools\scripts\qa\00-verify-versions.ps1
 
-  test-suite-complete:
-    runs-on: ubuntu-latest
-    needs: [pr-gate, full-qa-linux, full-qa-windows]
-    if: always()
-    steps:
-      - name: Check test results
+      - name: Setup toolchains (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
+          $ErrorActionPreference = "Stop"
+          .\tools\scripts\qa\10-setup-toolchains.ps1 -EnableWindowsDesktop -EnsureFrbCodegen -EnsureRustWasmTargets
 
-          if [[ "${{ needs.pr-gate.outputs.should_run }}" != "true" ]]; then
-            echo "PR is not from develop branch - test suite bypassed cleanly."
-            exit 0
-          fi
-
-
-          if [[ "${{ needs.full-qa-linux.result }}" != "success" ]] || [[ "${{ needs.full-qa-windows.result }}" != "success" ]]; then
-            echo "One or more QA jobs failed."
-            exit 1
-          fi
-          echo "All QA jobs passed successfully."
+      - name: Run examples QA (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          .\tools\scripts\qa\50-examples.ps1 -MaxParallel 2
