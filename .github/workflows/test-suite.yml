@@ -22,8 +22,6 @@ env:
 
 jobs:
   pr-gate:
-    # Only run full test suite for PRs from develop branch
-    if: github.event.pull_request.head.ref == 'develop'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -32,19 +30,24 @@ jobs:
       - name: Validate PR source branch
         id: check
         run: |
-          echo "Running full test suite for PR from develop into main."
-          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          if [[ "${{ github.event.pull_request.head.ref }}" == "develop" ]]; then
+            echo "Running full test suite for PR from develop into main."
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping full test suite for non-develop branch."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
 
   full-qa-linux:
     needs: pr-gate
-    if: needs.pr-gate.outputs.should_run == 'true'
+    # Use always() so GitHub evaluates this job even if pr-gate skipped or changed behavior
+    if: always() && needs.pr-gate.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Fetch full history for accurate diff detection
           fetch-depth: 0
 
       - name: Setup Rust toolchain
@@ -86,7 +89,7 @@ jobs:
 
   full-qa-windows:
     needs: pr-gate
-    if: needs.pr-gate.outputs.should_run == 'true'
+    if: always() && needs.pr-gate.outputs.should_run == 'true'
     runs-on: windows-latest
     timeout-minutes: 240
     steps:
@@ -137,7 +140,6 @@ jobs:
           $ErrorActionPreference = "Stop"
           .\tools\scripts\qa.ps1 -ExampleMaxParallel 2
 
-  # Summary job for branch protection rules
   test-suite-complete:
     runs-on: ubuntu-latest
     needs: [pr-gate, full-qa-linux, full-qa-windows]
@@ -145,12 +147,15 @@ jobs:
     steps:
       - name: Check test results
         run: |
-          if [[ "${{ needs.pr-gate.result }}" == "skipped" ]]; then
-            echo "PR is not from develop branch - test suite skipped (expected for non-develop PRs)"
+
+          if [[ "${{ needs.pr-gate.outputs.should_run }}" != "true" ]]; then
+            echo "PR is not from develop branch - test suite bypassed cleanly."
             exit 0
           fi
+
+
           if [[ "${{ needs.full-qa-linux.result }}" != "success" ]] || [[ "${{ needs.full-qa-windows.result }}" != "success" ]]; then
-            echo "One or more QA jobs failed"
+            echo "One or more QA jobs failed."
             exit 1
           fi
-          echo "All QA jobs passed successfully"
+          echo "All QA jobs passed successfully."
