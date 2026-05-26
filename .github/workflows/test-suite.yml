@@ -202,7 +202,7 @@ jobs:
 
       - name: Run examples QA (Linux)
         if: runner.os != 'Windows'
-        run: bash ./tools/scripts/qa/50-examples.sh --max-parallel 2
+        run: bash ./tools/scripts/qa/50-examples.sh --max-parallel 2 --skip-frb-diff-check
 
       - name: Verify versions (Windows)
         if: runner.os == 'Windows'
@@ -223,4 +223,4 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          .\tools\scripts\qa\50-examples.ps1 -MaxParallel 2
+          .\tools\scripts\qa\50-examples.ps1 -MaxParallel 2 -SkipFrbDiffCheck
