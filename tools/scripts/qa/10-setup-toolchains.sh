@@ -32,7 +32,6 @@ if [[ "$ensure_frb_codegen" == "1" ]]; then
   if ! command -v flutter_rust_bridge_codegen >/dev/null 2>&1; then
     qa_run cargo install flutter_rust_bridge_codegen --version 2.12.0 --locked
   else
-    local frb_version
     frb_version="$(flutter_rust_bridge_codegen --version 2>/dev/null || true)"
     if [[ "$frb_version" != "flutter_rust_bridge_codegen 2.12.0" ]]; then
       echo "flutter_rust_bridge_codegen must be exactly 2.12.0 (found: ${frb_version:-unknown})." >&2
