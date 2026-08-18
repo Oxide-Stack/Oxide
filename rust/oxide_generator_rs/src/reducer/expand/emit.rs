@@ -117,13 +117,11 @@ pub(super) fn emit_reducer_tokens(
                 }
             }
 
-            #[flutter_rust_bridge::frb]
-            pub fn set_persistence_debug_json_enabled(enabled: bool) {
-                #[cfg(feature = "state-persistence")]
-                {
-                    oxide_core::persistence::set_debug_json_enabled(enabled);
-                }
-            }
+            // `set_persistence_debug_json_enabled` used to be emitted here as a
+            // reducer-scoped FRB function. Persistence debug is global in
+            // `oxide_core::persistence` and should not be generated per-reducer.
+            // The generator intentionally no longer emits a reducer-scoped
+            // FRB setter so consumers use the global runtime policy instead.
 
             #[flutter_rust_bridge::frb]
             pub async fn dispatch(

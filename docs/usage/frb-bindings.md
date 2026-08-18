@@ -66,6 +66,8 @@ pub use oxide_core::OxideError;
 
 If your `rust_input` points at an `api` module, it’s also common to re-export `OxideError` from within that module tree (for example `src/api/bridge.rs`), mirroring this repo’s examples.
 
+Isolated-channel errors now use `oxide_core::OxideChannelError` in generated signatures, so they do **not** require a crate-root re-export.
+
 ## What Dart Gets
 
 After generation, your Flutter code imports the FRB-generated Dart API. For a typical store you’ll see:

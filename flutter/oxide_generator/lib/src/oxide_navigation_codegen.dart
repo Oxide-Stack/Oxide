@@ -5,10 +5,7 @@ import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:glob/glob.dart';
 
-final _formatter = DartFormatter(
-  languageVersion: DartFormatter.latestShortStyleLanguageVersion,
-  pageWidth: 100,
-);
+final _formatter = DartFormatter(languageVersion: DartFormatter.latestShortStyleLanguageVersion, pageWidth: 100);
 
 final class RustRouteFieldMeta {
   RustRouteFieldMeta({required this.name, required this.type});
@@ -45,12 +42,7 @@ final class RustRouteMetadata {
 // ------------------ channel metadata (Phase3 support) ------------------
 
 final class RustChannelMetadata {
-  RustChannelMetadata({
-    required this.events,
-    required this.callbacks,
-    this.crateName,
-    this.initFnName,
-  });
+  RustChannelMetadata({required this.events, required this.callbacks, this.crateName, this.initFnName});
 
   final List<RustEventChannelMeta> events;
   final List<RustCallbackMeta> callbacks;
@@ -80,11 +72,7 @@ final class RustEventChannelMeta {
 }
 
 final class RustCallbackMeta {
-  RustCallbackMeta({
-    required this.name,
-    required this.requestType,
-    required this.responseType,
-  });
+  RustCallbackMeta({required this.name, required this.requestType, required this.responseType});
 
   final String name;
   final String requestType;
@@ -98,11 +86,7 @@ Future<RustChannelMetadata> readRustChannelMetadata() async {
   final crateNames = <String>{};
 
   if (dir.existsSync()) {
-    final files = dir
-        .listSync(followLinks: false)
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.json'))
-        .toList(growable: false);
+    final files = dir.listSync(followLinks: false).whereType<File>().where((f) => f.path.endsWith('.json')).toList(growable: false);
 
     for (final file in files) {
       final jsonStr = await file.readAsString();
@@ -133,13 +117,7 @@ Future<RustChannelMetadata> readRustChannelMetadata() async {
           final req = raw['request_type'];
           final resp = raw['response_type'];
           if (name is String && req is String && resp is String) {
-            callbacks.add(
-              RustCallbackMeta(
-                name: name,
-                requestType: req,
-                responseType: resp,
-              ),
-            );
+            callbacks.add(RustCallbackMeta(name: name, requestType: req, responseType: resp));
           }
         }
       }
@@ -158,9 +136,7 @@ Future<RustChannelMetadata> readRustChannelMetadata() async {
     if (bridgeFile.existsSync()) {
       final text = await bridgeFile.readAsString();
       bridgeText = text;
-      final match = RegExp(
-        r'Future<\s*void\s*>\s*(init[^\(\s]+)\(',
-      ).firstMatch(text);
+      final match = RegExp(r'Future<\s*void\s*>\s*(init[^\(\s]+)\(').firstMatch(text);
       if (match != null) initFnName = match.group(1);
     }
   } catch (_) {
@@ -171,22 +147,11 @@ Future<RustChannelMetadata> readRustChannelMetadata() async {
     _inferChannelsFromBridge(bridgeText, events: events, callbacks: callbacks);
   }
 
-  return RustChannelMetadata(
-    events: events,
-    callbacks: callbacks,
-    crateName: crateName,
-    initFnName: initFnName,
-  );
+  return RustChannelMetadata(events: events, callbacks: callbacks, crateName: crateName, initFnName: initFnName);
 }
 
-void _inferChannelsFromBridge(
-  String text, {
-  required List<RustEventChannelMeta> events,
-  required List<RustCallbackMeta> callbacks,
-}) {
-  final eventRegex = RegExp(
-    r'Stream<\s*([A-Za-z0-9_]+)\s*>\s+([A-Za-z0-9_]+)Stream\s*\(',
-  );
+void _inferChannelsFromBridge(String text, {required List<RustEventChannelMeta> events, required List<RustCallbackMeta> callbacks}) {
+  final eventRegex = RegExp(r'Stream<\s*([A-Za-z0-9_]+)\s*>\s+([A-Za-z0-9_]+)Stream\s*\(');
   for (final match in eventRegex.allMatches(text)) {
     final eventType = match.group(1);
     final baseName = match.group(2);
@@ -197,9 +162,7 @@ void _inferChannelsFromBridge(
     events.add(RustEventChannelMeta(name: name, eventType: eventType));
   }
 
-  final callbackRegex = RegExp(
-    r'Stream<\s*([A-Za-z0-9_]+PendingRequest)\s*>\s+([A-Za-z0-9_]+)RequestsStream\s*\(',
-  );
+  final callbackRegex = RegExp(r'Stream<\s*([A-Za-z0-9_]+PendingRequest)\s*>\s+([A-Za-z0-9_]+)RequestsStream\s*\(');
   for (final match in callbackRegex.allMatches(text)) {
     final pendingType = match.group(1);
     final baseName = match.group(2);
@@ -208,36 +171,22 @@ void _inferChannelsFromBridge(
     final requestType = _findRequestType(text, pendingType);
     final responseType = _findResponseType(text, baseName);
     if (requestType == null || responseType == null) continue;
-    callbacks.add(
-      RustCallbackMeta(
-        name: name,
-        requestType: requestType,
-        responseType: responseType,
-      ),
-    );
+    callbacks.add(RustCallbackMeta(name: name, requestType: requestType, responseType: responseType));
   }
 }
 
 String? _findRequestType(String text, String pendingType) {
-  final regex = RegExp(
-    'class\\s+$pendingType\\s*\\{[\\s\\S]*?final\\s+([A-Za-z0-9_]+)\\s+request;',
-  );
+  final regex = RegExp('class\\s+$pendingType\\s*\\{[\\s\\S]*?final\\s+([A-Za-z0-9_]+)\\s+request;');
   return regex.firstMatch(text)?.group(1);
 }
 
 String? _findResponseType(String text, String baseName) {
-  final regex = RegExp(
-    'Future<\\s*void\\s*>\\s+${baseName}Respond\\s*\\(\\s*\\{[\\s\\S]*?required\\s+([A-Za-z0-9_]+)\\s+response',
-  );
+  final regex = RegExp('Future<\\s*void\\s*>\\s+${baseName}Respond\\s*\\(\\s*\\{[\\s\\S]*?required\\s+([A-Za-z0-9_]+)\\s+response');
   return regex.firstMatch(text)?.group(1);
 }
 
 final class RoutePageBinding {
-  const RoutePageBinding({
-    required this.kindKey,
-    required this.widgetType,
-    required this.libraryUri,
-  });
+  const RoutePageBinding({required this.kindKey, required this.widgetType, required this.libraryUri});
 
   final String kindKey;
   final String widgetType;
@@ -253,11 +202,7 @@ Future<RustRouteMetadata> readRustRouteMetadata() async {
   final targetCrateName = _readCargoPackageName();
   final routes = <RustRouteMeta>[];
 
-  final files = dir
-      .listSync(followLinks: false)
-      .whereType<File>()
-      .where((f) => f.path.endsWith('.json'))
-      .toList(growable: false);
+  final files = dir.listSync(followLinks: false).whereType<File>().where((f) => f.path.endsWith('.json')).toList(growable: false);
 
   for (final file in files) {
     final jsonStr = await file.readAsString();
@@ -265,9 +210,7 @@ Future<RustRouteMetadata> readRustRouteMetadata() async {
     if (obj is! Map<String, dynamic>) continue;
 
     final fileCrate = obj['crate_name'];
-    if (targetCrateName != null &&
-        fileCrate is String &&
-        fileCrate != targetCrateName) {
+    if (targetCrateName != null && fileCrate is String && fileCrate != targetCrateName) {
       continue;
     }
     // crate name from metadata is ignored
@@ -304,12 +247,8 @@ Future<RustRouteMetadata> readRustRouteMetadata() async {
           kind: kind,
           rustType: rustType,
           path: path is String ? path : null,
-          returnType: returnType is String
-              ? returnType
-              : 'oxide_core::navigation::NoReturn',
-          extraType: extraType is String
-              ? extraType
-              : 'oxide_core::navigation::NoExtra',
+          returnType: returnType is String ? returnType : 'oxide_core::navigation::NoReturn',
+          extraType: extraType is String ? extraType : 'oxide_core::navigation::NoExtra',
           fields: fields,
         ),
       );
@@ -324,19 +263,13 @@ Future<RustRouteMetadata> readRustRouteMetadata() async {
       continue;
     }
     if (!_sameRouteMeta(existing, r)) {
-      throw StateError(
-        'Conflicting route metadata for kind "${r.kind}" under rust/target/oxide_routes',
-      );
+      throw StateError('Conflicting route metadata for kind "${r.kind}" under rust/target/oxide_routes');
     }
   }
 
-  final dedupedRoutes = byKind.values.toList(growable: false)
-    ..sort((a, b) => a.kind.compareTo(b.kind));
+  final dedupedRoutes = byKind.values.toList(growable: false)..sort((a, b) => a.kind.compareTo(b.kind));
   // crateName isn’t tracked now; fall back to the Cargo package name or unknown
-  return RustRouteMetadata(
-    crateName: targetCrateName ?? 'unknown',
-    routes: dedupedRoutes,
-  );
+  return RustRouteMetadata(crateName: targetCrateName ?? 'unknown', routes: dedupedRoutes);
 }
 
 Future<List<RoutePageBinding>> discoverRoutePages(BuildStep buildStep) async {
@@ -358,10 +291,7 @@ Future<List<RoutePageBinding>> discoverRoutePages(BuildStep buildStep) async {
     final src = await buildStep.readAsString(assetId);
     if (partOfRe.hasMatch(src)) continue;
 
-    final libraryUri = Uri(
-      scheme: 'package',
-      path: '$package/${assetId.path.substring('lib/'.length)}',
-    ).toString();
+    final libraryUri = Uri(scheme: 'package', path: '$package/${assetId.path.substring('lib/'.length)}').toString();
 
     for (final annMatch in annotationRe.allMatches(src)) {
       final kindKey = _routeKindKeyFromSource(annMatch.group(1) ?? '');
@@ -375,14 +305,11 @@ Future<List<RoutePageBinding>> discoverRoutePages(BuildStep buildStep) async {
       if (widgetType.isEmpty) continue;
 
       final classStart = annMatch.end + classMatch.start;
-      final classSnippetEnd = (classStart + 2500) < src.length
-          ? (classStart + 2500)
-          : src.length;
+      final classSnippetEnd = (classStart + 2500) < src.length ? (classStart + 2500) : src.length;
       final classSnippet = src.substring(classStart, classSnippetEnd);
       final hasRouteCtor = routeCtorRe.hasMatch(classSnippet);
       final hasRouteField = routeFieldRe.hasMatch(classSnippet);
-      final isLikelyPage =
-          hasRouteCtor || hasRouteField || widgetType.endsWith('Page');
+      final isLikelyPage = hasRouteCtor || hasRouteField || widgetType.endsWith('Page');
       if (!isLikelyPage) continue;
 
       var score = 0;
@@ -391,11 +318,7 @@ Future<List<RoutePageBinding>> discoverRoutePages(BuildStep buildStep) async {
       if (hasRouteField) score += 2;
       if (widgetType.endsWith('Screen')) score -= 1;
 
-      final binding = RoutePageBinding(
-        kindKey: kindKey,
-        widgetType: widgetType,
-        libraryUri: libraryUri,
-      );
+      final binding = RoutePageBinding(kindKey: kindKey, widgetType: widgetType, libraryUri: libraryUri);
       final existing = byKindKey[kindKey];
       if (existing == null) {
         byKindKey[kindKey] = (binding, score);
@@ -406,9 +329,7 @@ Future<List<RoutePageBinding>> discoverRoutePages(BuildStep buildStep) async {
         continue;
       }
       if (score == existing.$2) {
-        throw StateError(
-          'Duplicate @OxideRoutePage binding for "$kindKey": ${existing.$1.widgetType} and ${binding.widgetType}',
-        );
+        throw StateError('Duplicate @OxideRoutePage binding for "$kindKey": ${existing.$1.widgetType} and ${binding.widgetType}');
       }
     }
   }
@@ -547,10 +468,7 @@ String generateRouteModelsSource(RustRouteMetadata metadata) {
   return _formatter.format(buf.toString());
 }
 
-String generateRouteBuildersSource(
-  RustRouteMetadata metadata,
-  List<RoutePageBinding> bindings,
-) {
+String generateRouteBuildersSource(RustRouteMetadata metadata, List<RoutePageBinding> bindings) {
   final buf = StringBuffer()
     ..writeln('// Generated by oxide_generator. Do not edit.')
     ..writeln()
@@ -558,13 +476,9 @@ String generateRouteBuildersSource(
     ..writeln("import '../routes/route_kind.g.dart';")
     ..writeln("import '../routes/route_models.g.dart';")
     ..writeln()
-    ..writeln(
-      'typedef OxideRouteBuilder = Widget Function(BuildContext context, OxideRoute route);',
-    )
+    ..writeln('typedef OxideRouteBuilder = Widget Function(BuildContext context, OxideRoute route);')
     ..writeln()
-    ..writeln(
-      'final Map<RouteKind, OxideRouteBuilder> oxideRouteBuilders = <RouteKind, OxideRouteBuilder>{',
-    );
+    ..writeln('final Map<RouteKind, OxideRouteBuilder> oxideRouteBuilders = <RouteKind, OxideRouteBuilder>{');
 
   final byKind = <String, RoutePageBinding>{};
   for (final b in bindings) {
@@ -591,17 +505,14 @@ String generateRouteBuildersSource(
   buf.writeln('};');
 
   final raw = buf.toString();
-  final importLines =
-      bindings.map((b) => b.libraryUri).toSet().toList(growable: false)..sort();
+  final importLines = bindings.map((b) => b.libraryUri).toSet().toList(growable: false)..sort();
   if (importLines.isEmpty) {
     return _formatter.format(raw);
   }
 
   final insertAfter = "import '../routes/route_models.g.dart';";
   final insertion = importLines.map((u) => "import '$u';").join('\n');
-  return _formatter.format(
-    raw.replaceFirst(insertAfter, '$insertAfter\n$insertion'),
-  );
+  return _formatter.format(raw.replaceFirst(insertAfter, '$insertAfter\n$insertion'));
 }
 
 String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
@@ -619,26 +530,15 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln("import '../routes/route_models.g.dart' as route_models;")
     ..writeln()
     ..writeln("import '../../src/rust/routes.dart' as rust_routes;")
-    ..writeln(
-      "import '../../src/rust/routes/oxide_navigation.dart' as rust_nav;",
-    );
+    ..writeln("import '../../src/rust/routes/oxide_navigation.dart' as rust_nav;");
 
   final rustRouteImports =
-      metadata.routes
-          .map(
-            (r) =>
-                "import '../../src/rust/routes/${_snakeCase(r.rustType)}.dart';",
-          )
-          .toSet()
-          .toList(growable: false)
-        ..sort();
+      metadata.routes.map((r) => "import '../../src/rust/routes/${_snakeCase(r.rustType)}.dart';").toSet().toList(growable: false)..sort();
   for (final importLine in rustRouteImports) {
     buf.writeln(importLine);
   }
   buf.writeln();
-  buf.writeln(
-    'final GlobalKey<NavigatorState> oxideNavigatorKey = GlobalKey<NavigatorState>();',
-  );
+  buf.writeln('final GlobalKey<NavigatorState> oxideNavigatorKey = GlobalKey<NavigatorState>();');
   buf.writeln();
   buf.writeln(
     'final NavigatorNavigationHandler<route_models.OxideRoute, RouteKind> oxideNavigationHandler = '
@@ -651,9 +551,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
   buf.writeln();
 
   buf
-    ..writeln(
-      'route_models.OxideRoute _fromRustRoutePayload(rust_routes.RoutePayload payload) {',
-    )
+    ..writeln('route_models.OxideRoute _fromRustRoutePayload(rust_routes.RoutePayload payload) {')
     ..writeln('  return payload.when(');
 
   for (final r in metadata.routes) {
@@ -670,9 +568,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('  );')
     ..writeln('}')
     ..writeln()
-    ..writeln(
-      'rust_routes.RoutePayload _toRustRoutePayload(route_models.OxideRoute route) {',
-    )
+    ..writeln('rust_routes.RoutePayload _toRustRoutePayload(route_models.OxideRoute route) {')
     ..writeln('  switch (route.kind) {');
 
   for (final r in metadata.routes) {
@@ -680,9 +576,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     final kindCtor = _lowerCamel(r.kind);
     buf.writeln('    case RouteKind.$kindCtor:');
     if (r.fields.isEmpty) {
-      buf.writeln(
-        '      return rust_routes.RoutePayload.$kindCtor($rustType());',
-      );
+      buf.writeln('      return rust_routes.RoutePayload.$kindCtor($rustType());');
     } else {
       buf.writeln('      final r = route as route_models.$rustType;');
       buf.writeln('      return rust_routes.RoutePayload.$kindCtor($rustType(');
@@ -709,9 +603,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('  };')
     ..writeln('}')
     ..writeln()
-    ..writeln(
-      'OxideNavigationCommand<route_models.OxideRoute, RouteKind> _mapOxideNavCommand(rust_nav.OxideNavCommand cmd) {',
-    )
+    ..writeln('OxideNavigationCommand<route_models.OxideRoute, RouteKind> _mapOxideNavCommand(rust_nav.OxideNavCommand cmd) {')
     ..writeln('  assert(() {')
     ..writeln('    // debug incoming commands from Rust')
     ..writeln('    // ignore: avoid_print')
@@ -721,21 +613,15 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('  return cmd.when(')
     ..writeln('    push: (route, ticket) {')
     ..writeln('      final decoded = _fromRustRoutePayload(route);')
-    ..writeln(
-      '      return OxideNavigationCommand.push(route: decoded, ticket: ticket);',
-    )
+    ..writeln('      return OxideNavigationCommand.push(route: decoded, ticket: ticket);')
     ..writeln('    },')
     ..writeln('    pop: (resultJson) {')
-    ..writeln(
-      '      final Object? result = resultJson == null ? null : jsonDecode(resultJson);',
-    )
+    ..writeln('      final Object? result = resultJson == null ? null : jsonDecode(resultJson);')
     ..writeln('      return OxideNavigationCommand.pop(result: result);')
     ..writeln('    },')
     ..writeln('    popUntil: (kind) {')
     ..writeln('      final routeKind = _routeKindFromStr(kind);')
-    ..writeln(
-      "      if (routeKind == null) throw StateError('Unknown route kind: \$kind');",
-    )
+    ..writeln("      if (routeKind == null) throw StateError('Unknown route kind: \$kind');")
     ..writeln('      return OxideNavigationCommand.popUntil(kind: routeKind);')
     ..writeln('    },')
     ..writeln('    reset: (routes) {')
@@ -754,9 +640,7 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     )
     ..writeln('  commands: rust_nav.oxideNavCommandsStream()')
     ..writeln('      .map(_mapOxideNavCommand)')
-    ..writeln(
-      '      .cast<OxideNavigationCommand<route_models.OxideRoute, RouteKind>>(),',
-    )
+    ..writeln('      .cast<OxideNavigationCommand<route_models.OxideRoute, RouteKind>>(),')
     ..writeln('  handler: oxideNavigationHandler,')
     ..writeln('  kindOf: (route) => route.kind,')
     ..writeln(
@@ -769,36 +653,26 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     )
     ..writeln('  emitRouteUpdate: (update) {')
     ..writeln('    final rustOperation = switch (update.operation) {')
-    ..writeln('      OxideRouteOperation.push => rust_nav.RouteOperation.push,')
-    ..writeln('      OxideRouteOperation.pop => rust_nav.RouteOperation.pop,')
-    ..writeln('      OxideRouteOperation.popUntil => rust_nav.RouteOperation.popUntil,')
-    ..writeln('      OxideRouteOperation.reset => rust_nav.RouteOperation.reset,')
-    ..writeln('      OxideRouteOperation.sync => rust_nav.RouteOperation.sync,')
+    ..writeln('      OxideRouteOperation.push => rust_routes.RouteOperation.push,')
+    ..writeln('      OxideRouteOperation.pop => rust_routes.RouteOperation.pop,')
+    ..writeln('      OxideRouteOperation.popUntil => rust_routes.RouteOperation.popUntil,')
+    ..writeln('      OxideRouteOperation.reset => rust_routes.RouteOperation.reset,')
+    ..writeln('      OxideRouteOperation.sync => rust_routes.RouteOperation.sync_,')
     ..writeln('    };')
     ..writeln('    return rust_nav.oxideNavRouteUpdate(')
-    ..writeln('      update: rust_nav.RouteUpdateContext(')
+    ..writeln('      update: rust_routes.RouteUpdateContext(')
     ..writeln('        operation: rustOperation,')
-    ..writeln(
-      '        route: update.route == null ? null : _toRustRoutePayload(update.route!),',
-    )
-    ..writeln(
-      '        resultJson: update.result == null ? null : jsonEncode(update.result),',
-    )
-    ..writeln(
-      '        argumentsJson: update.arguments == null ? null : jsonEncode(update.arguments),',
-    )
+    ..writeln('        route: update.route == null ? null : _toRustRoutePayload(update.route!),')
+    ..writeln('        resultJson: update.result == null ? null : jsonEncode(update.result),')
+    ..writeln('        argumentsJson: update.arguments == null ? null : jsonEncode(update.arguments),')
     ..writeln('        firstPush: update.firstPush,')
     ..writeln('      ),')
     ..writeln('    );')
     ..writeln('  },')
     ..writeln(');')
     ..writeln()
-    ..writeln(
-      '// start the navigation runtime once; repeat calls are benign but',
-    )
-    ..writeln(
-      '// this prevents excessive stream subscriptions when init is invoked',
-    )
+    ..writeln('// start the navigation runtime once; repeat calls are benign but')
+    ..writeln('// this prevents excessive stream subscriptions when init is invoked')
     ..writeln('// multiple times (e.g. hot-restart, debug experiments).')
     // top-level flag keeps state across repeated init calls; easier to format
     ..writeln('bool _oxideNavStarted = false;')
@@ -806,18 +680,14 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('  assert(() {')
     ..writeln('    // debug log to trace calls')
     ..writeln('    // ignore: avoid_print')
-    ..writeln(
-      r"    print('[Oxide] oxideNavStart called, started=$_oxideNavStarted');",
-    )
+    ..writeln(r"    print('[Oxide] oxideNavStart called, started=$_oxideNavStarted');")
     ..writeln('    return true;')
     ..writeln('  }());')
     ..writeln('  if (_oxideNavStarted) return;')
     ..writeln('  _oxideNavStarted = true;')
     ..writeln('  oxideNavigationRuntime.start();')
     ..writeln('  WidgetsBinding.instance.addPostFrameCallback((_) {')
-    ..writeln(
-      '    // initNavigation requires the navigation stack to exist (after the first frame).',
-    )
+    ..writeln('    // initNavigation requires the navigation stack to exist (after the first frame).')
     ..writeln('    unawaited(rust_nav.initNavigation());')
     ..writeln('  });')
     ..writeln('}')
@@ -831,9 +701,7 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
   // only import the bridge helpers when the Rust code actually defines
   // events or callbacks that will be referenced below. otherwise the file
   // doesn't exist and builds will fail (see example todos_app).
-  final hasChannels =
-      channels != null &&
-      (channels.events.isNotEmpty || channels.callbacks.isNotEmpty);
+  final hasChannels = channels != null && (channels.events.isNotEmpty || channels.callbacks.isNotEmpty);
   final initFnName = channels?.initFnName;
 
   final buf = StringBuffer()
@@ -844,21 +712,14 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln();
   if (hasChannels) {
     // alias the bridge so we can continue to call methods without prefixing.
-    buf.writeln(
-      "import '../src/rust/api/isolated_channels_bridge.dart' as channels;",
-    );
+    buf.writeln("import '../src/rust/api/isolated_channels_bridge.dart' as channels;");
     // some types generated by the bridge (notably the pending-request objects)
     // are defined in the same file but we'd like to expose them unprefixed in
     // the public APIs below. import them explicitly with `show` so the class
     // names are available without `_ch.` qualifiers.
     if (channels.callbacks.isNotEmpty == true) {
-      final pendingNames = channels.callbacks
-          .map((c) => '${c.name}PendingRequest')
-          .toSet()
-          .join(', ');
-      buf.writeln(
-        'import "../src/rust/api/isolated_channels_bridge.dart" show $pendingNames;',
-      );
+      final pendingNames = channels.callbacks.map((c) => '${c.name}PendingRequest').toSet().join(', ');
+      buf.writeln('import "../src/rust/api/isolated_channels_bridge.dart" show $pendingNames;');
     }
     // also bring in any channel type definitions; frb_generated.dart only imports
     // these files, it doesn't export their symbols, so other libraries won't
@@ -870,14 +731,11 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     // import inside frb_generated.dart sometimes confuses the analyzer, so we
     // pull in the io variant explicitly; analysis of web builds may still
     // succeed since those files export the same names.
-    buf.writeln(
-      "import '../src/rust/frb_generated.io.dart'; // ignore: unused_import",
-    );
+    buf.writeln("import '../src/rust/frb_generated.io.dart'; // ignore: unused_import");
     buf.writeln();
   }
   buf
     ..writeln("import '../src/rust/frb_generated.dart';")
-    ..writeln("import '../src/rust/api/bridge.dart';")
     ..writeln()
     ..writeln("import 'navigation/navigation_runtime.g.dart';")
     ..writeln("import 'routes/route_kind.g.dart';")
@@ -888,30 +746,18 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln()
     ..writeln('  static bool get isInitialized => _initialized;')
     ..writeln()
-    ..writeln(
-      '  static GlobalKey<NavigatorState> get navigatorKey => oxideNavigatorKey;',
-    )
+    ..writeln('  static GlobalKey<NavigatorState> get navigatorKey => oxideNavigatorKey;')
     ..writeln()
-    ..writeln(
-      '  static Future<void> init({bool startNavigation = false}) async {',
-    )
+    ..writeln()
+    ..writeln('  static Future<void> init({bool startNavigation = false}) async {')
     ..writeln('    if (_initialized) return;')
-    ..writeln(
-      '    // make sure flutter bindings are ready; simplifies example setup',
-    )
+    ..writeln('    // make sure flutter bindings are ready; simplifies example setup')
     ..writeln('    WidgetsFlutterBinding.ensureInitialized();')
     ..writeln('    await RustLib.init();')
-    ..writeln('    setPersistenceDebugJsonEnabled(OxideLogger.isDebugJsonEnabled);')
-    ..writeln(
-      '    _initialized = true;',
-    ) // when channels are generated we need to make sure they are initialized too;
+    ..writeln('    _initialized = true;') // when channels are generated we need to make sure they are initialized too;
     // running this inside the common startup path frees consumers from having
     // to remember to call a channel helper by hand.
-    ..writeln(
-      hasChannels
-          ? '    // initialize any generated channel APIs before returning'
-          : '',
-    )
+    ..writeln(hasChannels ? '    // initialize any generated channel APIs before returning' : '')
     ..writeln(hasChannels ? '    await oxideInitChannels();' : '')
     ..writeln('    if (startNavigation) {')
     ..writeln('      await oxideNavStart();')
@@ -919,48 +765,30 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln('  }')
     ..writeln()
     ..writeln('  // navigation runtime is already generated')
-    ..writeln(
-      '  static OxideNavigationRuntime<OxideRoute, RouteKind> get navigation {',
-    )
+    ..writeln('  static OxideNavigationRuntime<OxideRoute, RouteKind> get navigation {')
     ..writeln('    _ensureInitialized();')
     ..writeln('    return oxideNavigationRuntime;')
     ..writeln('  }')
     ..writeln()
-    ..writeln(
-      '  // central stub for any generated event APIs. concrete channels will be',
-    )
-    ..writeln(
-      '  // added here by the generator when events are declared in Rust.',
-    )
+    ..writeln('  // central stub for any generated event APIs. concrete channels will be')
+    ..writeln('  // added here by the generator when events are declared in Rust.')
     ..writeln('  static OxideEvents get events => _events;')
     ..writeln('  static final _events = OxideEvents._();')
     ..writeln()
-    ..writeln(
-      '  // central stub for any generated callback APIs. methods will be added',
-    )
-    ..writeln(
-      '  // here by generator when callback interfaces are declared in Rust.',
-    )
+    ..writeln('  // central stub for any generated callback APIs. methods will be added')
+    ..writeln('  // here by generator when callback interfaces are declared in Rust.')
     ..writeln('  static OxideCallbacks get callbacks => _callbacks;')
     ..writeln('  static final _callbacks = OxideCallbacks._();')
     ..writeln()
     ..writeln('  static void _ensureInitialized() {')
     ..writeln('    if (_initialized) return;')
-    ..writeln(
-      "    throw StateError('OxideStack.init() must be called from main() before using Oxide APIs.');",
-    )
+    ..writeln("    throw StateError('OxideStack.init() must be called from main() before using Oxide APIs.');")
     ..writeln('  }')
     ..writeln('}')
     ..writeln()
-    ..writeln(
-      '// placeholders that allow upstream code to append members when channels',
-    )
-    ..writeln(
-      '// or callback systems are generated. the classes are intentionally private',
-    )
-    ..writeln(
-      '// because consumers should only interact via the typed getters above, which',
-    )
+    ..writeln('// placeholders that allow upstream code to append members when channels')
+    ..writeln('// or callback systems are generated. the classes are intentionally private')
+    ..writeln('// because consumers should only interact via the typed getters above, which')
     ..writeln('// can later hide nullability or initialization details.')
     ..writeln('final class OxideEvents {')
     ..writeln('  const OxideEvents._();')
@@ -990,12 +818,8 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
       buf.writeln('  Stream<${c.name}PendingRequest> get ${method}Requests =>');
       buf.writeln('      channels.${method}RequestsStream();');
       buf.writeln();
-      buf.writeln(
-        '  Future<void> ${method}Respond({required BigInt id, required ${c.responseType} response}) =>',
-      );
-      buf.writeln(
-        '      channels.${method}Respond(id: id, response: response);',
-      );
+      buf.writeln('  Future<void> ${method}Respond({required BigInt id, required ${c.responseType} response}) =>');
+      buf.writeln('      channels.${method}Respond(id: id, response: response);');
       buf.writeln();
     }
   } else {
@@ -1014,32 +838,20 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     if (initFnName != null) {
       buf.writeln('  await channels.$initFnName();');
     } else {
-      buf.writeln(
-        '  // no-op; failed to determine the generated init helper name',
-      );
+      buf.writeln('  // no-op; failed to determine the generated init helper name');
     }
     buf.writeln('}');
   }
   // convenience helper for example applications to remove boilerplate
   buf.writeln('');
   buf.writeln('// helper that initializes Oxide and starts the Flutter app');
-  buf.writeln(
-    '// navigation startup is deferred until the first frame so that the',
-  );
-  buf.writeln(
-    '// navigator key is attached before commands are processed; this avoids',
-  );
-  buf.writeln(
-    '// spurious resets / flicker when the runtime immediately emits the',
-  );
+  buf.writeln('// navigation startup is deferred until the first frame so that the');
+  buf.writeln('// navigator key is attached before commands are processed; this avoids');
+  buf.writeln('// spurious resets / flicker when the runtime immediately emits the');
   buf.writeln('// initial route.');
-  buf.writeln(
-    'Future<void> runOxideApp(Widget app, {bool startNavigation = true}) async {',
-  );
+  buf.writeln('Future<void> runOxideApp(Widget app, {bool startNavigation = true}) async {');
   buf.writeln('  WidgetsFlutterBinding.ensureInitialized();');
-  buf.writeln(
-    '  // always perform core init; navigation start is deferred until the first frame.',
-  );
+  buf.writeln('  // always perform core init; navigation start is deferred until the first frame.');
   buf.writeln('  await OxideStack.init();');
   buf.writeln('  runApp(app);');
   buf.writeln('  if (startNavigation) {');
@@ -1056,20 +868,14 @@ String generateOxideEntrypointSource({bool includeSrcOxide = false}) {
     ..writeln('// Generated by oxide_generator. Do not edit.')
     ..writeln()
     // expose the core entrypoint and conveniently export the app helper too
-    ..writeln(
-      "export 'oxide_generated/oxide_stack.g.dart' show OxideStack, runOxideApp;",
-    )
-    ..writeln(
-      "export 'oxide_generated/routes/route_kind.g.dart' show RouteKind, RouteKindX;",
-    )
+    ..writeln("export 'oxide_generated/oxide_stack.g.dart' show OxideStack, runOxideApp;")
+    ..writeln("export 'oxide_generated/routes/route_kind.g.dart' show RouteKind, RouteKindX;")
     ..writeln("export 'oxide_generated/routes/route_models.g.dart';");
 
   if (includeSrcOxide) {
     buf
       ..writeln()
-      ..writeln(
-        '// re-export example-specific helpers so consumers can use the',
-      )
+      ..writeln('// re-export example-specific helpers so consumers can use the')
       ..writeln('// package root rather than dipping into src/.')
       ..writeln("export 'src/oxide.dart';");
   }
@@ -1079,20 +885,14 @@ String generateOxideEntrypointSource({bool includeSrcOxide = false}) {
 
 String _lowerCamel(String s) {
   if (s.isEmpty) return s;
-  final parts = s
-      .split(RegExp(r'[_\-\s]+'))
-      .where((p) => p.isNotEmpty)
-      .toList(growable: false);
+  final parts = s.split(RegExp(r'[_\-\s]+')).where((p) => p.isNotEmpty).toList(growable: false);
   if (parts.isEmpty) return s;
 
   final first = parts.first;
   final firstLower = first[0].toLowerCase() + first.substring(1);
   if (parts.length == 1) return firstLower;
 
-  final rest = parts
-      .skip(1)
-      .map((p) => p.isEmpty ? p : (p[0].toUpperCase() + p.substring(1)))
-      .join();
+  final rest = parts.skip(1).map((p) => p.isEmpty ? p : (p[0].toUpperCase() + p.substring(1))).join();
   return '$firstLower$rest';
 }
 
@@ -1105,10 +905,7 @@ String _upperCamel(String s) {
 
 String _snakeCase(String s) {
   if (s.isEmpty) return s;
-  final withUnderscores = s.replaceAllMapped(
-    RegExp(r'(?<!^)([A-Z])'),
-    (m) => '_${m[1]}',
-  );
+  final withUnderscores = s.replaceAllMapped(RegExp(r'(?<!^)([A-Z])'), (m) => '_${m[1]}');
   return withUnderscores.toLowerCase();
 }
 
@@ -1185,10 +982,7 @@ List<String> _splitRustGenericArgs(String s) {
   if (buf.isNotEmpty) {
     args.add(buf.toString());
   }
-  return args
-      .map((a) => a.trim())
-      .where((a) => a.isNotEmpty)
-      .toList(growable: false);
+  return args.map((a) => a.trim()).where((a) => a.isNotEmpty).toList(growable: false);
 }
 
 String? _readCargoPackageName() {

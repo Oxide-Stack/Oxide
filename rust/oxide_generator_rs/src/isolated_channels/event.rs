@@ -275,7 +275,7 @@ fn expand_duplex_channel(
                 #[flutter_rust_bridge::frb]
                 pub fn #incoming_fn_ident(
                     event: #incoming_ty,
-                ) -> Result<(), #channel_error_alias_ident> {
+                ) -> Result<(), oxide_core::OxideChannelError> {
                     super::incoming().handle(event)
                 }
             }
@@ -285,7 +285,7 @@ fn expand_duplex_channel(
     let expanded = quote! {
         #item_impl
 
-        pub type #channel_error_alias_ident = ::oxide_core::OxideChannelError;
+        pub type #channel_error_alias_ident = oxide_core::OxideChannelError;
 
         #send_helpers
 

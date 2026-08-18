@@ -194,12 +194,12 @@ fn callbacking_generates_methods_and_runtime_module() {
     );
     assert!(out.contains("__oxide_isolated_callback_dialog_service"));
     assert!(
-        compact.contains("pubtypeOxideChannelErrorDialogService=::oxide_core::OxideChannelError;"),
+        compact.contains("pubtypeOxideChannelErrorDialogService=oxide_core::OxideChannelError;"),
         "expected generated OxideChannelError alias for callback service, got: {out}"
     );
     assert!(
-        compact.contains("->Result<bool,OxideChannelErrorDialogService>"),
-        "expected callback methods to use generated OxideChannelError alias, got: {out}"
+        compact.contains("->Result<bool,oxide_core::OxideChannelError>"),
+        "expected callback methods to use stable OxideChannelError path, got: {out}"
     );
 }
 
@@ -380,12 +380,12 @@ fn event_channel_duplex_generates_outgoing_frb_guard_helper() {
     );
     let compact: String = out.chars().filter(|c| !c.is_whitespace()).collect();
     assert!(
-        compact.contains("pubtypeOxideChannelErrorDuplexChannel=::oxide_core::OxideChannelError;"),
+        compact.contains("pubtypeOxideChannelErrorDuplexChannel=oxide_core::OxideChannelError;"),
         "expected generated OxideChannelError alias for duplex channel, got: {out}"
     );
     assert!(
-        compact.contains("->Result<(),OxideChannelErrorDuplexChannel>"),
-        "expected duplex incoming bridge to use generated OxideChannelError alias, got: {out}"
+        compact.contains("->Result<(),oxide_core::OxideChannelError>"),
+        "expected duplex incoming bridge to use stable OxideChannelError path, got: {out}"
     );
 }
 

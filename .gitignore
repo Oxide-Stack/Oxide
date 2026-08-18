@@ -6,7 +6,6 @@ rust/target/
 flutter/target/
 **/.dart_tool/
 **/build/
-**/rust/src/frb_generated.rs
 **/windows/flutter/ephemeral/
 **/linux/flutter/ephemeral/
 **/.plugin_symlinks/

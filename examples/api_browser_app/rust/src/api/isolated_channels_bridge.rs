@@ -2,8 +2,6 @@
 //!
 //! This API is additive and feature-gated behind `isolated-channels`.
 
-pub use oxide_core::OxideChannelError;
-
 use flutter_rust_bridge::DartFnFuture;
 
 use crate::isolated_channels_demo::{

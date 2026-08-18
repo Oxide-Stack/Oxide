@@ -24,6 +24,12 @@ class OxideLogger {
   /// Enables verbose transition payload logs (before/action/after).
   static const bool _isAdvancedLogEnabled = bool.fromEnvironment('ENABLE_ADVANCED_LOGS', defaultValue: false);
 
+  /// Controls persistence debug JSON copies.
+  ///
+  /// Supported values are `auto`, `on`, and `off`. `auto` enables the copies
+  /// in debug/profile builds and disables them in release builds.
+  static const String _debugJsonPolicy = String.fromEnvironment('OXIDE_DEBUG_JSON', defaultValue: 'auto');
+
   /// Helper to determine if we should log based on mode and flag
   static bool get _shouldLog => !kReleaseMode || _isLogEnabled;
 
@@ -31,8 +37,20 @@ class OxideLogger {
   static bool get isAdvancedLoggingEnabled => _shouldLog && _isAdvancedLogEnabled;
 
   /// `true` when debug JSON persistence copies should be enabled in Rust.
-  static bool get isDebugJsonEnabled =>
-      !kReleaseMode || _isLogEnabled || _isAdvancedLogEnabled;
+  static bool get isDebugJsonEnabled {
+    switch (_debugJsonPolicy.toLowerCase()) {
+      case 'on':
+      case 'true':
+      case '1':
+        return true;
+      case 'off':
+      case 'false':
+      case '0':
+        return false;
+      default:
+        return !kReleaseMode;
+    }
+  }
 
   static void _log(LogLevel level, String source, String message, {Object? error, StackTrace? stackTrace}) {
     if (!_shouldLog) return;
