@@ -70,12 +70,16 @@ try {
     Push-Location $exampleRustDir
     try {
       Invoke-QACommandWithRetry "cargo" @("test")
+      # Build the release cdylib that the FRB Dart loader probes for `flutter test`.
+      # CARGO_TARGET_DIR is redirected, so point the loader at the same directory.
+      Invoke-QACommandWithRetry "cargo" @("build", "--release")
     } finally {
       Pop-Location
     }
   }
 
   Invoke-QACommandWithRetry "dart" @("run", "build_runner", "build", "-d")
+  $env:FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR = Join-Path $env:CARGO_TARGET_DIR "release"
   Invoke-QACommandWithRetry "flutter" @("test")
 
   $integrationTestDir = Join-Path (Get-Location) "integration_test"
@@ -87,5 +91,6 @@ try {
   }
 } finally {
   Remove-Item Env:CARGO_TARGET_DIR -ErrorAction SilentlyContinue
+  Remove-Item Env:FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR -ErrorAction SilentlyContinue
   Pop-Location
 }

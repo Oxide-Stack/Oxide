@@ -93,22 +93,25 @@ fi
 if [[ -f "rust/Cargo.toml" ]]; then
   cd rust
   qa_run cargo test
+  # Build the release cdylib that the FRB Dart loader probes for `flutter test`.
+  # CARGO_TARGET_DIR is redirected, so point the loader at the same directory.
+  qa_run cargo build --release
   cd ..
 fi
 
 run_with_retry 5 5 qa_run dart run build_runner build -d
-qa_run flutter test
+qa_run env FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR="$CARGO_TARGET_DIR/release" flutter test
 
 run_integration_test() {
   local test_file="$1"
-  if qa_run flutter test "$test_file" -d "$integration_device_id" --timeout "$integration_timeout" --ignore-timeouts; then
+  if qa_run env FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR="$CARGO_TARGET_DIR/release" flutter test "$test_file" -d "$integration_device_id" --timeout "$integration_timeout" --ignore-timeouts; then
     return 0
   fi
 
   # Retry after clean to recover from stale desktop artifacts.
   qa_run flutter clean
   rm -rf build/windows
-  qa_run flutter test "$test_file" -d "$integration_device_id" --timeout "$integration_timeout" --ignore-timeouts
+  qa_run env FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR="$CARGO_TARGET_DIR/release" flutter test "$test_file" -d "$integration_device_id" --timeout "$integration_timeout" --ignore-timeouts
 }
 
 if [[ "$skip_integration" != "1" && -d "integration_test" && -n "$integration_device_id" ]]; then
