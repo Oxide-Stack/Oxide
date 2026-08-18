@@ -13,11 +13,10 @@ Future<void> main() async {
   await runOxideApp(
     const ProviderScope(
       child: BenchCounterHooksOxideScope(
-        child: BenchJsonHooksOxideScope(
-          child: BenchSieveHooksOxideScope(child: BenchApp()),
-        ),
+        child: BenchJsonHooksOxideScope(child: BenchSieveHooksOxideScope(child: BenchApp())),
       ),
     ),
+    startNavigation: false,
   );
 
   // start the navigation runtime manually and then immediately wipe any

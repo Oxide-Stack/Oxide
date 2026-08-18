@@ -92,7 +92,6 @@ pub fn expand_oxide_callback(
 
     let methods = generate_callback_methods(
         &self_ident,
-        &channel_error_alias_ident,
         &request_ty,
         &request_enum,
         &response_ty,
@@ -140,7 +139,7 @@ pub fn expand_oxide_callback(
                 pub async fn #respond_fn_ident(
                     id: u64,
                     response: #response_ty,
-                ) -> Result<(), #channel_error_alias_ident> {
+                ) -> Result<(), oxide_core::OxideChannelError> {
                     super::runtime().respond(id, response).await
                 }
             }
@@ -150,7 +149,7 @@ pub fn expand_oxide_callback(
     Ok(quote! {
         #item_impl
 
-        pub type #channel_error_alias_ident = ::oxide_core::OxideChannelError;
+        pub type #channel_error_alias_ident = oxide_core::OxideChannelError;
 
         #methods
 
@@ -196,7 +195,6 @@ fn validate_request_response_parity(
 
 fn generate_callback_methods(
     self_ident: &syn::Ident,
-    channel_error_alias_ident: &syn::Ident,
     request_ty: &Type,
     request_enum: &ItemEnum,
     response_ty: &Type,
@@ -221,11 +219,11 @@ fn generate_callback_methods(
         let (ret_ty, match_arm) = response_match_arm(response_ty, resp_variant)?;
 
         out.push(quote! {
-            pub async fn #method_ident(#args) -> Result<#ret_ty, #channel_error_alias_ident> {
+            pub async fn #method_ident(#args) -> Result<#ret_ty, oxide_core::OxideChannelError> {
                 let response = #runtime_mod_ident::runtime().invoke(#req_ctor).await?;
                 match response {
                     #match_arm,
-                    _ => Err(#channel_error_alias_ident::UnexpectedResponse),
+                    _ => Err(oxide_core::OxideChannelError::UnexpectedResponse),
                 }
             }
         });

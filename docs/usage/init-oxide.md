@@ -55,3 +55,21 @@ Notes:
 
 - In debug/profile builds, baseline Oxide logs are already available.
 - `ENABLE_ADVANCED_LOGS` is intended for deep diagnostics and can produce large logs because it includes state snapshots and action payloads.
+
+### Persistence Debug JSON
+
+Oxide can mirror persisted snapshots to a validated debug JSON copy. The default policy is `auto`, which enables the copy in debug/profile builds and disables it in release builds.
+
+Supported compile-time flag:
+
+- `OXIDE_DEBUG_JSON=auto` (default): follow the build mode.
+- `OXIDE_DEBUG_JSON=on`: force persistence debug JSON on in any build.
+- `OXIDE_DEBUG_JSON=off`: force persistence debug JSON off in any build.
+
+Example:
+
+```bash
+flutter run --dart-define=OXIDE_DEBUG_JSON=off
+```
+
+`OxideStack.init()` applies this policy automatically during startup.
