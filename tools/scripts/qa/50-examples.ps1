@@ -17,7 +17,8 @@ $exampleDirs = @(
   "examples\todos_app",
   "examples\ticker_app",
   "examples\benchmark_app",
-  "examples\api_browser_app"
+  "examples\api_browser_app",
+  "examples\showcase_app"
 )
 
 if ($MaxParallel -lt 1) {
