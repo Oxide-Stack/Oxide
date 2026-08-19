@@ -291,7 +291,7 @@ jobs:
         run: |
           set -euo pipefail
           # Install via cargo (preferred). Ensure cargo's bin dir is on PATH for subsequent steps.
-          cargo install flutter_rust_bridge_codegen --locked || true
+          cargo install flutter_rust_bridge_codegen --version 2.12.0 --locked || true
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
       - name: Publish oxide_annotations

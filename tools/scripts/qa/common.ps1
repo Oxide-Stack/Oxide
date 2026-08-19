@@ -28,7 +28,11 @@ function Invoke-QACommand([string] $exe, [string[]] $commandArgs) {
 }
 
 function Invoke-QAScript([string] $scriptPath, [string[]] $scriptArgs) {
-  Invoke-QACommand "pwsh" @("-NoProfile", "-File", $scriptPath) + $scriptArgs
+  $pwshArgs = @("-NoProfile", "-File", $scriptPath)
+  if ($scriptArgs.Count -gt 0) {
+    $pwshArgs += $scriptArgs
+  }
+  Invoke-QACommand "pwsh" $pwshArgs
 }
 
 function Remove-QABuildDir([string] $dirPath) {
