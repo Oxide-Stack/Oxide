@@ -133,9 +133,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-
 
-      - name: Setup toolchains (Linux)
-        run: bash ./tools/scripts/qa/10-setup-toolchains.sh 1 1 1
-
       - name: Final QA check (Linux)
         env:
           QA_EXAMPLE_MAX_PARALLEL: "2"
@@ -189,12 +186,6 @@ jobs:
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pub-
-
-      - name: Setup toolchains (Windows)
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          .\tools\scripts\qa\10-setup-toolchains.ps1 -EnableWindowsDesktop -EnsureFrbCodegen -EnsureRustWasmTargets
 
       - name: Final QA check (Windows)
         env:
