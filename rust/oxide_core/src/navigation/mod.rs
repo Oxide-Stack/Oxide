@@ -27,10 +27,12 @@
 //!     type Extra = NoExtra;
 //! }
 //! ```
+#[cfg(feature = "navigation-binding")]
+pub(crate) mod context;
 mod default_extra;
+mod default_return;
 mod nav_command;
 mod nav_route;
-mod default_return;
 mod no_extra;
 mod no_return;
 mod oxide_route_traits;
@@ -38,6 +40,8 @@ mod route;
 mod route_context;
 mod route_extra;
 mod route_return;
+#[cfg(feature = "navigation-binding")]
+pub(crate) mod runtime;
 
 pub use default_extra::DefaultExtra;
 pub use default_return::DefaultReturn;
@@ -47,6 +51,6 @@ pub use no_extra::NoExtra;
 pub use no_return::NoReturn;
 pub use oxide_route_traits::{OxideRoute, OxideRouteKind, OxideRoutePayload};
 pub use route::Route;
-pub use route_context::RouteContext;
+pub use route_context::{RouteContext, RouteOperation, RouteUpdate};
 pub use route_extra::RouteExtra;
 pub use route_return::RouteReturn;

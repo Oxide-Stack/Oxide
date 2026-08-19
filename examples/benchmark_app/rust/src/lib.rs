@@ -12,9 +12,7 @@ pub use oxide_core::{CoreResult, OxideError};
 pub use serde_json::Value;
 
 #[oxide_generator_rs::routes]
-pub mod routes {
-    include!("routes/mod.rs");
-}
+pub mod routes {}
 
 #[cfg(test)]
 mod tests;

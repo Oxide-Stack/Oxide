@@ -1,0 +1,5 @@
+error: expected `=`
+ --> tests/ui/fail_oxide_route_missing_equals.rs:3:20
+  |
+3 | #[oxide_route(path "/x")]
+  |                    ^^^^

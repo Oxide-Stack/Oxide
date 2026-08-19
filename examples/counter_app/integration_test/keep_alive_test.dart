@@ -40,7 +40,7 @@ void main() {
 
   setUpAll(() async {
     // navigation not exercised by these state/bridge tests
-    await OxideStack.init(startNavigation: false);
+    await OxideStack.init();
   });
 
   testWidgets(

@@ -9,9 +9,8 @@ import 'package:counter_app/src/features/counter/counter_home_screen.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
-    // navigation isn't needed for these widget-focused tests and the harness
-    // doesn't wire up the generated navigator key, so keep startup quiet.
-    await OxideStack.init(startNavigation: false);
+    // Initialization no longer requires working navigation to be wired.
+    await OxideStack.init();
   });
 
   testWidgets('Counter dispatch updates Rust state', (

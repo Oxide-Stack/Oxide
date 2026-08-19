@@ -1,13 +1,6 @@
 #![doc = include_str!("../README.md")]
 
-// Crate entrypoint and stable public surface.
-//
-// Why: Oxide needs a small, usage-agnostic Rust core that can be consumed from
-// multiple environments (native, WASM, and Flutter Rust Bridge) without leaking
-// internal module structure into public imports.
-//
-// How: Keep internal modules organized by responsibility and re-export the
-// user-facing types from this file so refactors remain non-breaking.
+// Stable public surface for the Rust core.
 mod engine;
 
 #[cfg(feature = "navigation-binding")]
@@ -28,19 +21,15 @@ pub mod runtime;
 /// Optional state persistence utilities.
 pub mod persistence;
 
+pub use engine::Context;
 pub use engine::InitContext;
 pub use engine::{
     CoreResult, OxideError, Reducer, ReducerEngine, SlicedState, StateChange, StateSnapshot,
 };
-pub use engine::Context;
 pub type ReducerCtx<'a, Input, State, StateSlice = ()> =
     engine::Context<'a, Input, State, StateSlice>;
 
 /// Initializes global runtimes used by optional Oxide features.
-///
-/// Why: some features (navigation, isolated channels) use explicit global singletons for
-/// generated glue code. This helper provides a single, idempotent entry point to initialize
-/// all enabled globals consistently.
 pub fn init_engine_globals() -> CoreResult<()> {
     #[cfg(feature = "navigation-binding")]
     {
@@ -70,18 +59,16 @@ pub fn init_from_frb(_thread_pool_provider: fn() -> ()) -> CoreResult<()> {
 }
 
 #[cfg(feature = "navigation-binding")]
-pub use engine::{
-    NavigationCtx, NavigationRuntime, init_navigation, navigation_runtime,
-};
+pub use engine::{NavigationCtx, NavigationRuntime, init_navigation, navigation_runtime};
 
+pub use ffi::watch_receiver_to_stream;
 #[cfg(feature = "isolated-channels")]
 pub use isolated_channels::{
     CallbackRuntime, EventChannelRuntime, IncomingHandler, OxideCallbacking, OxideChannelError,
-    OxideChannelResult, OxideEventChannel, OxideEventDuplexChannel, ensure_isolated_channels_initialized,
-    init_isolated_channels, isolated_channels_initialized, isolated_channels_runtime,
-    OxideIsolatedChannelsRuntime,
+    OxideChannelResult, OxideEventChannel, OxideEventDuplexChannel, OxideIsolatedChannelsRuntime,
+    ensure_isolated_channels_initialized, init_isolated_channels, isolated_channels_initialized,
+    isolated_channels_runtime,
 };
-pub use ffi::watch_receiver_to_stream;
 pub use tokio;
 
 #[cfg(any(feature = "state-persistence", feature = "navigation-binding"))]

@@ -1,6 +1,6 @@
 // Snapshot model used by both Rust and binding layers.
 //
-// Why: Exposing a small `{revision, state}` payload makes it easy for consumers
+// Exposing a small `{revision, state}` payload makes it easy for consumers
 // to reason about update ordering and to build reactive streams on top.
 /// Versioned snapshot of store state.
 ///

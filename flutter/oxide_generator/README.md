@@ -1,8 +1,8 @@
 # oxide_generator
 
-`oxide_generator` is a dev-only build_runner generator that reads `@OxideStore(...)` declarations and emits backend glue as `*.oxide.g.dart`.
+`oxide_generator` is a dev-only build_runner generator that reads `@OxideStore(...)` declarations and emits `*.oxide.g.dart` backend glue.
 
-This package is intentionally usage-agnostic. For runnable usage, see the example apps in the repository (examples/*) and the root README.
+The package stays usage-agnostic. For runnable usage, see the example apps in the repository and the root README.
 
 ## Add It To Your App
 
@@ -10,12 +10,12 @@ In your Flutter app:
 
 ```yaml
 dependencies:
-  oxide_annotations: ^0.4.0
-  oxide_runtime: ^0.4.0
+  oxide_annotations: ^0.5.0
+  oxide_runtime: ^0.5.0
 
 dev_dependencies:
   build_runner: ^2.0.0
-  oxide_generator: ^0.4.0
+  oxide_generator: ^0.5.0
 ```
 
 Then fetch packages:
@@ -75,7 +75,7 @@ The generator emits backend-specific glue. Depending on `backend: OxideBackend..
 - `keepAlive`: keeps the generated store alive when possible (backend-dependent behavior).
 - `bindings`: optional import alias prefix used to qualify default binding function names.
 - `createEngine`, `disposeEngine`, `dispatch`, `stateStream`, `current`: binding function names (typically FRB-generated).
-- `initApp`: optional initialization hook invoked at the start of store initialization (not a substitute for FRB `RustLib.init()` + `initOxide()`).
+- `initApp`: optional initialization hook invoked at the start of store initialization (not a substitute for calling `OxideStack.init()` in `main()`).
 - `encodeCurrentState`: optional binding used by the runtime to snapshot/persist bytes.
 
 ## Lifetime / Keep-Alive

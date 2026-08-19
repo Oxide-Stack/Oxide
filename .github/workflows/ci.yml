@@ -1,216 +1,74 @@
-name: CI
+name: Basic CI
 
 on:
-  pull_request:
   push:
-    branches:
+    branches-ignore:
       - main
+    tags-ignore:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: basic-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  FLUTTER_ROOT: ""
 
 jobs:
-  verify:
+  basic-ci:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
-      - name: Verify version sync
-        run: bash ./tools/scripts/version_sync.sh --verify
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  rust:
-    runs-on: ubuntu-latest
-    needs: verify
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: subosito/flutter-action@v2
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
-      - name: Install flutter_rust_bridge_codegen (via cargo)
-        shell: bash
-        run: |
-          set -euo pipefail
-          if ! command -v flutter_rust_bridge_codegen >/dev/null 2>&1; then
-            cargo install flutter_rust_bridge_codegen --locked
-          fi
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-      - name: Test (Rust workspace)
-        working-directory: rust
-        run: cargo test --workspace
-      - name: Test oxide_core (navigation + isolated channels)
-        working-directory: rust
-        run: cargo test -p oxide_core --features "navigation-binding,isolated-channels"
-      - name: Check (WASM targets)
-        working-directory: rust
-        run: |
-          rustup target add wasm32-unknown-unknown wasm32-wasip1
-          cargo check -p oxide_core --target wasm32-unknown-unknown --all-features
-          cargo check -p oxide_core --target wasm32-wasip1 --all-features
-          cargo test -p oxide_core --target wasm32-unknown-unknown --all-features --no-run --test wasm_web_compat
-          cargo test -p oxide_core --target wasm32-wasip1 --all-features --no-run --test wasm_wasi_compat
-      - uses: taiki-e/install-action@v2
+
+      - name: Cache Flutter pub dependencies
+        uses: actions/cache@v4
         with:
-          tool: cargo-llvm-cov
-      - name: Coverage (Rust workspace)
-        working-directory: rust
-        run: |
-          rustup component add llvm-tools-preview
-          cargo llvm-cov --workspace --all-features --fail-under-lines 62 --fail-under-regions 65 --summary-only
-      - name: Test (Example Rust crates)
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Prepare toolchains
         shell: bash
         run: |
           set -euo pipefail
-          examples=(
-            "examples/counter_app/rust"
-            "examples/todos_app/rust"
-            "examples/ticker_app/rust"
-            "examples/benchmark_app/rust"
-            "examples/api_browser_app/rust"
-          )
-          for dir in "${examples[@]}"; do
-            example_root="$(dirname "$dir")"
-            (
-              cd "$example_root"
-              flutter pub get
-              flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
-              cd "rust"
-              cargo test
-            )
-          done
+          bash ./tools/scripts/qa/00-verify-versions.sh
+          # Linux runner: skip windows desktop toggle, ensure FRB + wasm prerequisites
+          bash ./tools/scripts/qa/10-setup-toolchains.sh 0 1 1
 
-  flutter:
-    runs-on: ubuntu-latest
-    needs: verify
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Install flutter_rust_bridge_codegen (via cargo)
+      - name: Run minimal repository test suite
+        env:
+          QA_SKIP_COVERAGE: "1"
         shell: bash
         run: |
           set -euo pipefail
-          # Install via cargo (FRB codegen is distributed via cargo)
-          if ! command -v flutter_rust_bridge_codegen >/dev/null 2>&1; then
-            cargo install flutter_rust_bridge_codegen --locked
-          fi
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-
-      - name: Test oxide_runtime
-        working-directory: flutter/oxide_runtime
-        run: flutter test
-
-      - name: Test oxide_generator
-        working-directory: flutter/oxide_generator
-        run: dart test
-
-      - name: Analyze oxide_annotations
-        working-directory: flutter/oxide_annotations
-        run: dart analyze
-
-      - name: Test examples (Flutter tests)
-        shell: bash
-        run: |
-          set -euo pipefail
-          examples=(
-            "examples/counter_app"
-            "examples/todos_app"
-            "examples/ticker_app"
-            "examples/benchmark_app"
-            "examples/api_browser_app"
-          )
-          for dir in "${examples[@]}"; do
-            (
-              cd "$dir"
-              flutter pub get
-              # Use the cargo-installed binary
-              flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
-              if git diff --name-only | grep -E '(^|/)frb_generated\.' >/dev/null; then
-                echo "FRB generated outputs are out of date in $dir:"
-                git diff --name-only | grep -E '(^|/)frb_generated\.'
-                exit 1
-              fi
-              dart run build_runner build -d
-              flutter test
-            )
-          done
-
-  examples-windows:
-    runs-on: windows-latest
-    needs: verify
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - name: Enable Windows desktop and list devices
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          Set-StrictMode -Version Latest
-          flutter config --enable-windows-desktop
-          flutter doctor -v
-          flutter devices
-      - name: Install flutter_rust_bridge_codegen (via cargo)
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          Set-StrictMode -Version Latest
-          # Install via cargo if not already present
-          if (-not (Get-Command flutter_rust_bridge_codegen -ErrorAction SilentlyContinue)) {
-            cargo install flutter_rust_bridge_codegen --locked
-          }
-          # Ensure the cargo bin dir is on PATH for subsequent steps in this job
-          $env:PATH = "$env:PATH;$env:USERPROFILE\.cargo\bin"
-      - name: Test examples (Windows integration tests)
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-          Set-StrictMode -Version Latest
-          function Invoke-Native {
-            param(
-              [Parameter(Mandatory = $true)][string]$Command,
-              [Parameter(Mandatory = $true)][string[]]$Args
-            )
-            & $Command @Args
-            $exitCode = $LASTEXITCODE
-            if ($exitCode -ne 0) {
-              throw "Command failed ($exitCode): $Command $($Args -join ' ')"
-            }
-          }
-          $exampleDirs = @(
-            "examples\counter_app",
-            "examples\todos_app",
-            "examples\ticker_app",
-            "examples\benchmark_app",
-            "examples\api_browser_app"
-          )
-          foreach ($dir in $exampleDirs) {
-            Push-Location $dir
-            try {
-              Invoke-Native -Command flutter -Args @("pub", "get")
-              if (Test-Path "flutter_rust_bridge.yaml") {
-                Invoke-Native -Command flutter_rust_bridge_codegen -Args @("generate", "--config-file", "flutter_rust_bridge.yaml")
-              }
-              if (Test-Path "rust") {
-                Push-Location "rust"
-                try {
-                  Invoke-Native -Command cargo -Args @("build", "--target-dir", "target")
-                } finally {
-                  Pop-Location
-                }
-              }
-              Invoke-Native -Command dart -Args @("run", "build_runner", "build", "-d")
-              Invoke-Native -Command flutter -Args @("test")
-              if (Test-Path "integration_test") {
-                $tests = Get-ChildItem -Path "integration_test" -Filter "*_test.dart" -File
-                foreach ($test in $tests) {
-                  Invoke-Native -Command flutter -Args @("test", "-d", "windows", $test.FullName)
-                }
-              }
-            } finally {
-              Pop-Location
-            }
-          }
+          bash ./tools/scripts/qa/20-rust.sh 1
+          bash ./tools/scripts/qa/30-flutter-packages.sh 1

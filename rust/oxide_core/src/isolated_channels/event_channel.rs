@@ -43,4 +43,3 @@ where
         self.tx.subscribe()
     }
 }
-

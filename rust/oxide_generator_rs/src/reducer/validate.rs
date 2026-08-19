@@ -2,7 +2,7 @@ use syn::{Ident, ImplItem, ItemImpl};
 
 // Structural validation helpers for reducer impl blocks.
 //
-// Why: codegen should fail fast with actionable errors when the user-written
+// codegen should fail fast with actionable errors when the user-written
 // reducer signature doesn't match what Oxide needs to generate bindings.
 pub(crate) fn type_path_last_segment(ty: &syn::Type) -> Option<String> {
     match ty {
@@ -53,10 +53,12 @@ pub(crate) fn find_impl_fn<'a>(item_impl: &'a ItemImpl, name: &str) -> Option<&'
 }
 
 pub(crate) fn validate_init_sig(item_fn: &syn::ImplItemFn) -> syn::Result<()> {
-    if item_fn.sig.asyncness.is_none() {
+    let is_async = item_fn.sig.asyncness.is_some();
+    let has_explicit_return = !matches!(item_fn.sig.output, syn::ReturnType::Default);
+    if !is_async && !has_explicit_return {
         return Err(syn::Error::new_spanned(
             &item_fn.sig.fn_token,
-            "`init` must be async",
+            "`init` must be async or return a Future",
         ));
     }
     if item_fn.sig.inputs.len() != 2 {
@@ -89,10 +91,10 @@ pub(crate) fn validate_init_sig(item_fn: &syn::ImplItemFn) -> syn::Result<()> {
         }
     }
 
-    if !matches!(item_fn.sig.output, syn::ReturnType::Default) {
+    if is_async && has_explicit_return {
         return Err(syn::Error::new_spanned(
             &item_fn.sig.output,
-            "`init` must not return a value",
+            "`init` must not return a value when declared as async",
         ));
     }
 
@@ -140,7 +142,7 @@ pub(crate) fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) ->
         return Err(syn::Error::new_spanned(
             &item_fn.sig.inputs,
             format!(
-                "`{name}` must take exactly 3 arguments: `&mut self`, `&mut State`, and `oxide_core::Context<...>`"
+                "`{name}` must take exactly 3 arguments: `&mut self`, `&mut State`, and `oxide_core::ReducerCtx<...>`"
             ),
         ));
     }
@@ -189,21 +191,27 @@ pub(crate) fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) ->
                 if !ok {
                     return Err(syn::Error::new_spanned(
                         p,
-                        format!("`{name}` third argument must be `oxide_core::Context<...>`"),
+                        format!(
+                            "`{name}` third argument must be `oxide_core::ReducerCtx<...>` (or `oxide_core::Context<...>`)"
+                        ),
                     ));
                 }
             }
             other => {
                 return Err(syn::Error::new_spanned(
                     other,
-                    format!("`{name}` third argument must be `oxide_core::Context<...>`"),
+                    format!(
+                        "`{name}` third argument must be `oxide_core::ReducerCtx<...>` (or `oxide_core::Context<...>`)"
+                    ),
                 ));
             }
         },
         other => {
             return Err(syn::Error::new_spanned(
                 other,
-                format!("`{name}` third argument must be `oxide_core::Context<...>` (not `self`)"),
+                format!(
+                    "`{name}` third argument must be `oxide_core::ReducerCtx<...>` (or `oxide_core::Context<...>`, not `self`)"
+                ),
             ));
         }
     }
@@ -216,4 +224,82 @@ pub(crate) fn validate_reduce_like_sig(item_fn: &syn::ImplItemFn, name: &str) ->
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_impl(src: &str) -> ItemImpl {
+        syn::parse_str(src).unwrap()
+    }
+
+    #[test]
+    fn helper_extractors_work_for_path_types() {
+        let ty: syn::Type = syn::parse_str("crate::state::AppState").unwrap();
+        assert_eq!(type_path_last_segment(&ty).as_deref(), Some("AppState"));
+
+        let trait_path: syn::Path = syn::parse_str("oxide_core::Reducer").unwrap();
+        assert!(is_reducer_trait(&trait_path));
+
+        let item_impl = parse_impl("impl MyReducer { fn reduce(&mut self) {} type X = u64; }");
+        assert_eq!(
+            impl_reducer_ident(&item_impl).unwrap().to_string(),
+            "MyReducer"
+        );
+        assert!(impl_assoc_type(&item_impl, "X").is_some());
+        assert!(find_impl_fn(&item_impl, "reduce").is_some());
+    }
+
+    #[test]
+    fn validate_init_sig_accepts_expected_shape_and_rejects_bad_forms() {
+        let ok_impl =
+            parse_impl("impl R { async fn init(&mut self, _ctx: oxide_core::InitContext<()>) {} }");
+        let ok_fn = find_impl_fn(&ok_impl, "init").unwrap();
+        validate_init_sig(ok_fn).unwrap();
+
+        let ok_future_impl = parse_impl(
+            "impl R { fn init(&mut self, _ctx: oxide_core::InitContext<()>) -> impl core::future::Future<Output = ()> + Send { async move {} } }",
+        );
+        let ok_future_fn = find_impl_fn(&ok_future_impl, "init").unwrap();
+        validate_init_sig(ok_future_fn).unwrap();
+
+        let bad_async =
+            parse_impl("impl R { fn init(&mut self, _ctx: oxide_core::InitContext<()>) {} }");
+        let err = validate_init_sig(find_impl_fn(&bad_async, "init").unwrap())
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("must be async or return a Future"));
+
+        let bad_receiver =
+            parse_impl("impl R { async fn init(&self, _ctx: oxide_core::InitContext<()>) {} }");
+        let err = validate_init_sig(find_impl_fn(&bad_receiver, "init").unwrap())
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("first argument must be `&mut self`"));
+    }
+
+    #[test]
+    fn validate_reduce_like_sig_accepts_and_rejects_expected_signatures() {
+        let ok_impl = parse_impl(
+            "impl R { fn reduce(&mut self, _state: &mut S, _ctx: oxide_core::Context<'_, A, S, ()>) -> oxide_core::CoreResult<oxide_core::StateChange> { Ok(oxide_core::StateChange::None) } }",
+        );
+        validate_reduce_like_sig(find_impl_fn(&ok_impl, "reduce").unwrap(), "reduce").unwrap();
+
+        let bad_async = parse_impl(
+            "impl R { async fn reduce(&mut self, _state: &mut S, _ctx: oxide_core::Context<'_, A, S, ()>) -> oxide_core::CoreResult<oxide_core::StateChange> { Ok(oxide_core::StateChange::None) } }",
+        );
+        let err = validate_reduce_like_sig(find_impl_fn(&bad_async, "reduce").unwrap(), "reduce")
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("must not be async"));
+
+        let bad_return = parse_impl(
+            "impl R { fn reduce(&mut self, _state: &mut S, _ctx: oxide_core::Context<'_, A, S, ()>) -> oxide_core::CoreResult<()> { Ok(()) } }",
+        );
+        let err = validate_reduce_like_sig(find_impl_fn(&bad_return, "reduce").unwrap(), "reduce")
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("must return"));
+    }
 }

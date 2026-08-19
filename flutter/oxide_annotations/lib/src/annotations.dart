@@ -1,7 +1,7 @@
 // Annotation contracts shared between user code, generator, and generated output.
 //
-// Why: the generator needs stable metadata to produce predictable glue code.
-// How: expose a minimal annotation API with clear backend options.
+// the generator needs stable metadata to produce predictable glue code.
+// expose a minimal annotation API with clear backend options.
 /// Backend integration strategy used by generated store code.
 enum OxideBackend {
   /// Generates an `InheritedNotifier`-based scope widget plus a `ChangeNotifier`
@@ -132,8 +132,8 @@ final class OxideStore {
   /// initialization (before creating the engine). This can be used for
   /// per-library initialization steps required by your bindings layer.
   ///
-  /// In FRB-based apps, Oxide recommends calling `RustLib.init()` and the
-  /// app-provided `initOxide()` from `main()` instead of relying on this hook.
+  /// In FRB-based apps, Oxide recommends calling `OxideStack.init()` from `main()`
+  /// instead of relying on this hook.
   final String? initApp;
 
   /// Optional method name for encoding current state bytes for persistence.

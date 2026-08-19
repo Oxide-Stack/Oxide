@@ -2,7 +2,7 @@
 
 // Safety-net test for persistence restore behavior.
 //
-// Why: refactors in codecs/backends must never cause corrupt persisted payloads
+// refactors in codecs/backends must never cause corrupt persisted payloads
 // to crash initialization. The engine should fall back to the caller-provided
 // initial state.
 use oxide_core::persistence::PersistenceConfig;

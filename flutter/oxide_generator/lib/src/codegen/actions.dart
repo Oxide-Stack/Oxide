@@ -2,10 +2,10 @@ import 'model.dart';
 
 // Action facade string generation.
 //
-// Why: generated stores expose an `Actions` class so UI code can call strongly-
+// generated stores expose an `Actions` class so UI code can call strongly-
 // typed methods without manually constructing action objects.
 //
-// How: emit one method per enum constant (enum actions) or per factory
+// emit one method per enum constant (enum actions) or per factory
 // constructor (union-class actions), delegating to the store's `_dispatch`.
 String generateActionsMethods({required String actionsType, required bool actionsIsEnum, required List<OxideActionConstructor> constructors}) {
   final buffer = StringBuffer();

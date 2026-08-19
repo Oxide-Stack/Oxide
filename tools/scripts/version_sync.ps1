@@ -41,11 +41,21 @@ function Update-FileText([string] $path, [scriptblock] $update, [string] $label)
     throw "Missing file: $path"
   }
   $before = Get-Content $path -Raw
+
+  # Preserve the original line endings when writing changes.
+  # This avoids false-positive diffs caused by PowerShell normalizing to CRLF on Windows.
+  $originalEol = if ($before -match "`r`n") { "`r`n" } else { "`n" }
+
   $after = & $update $before
-  if ($after -ne $before) {
+
+  # Compare normalized line endings so that LF/CRLF differences don't trigger a change.
+  $normalize = { param($text) ($text -replace "`r?`n", "`n") }
+  if (($normalize.Invoke($after)) -ne ($normalize.Invoke($before))) {
     if ($Verify) {
       return $label
     }
+    # Write using the same line endings as the original file.
+    $after = $after -replace "`r?`n", $originalEol
     Set-Content -Path $path -Value $after -NoNewline
   }
   return $null
@@ -75,11 +85,19 @@ function Set-PubspecVersion([string] $pubspecPath, [string] $newVersion) {
     throw "Missing pubspec: $pubspecPath"
   }
   $content = Get-Content $pubspecPath -Raw
+
+  # Preserve original line endings for write operations.
+  $originalEol = if ($content -match "`r`n") { "`r`n" } else { "`n" }
+
   $updated = Get-PubspecWithSyncedVersion $content $newVersion
-  if ($updated -ne $content) {
+
+  # Compare normalized line endings so LF/CRLF differences don't trigger a mismatch.
+  $normalize = { param($text) ($text -replace "`r?`n", "`n") }
+  if (($normalize.Invoke($updated)) -ne ($normalize.Invoke($content))) {
     if ($Verify) {
       return "pubspec version: $pubspecPath"
     }
+    $updated = $updated -replace "`r?`n", $originalEol
     Set-Content -Path $pubspecPath -Value $updated -NoNewline
   }
   return $null
@@ -127,6 +145,8 @@ $podspecs = @(
   "examples\benchmark_app\rust_builder\macos\rust_lib_benchmark_app.podspec",
   "examples\counter_app\rust_builder\ios\rust_lib_counter_app.podspec",
   "examples\counter_app\rust_builder\macos\rust_lib_counter_app.podspec",
+  "examples\showcase_app\rust_builder\ios\rust_lib_showcase_app.podspec",
+  "examples\showcase_app\rust_builder\macos\rust_lib_showcase_app.podspec",
   "examples\ticker_app\rust_builder\ios\rust_lib_ticker_app.podspec",
   "examples\ticker_app\rust_builder\macos\rust_lib_ticker_app.podspec",
   "examples\todos_app\rust_builder\ios\rust_lib_counter_app.podspec",
@@ -151,6 +171,8 @@ $cargokitVersionStamps = @(
   "examples\benchmark_app\rust_builder\cargokit\run_build_tool.cmd",
   "examples\counter_app\rust_builder\cargokit\run_build_tool.sh",
   "examples\counter_app\rust_builder\cargokit\run_build_tool.cmd",
+  "examples\showcase_app\rust_builder\cargokit\run_build_tool.sh",
+  "examples\showcase_app\rust_builder\cargokit\run_build_tool.cmd",
   "examples\ticker_app\rust_builder\cargokit\run_build_tool.sh",
   "examples\ticker_app\rust_builder\cargokit\run_build_tool.cmd",
   "examples\todos_app\rust_builder\cargokit\run_build_tool.sh",

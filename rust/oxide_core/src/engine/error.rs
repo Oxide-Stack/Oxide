@@ -2,7 +2,7 @@ use thiserror::Error;
 
 // Cross-boundary error model.
 //
-// Why: A stable, string-based error type keeps FFI surfaces predictable and
+// A stable, string-based error type keeps FFI surfaces predictable and
 // avoids leaking dependency-specific error enums across language boundaries.
 /// Convenience alias used throughout the crate.
 pub type CoreResult<T> = Result<T, OxideError>;

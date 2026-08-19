@@ -6,7 +6,7 @@ import 'src/app_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await OxideStack.init(startNavigation: false);
+  await OxideStack.init();
   await resetApiBaseUrl();
   await runOxideApp(const ProviderScope(child: ApiBrowserApp()));
 }

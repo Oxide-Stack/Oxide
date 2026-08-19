@@ -1,6 +1,6 @@
 # oxide_generator_rs
 
-`oxide_generator_rs` provides proc-macro attributes used to annotate Oxide state and reducer types.
+`oxide_generator_rs` provides proc-macro attributes for Oxide state and reducer types.
 
 The macros embed structured metadata as Rust doc strings so that code generation tools can discover:
 
@@ -8,7 +8,7 @@ The macros embed structured metadata as Rust doc strings so that code generation
 - action names and variant shapes
 - reducer ↔ state/actions associations
 
-This crate is intentionally usage-agnostic. For end-to-end Rust ↔ Flutter wiring, see the repository [examples](../../examples) and the root [README](../../README.md).
+This crate stays usage-agnostic. For end-to-end Rust ↔ Flutter wiring, see the repository [examples](../../examples) and the root [README](../../README.md).
 
 ## Add It To Your Crate
 
@@ -16,15 +16,15 @@ In your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxide_generator_rs = "0.4.0"
-oxide_core = "0.4.0"
+oxide_generator_rs = "0.5.0"
+oxide_core = "0.5.0"
 ```
 
-When working inside this repository, use combined version + path dependencies (Cargo prefers `path` locally, while published crates resolve by `version`):
+When working inside this repository, use combined version + path dependencies. Cargo prefers `path` locally, while published crates resolve by `version`:
 
 ```toml
-oxide_core = { version = "0.4.0", path = "../rust/oxide_core" }
-oxide_generator_rs = { version = "0.4.0", path = "../rust/oxide_generator_rs" }
+oxide_core = { version = "0.5.0", path = "../rust/oxide_core" }
+oxide_generator_rs = { version = "0.5.0", path = "../rust/oxide_generator_rs" }
 ```
 
 ## Macros
@@ -38,6 +38,8 @@ The macro ensures these derives exist:
 - `Debug, Clone, PartialEq, Eq`
 
 Serialization derives (`Serialize`, `Deserialize`) are only added when the `state-persistence` feature is enabled on `oxide_generator_rs`. When enabled, the macro also injects `#[serde(crate = "oxide_core::serde")]` so downstream crates do not need to depend on `serde` directly.
+
+If your persisted state references nested custom structs/enums (for example, a `Theme` enum field), annotate those nested types with `#[state]` as well to get the same automatic derive behavior and avoid manual serde derive friction.
 
 Example (struct state):
 
@@ -160,8 +162,8 @@ The annotated impl must define:
 - `type Action = ...;`
 - `type SideEffect = ...;`
 - `async fn init(&mut self, ctx: oxide_core::InitContext<Self::SideEffect>)`
-- `fn reduce(&mut self, state: &mut Self::State, action: Self::Action) -> oxide_core::CoreResult<oxide_core::StateChange>`
-- `fn effect(&mut self, state: &mut Self::State, effect: Self::SideEffect) -> oxide_core::CoreResult<oxide_core::StateChange>`
+- `fn reduce(&mut self, state: &mut Self::State, ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>) -> oxide_core::CoreResult<oxide_core::StateChange>`
+- `fn effect(&mut self, state: &mut Self::State, ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>) -> oxide_core::CoreResult<oxide_core::StateChange>`
 
 Example:
 
@@ -194,9 +196,9 @@ impl oxide_core::Reducer for AppReducer {
   fn reduce(
     &mut self,
     state: &mut Self::State,
-    action: Self::Action,
+    ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
   ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-    match action {
+    match ctx.input {
       AppAction::Increment => state.counter = state.counter.saturating_add(1),
     }
     Ok(oxide_core::StateChange::Full)
@@ -205,7 +207,7 @@ impl oxide_core::Reducer for AppReducer {
   fn effect(
     &mut self,
     _state: &mut Self::State,
-    _effect: Self::SideEffect,
+    _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
   ) -> oxide_core::CoreResult<oxide_core::StateChange> {
     Ok(oxide_core::StateChange::None)
   }

@@ -10,7 +10,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
     // navigation irrelevant for ticker logic
-    await OxideStack.init(startNavigation: false);
+    await OxideStack.init();
   });
 
   testWidgets('Ticker stream updates are wired up', (WidgetTester tester) async {

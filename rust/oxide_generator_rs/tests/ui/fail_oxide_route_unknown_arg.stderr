@@ -1,0 +1,5 @@
+error: unknown #[oxide_route] argument
+ --> tests/ui/fail_oxide_route_unknown_arg.rs:3:15
+  |
+3 | #[oxide_route(unknown = "/x")]
+  |               ^^^^^^^

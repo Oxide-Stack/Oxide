@@ -144,7 +144,7 @@ Future<RustChannelMetadata> readRustChannelMetadata() async {
   }
 
   if (events.isEmpty && callbacks.isEmpty && bridgeText != null) {
-    _inferChannelsFromBridge(bridgeText!, events: events, callbacks: callbacks);
+    _inferChannelsFromBridge(bridgeText, events: events, callbacks: callbacks);
   }
 
   return RustChannelMetadata(events: events, callbacks: callbacks, crateName: crateName, initFnName: initFnName);
@@ -575,13 +575,17 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     final rustType = r.rustType;
     final kindCtor = _lowerCamel(r.kind);
     buf.writeln('    case RouteKind.$kindCtor:');
-    buf.writeln('      final r = route as route_models.$rustType;');
-    buf.writeln('      return rust_routes.RoutePayload.$kindCtor($rustType(');
-    for (final f in r.fields) {
-      final fieldName = _lowerCamel(f.name);
-      buf.writeln('        $fieldName: r.$fieldName,');
+    if (r.fields.isEmpty) {
+      buf.writeln('      return rust_routes.RoutePayload.$kindCtor($rustType());');
+    } else {
+      buf.writeln('      final r = route as route_models.$rustType;');
+      buf.writeln('      return rust_routes.RoutePayload.$kindCtor($rustType(');
+      for (final f in r.fields) {
+        final fieldName = _lowerCamel(f.name);
+        buf.writeln('        $fieldName: r.$fieldName,');
+      }
+      buf.writeln('      ));');
     }
-    buf.writeln('      ));');
   }
   buf
     ..writeln('  }')
@@ -600,9 +604,12 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('}')
     ..writeln()
     ..writeln('OxideNavigationCommand<route_models.OxideRoute, RouteKind> _mapOxideNavCommand(rust_nav.OxideNavCommand cmd) {')
-    ..writeln('  // debug incoming commands from Rust')
-    ..writeln('  // ignore: avoid_print')
-    ..writeln('  print("[Oxide] received nav command: \$cmd");')
+    ..writeln('  assert(() {')
+    ..writeln('    // debug incoming commands from Rust')
+    ..writeln('    // ignore: avoid_print')
+    ..writeln('    print("[Oxide] received nav command: \$cmd");')
+    ..writeln('    return true;')
+    ..writeln('  }());')
     ..writeln('  return cmd.when(')
     ..writeln('    push: (route, ticket) {')
     ..writeln('      final decoded = _fromRustRoutePayload(route);')
@@ -644,6 +651,24 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
       '  setCurrentRoute: (route) => rust_nav.oxideNavSetCurrentRoute('
       'route: route == null ? null : _toRustRoutePayload(route)),',
     )
+    ..writeln('  emitRouteUpdate: (update) {')
+    ..writeln('    final rustOperation = switch (update.operation) {')
+    ..writeln('      OxideRouteOperation.push => rust_routes.RouteOperation.push,')
+    ..writeln('      OxideRouteOperation.pop => rust_routes.RouteOperation.pop,')
+    ..writeln('      OxideRouteOperation.popUntil => rust_routes.RouteOperation.popUntil,')
+    ..writeln('      OxideRouteOperation.reset => rust_routes.RouteOperation.reset,')
+    ..writeln('      OxideRouteOperation.sync => rust_routes.RouteOperation.sync_,')
+    ..writeln('    };')
+    ..writeln('    return rust_nav.oxideNavRouteUpdate(')
+    ..writeln('      update: rust_routes.RouteUpdateContext(')
+    ..writeln('        operation: rustOperation,')
+    ..writeln('        route: update.route == null ? null : _toRustRoutePayload(update.route!),')
+    ..writeln('        resultJson: update.result == null ? null : jsonEncode(update.result),')
+    ..writeln('        argumentsJson: update.arguments == null ? null : jsonEncode(update.arguments),')
+    ..writeln('        firstPush: update.firstPush,')
+    ..writeln('      ),')
+    ..writeln('    );')
+    ..writeln('  },')
     ..writeln(');')
     ..writeln()
     ..writeln('// start the navigation runtime once; repeat calls are benign but')
@@ -651,14 +676,20 @@ String generateNavigationRuntimeSource(RustRouteMetadata metadata) {
     ..writeln('// multiple times (e.g. hot-restart, debug experiments).')
     // top-level flag keeps state across repeated init calls; easier to format
     ..writeln('bool _oxideNavStarted = false;')
-    ..writeln('void oxideNavStart() {')
-    ..writeln('  // debug log to trace calls')
-    ..writeln('  // ignore: avoid_print')
-    ..writeln(r"  print('[Oxide] oxideNavStart called, started=$_oxideNavStarted');")
+    ..writeln('Future<void> oxideNavStart() async {')
+    ..writeln('  assert(() {')
+    ..writeln('    // debug log to trace calls')
+    ..writeln('    // ignore: avoid_print')
+    ..writeln(r"    print('[Oxide] oxideNavStart called, started=$_oxideNavStarted');")
+    ..writeln('    return true;')
+    ..writeln('  }());')
     ..writeln('  if (_oxideNavStarted) return;')
     ..writeln('  _oxideNavStarted = true;')
     ..writeln('  oxideNavigationRuntime.start();')
-    ..writeln('  unawaited(rust_nav.initNavigation());')
+    ..writeln('  WidgetsBinding.instance.addPostFrameCallback((_) {')
+    ..writeln('    // initNavigation requires the navigation stack to exist (after the first frame).')
+    ..writeln('    unawaited(rust_nav.initNavigation());')
+    ..writeln('  });')
     ..writeln('}')
     ..writeln()
     ..writeln('Future<void> oxideNavStop() => oxideNavigationRuntime.stop();');
@@ -681,7 +712,7 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln();
   if (hasChannels) {
     // alias the bridge so we can continue to call methods without prefixing.
-    buf.writeln("import '../src/rust/api/isolated_channels_bridge.dart' as _ch;");
+    buf.writeln("import '../src/rust/api/isolated_channels_bridge.dart' as channels;");
     // some types generated by the bridge (notably the pending-request objects)
     // are defined in the same file but we'd like to expose them unprefixed in
     // the public APIs below. import them explicitly with `show` so the class
@@ -717,7 +748,8 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln()
     ..writeln('  static GlobalKey<NavigatorState> get navigatorKey => oxideNavigatorKey;')
     ..writeln()
-    ..writeln('  static Future<void> init({bool startNavigation = true}) async {')
+    ..writeln()
+    ..writeln('  static Future<void> init({bool startNavigation = false}) async {')
     ..writeln('    if (_initialized) return;')
     ..writeln('    // make sure flutter bindings are ready; simplifies example setup')
     ..writeln('    WidgetsFlutterBinding.ensureInitialized();')
@@ -728,7 +760,7 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln(hasChannels ? '    // initialize any generated channel APIs before returning' : '')
     ..writeln(hasChannels ? '    await oxideInitChannels();' : '')
     ..writeln('    if (startNavigation) {')
-    ..writeln('      oxideNavStart();')
+    ..writeln('      await oxideNavStart();')
     ..writeln('    }')
     ..writeln('  }')
     ..writeln()
@@ -740,13 +772,13 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln()
     ..writeln('  // central stub for any generated event APIs. concrete channels will be')
     ..writeln('  // added here by the generator when events are declared in Rust.')
-    ..writeln('  static _OxideEvents get events => _oxideEvents;')
-    ..writeln('  static final _oxideEvents = _OxideEvents._();')
+    ..writeln('  static OxideEvents get events => _events;')
+    ..writeln('  static final _events = OxideEvents._();')
     ..writeln()
     ..writeln('  // central stub for any generated callback APIs. methods will be added')
     ..writeln('  // here by generator when callback interfaces are declared in Rust.')
-    ..writeln('  static _OxideCallbacks get callbacks => _oxideCallbacks;')
-    ..writeln('  static final _oxideCallbacks = _OxideCallbacks._();')
+    ..writeln('  static OxideCallbacks get callbacks => _callbacks;')
+    ..writeln('  static final _callbacks = OxideCallbacks._();')
     ..writeln()
     ..writeln('  static void _ensureInitialized() {')
     ..writeln('    if (_initialized) return;')
@@ -758,8 +790,8 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     ..writeln('// or callback systems are generated. the classes are intentionally private')
     ..writeln('// because consumers should only interact via the typed getters above, which')
     ..writeln('// can later hide nullability or initialization details.')
-    ..writeln('class _OxideEvents {')
-    ..writeln('  const _OxideEvents._();')
+    ..writeln('final class OxideEvents {')
+    ..writeln('  const OxideEvents._();')
     ..writeln('');
   // emit channel getters if metadata available
   if (channels != null && channels.events.isNotEmpty) {
@@ -767,7 +799,7 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
       final field = _lowerCamel(e.name);
       buf.writeln('  // event channel for ${e.name}');
       buf.writeln('  Stream<${e.eventType}> get $field =>');
-      buf.writeln('      _ch.${field}Stream();');
+      buf.writeln('      channels.${field}Stream();');
       buf.writeln();
     }
   } else {
@@ -775,8 +807,8 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
   }
   buf.writeln('}');
   buf.writeln();
-  buf.writeln('class _OxideCallbacks {');
-  buf.writeln('  const _OxideCallbacks._();');
+  buf.writeln('final class OxideCallbacks {');
+  buf.writeln('  const OxideCallbacks._();');
   buf.writeln('');
   // callbacks
   if (channels != null && channels.callbacks.isNotEmpty) {
@@ -784,10 +816,10 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
       final method = _lowerCamel(c.name);
       buf.writeln('  // callback service for ${c.name}');
       buf.writeln('  Stream<${c.name}PendingRequest> get ${method}Requests =>');
-      buf.writeln('      _ch.${method}RequestsStream();');
+      buf.writeln('      channels.${method}RequestsStream();');
       buf.writeln();
       buf.writeln('  Future<void> ${method}Respond({required BigInt id, required ${c.responseType} response}) =>');
-      buf.writeln('      _ch.${method}Respond(id: id, response: response);');
+      buf.writeln('      channels.${method}Respond(id: id, response: response);');
       buf.writeln();
     }
   } else {
@@ -804,7 +836,7 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
     buf.writeln('');
     buf.writeln('Future<void> oxideInitChannels() async {');
     if (initFnName != null) {
-      buf.writeln('  await _ch.$initFnName();');
+      buf.writeln('  await channels.$initFnName();');
     } else {
       buf.writeln('  // no-op; failed to determine the generated init helper name');
     }
@@ -819,8 +851,8 @@ String generateOxideStackSource({RustChannelMetadata? channels}) {
   buf.writeln('// initial route.');
   buf.writeln('Future<void> runOxideApp(Widget app, {bool startNavigation = true}) async {');
   buf.writeln('  WidgetsFlutterBinding.ensureInitialized();');
-  buf.writeln('  // always perform core init but postpone actual navigation start');
-  buf.writeln('  await OxideStack.init(startNavigation: false);');
+  buf.writeln('  // always perform core init; navigation start is deferred until the first frame.');
+  buf.writeln('  await OxideStack.init();');
   buf.writeln('  runApp(app);');
   buf.writeln('  if (startNavigation) {');
   buf.writeln('    WidgetsBinding.instance.addPostFrameCallback((_) {');

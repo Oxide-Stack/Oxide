@@ -3,7 +3,7 @@ use syn::{Ident, Token};
 
 // Attribute argument parsing for `#[reducer(...)]`.
 //
-// Why: a dedicated parse layer keeps the mini-language stable and isolates
+// a dedicated parse layer keeps the mini-language stable and isolates
 // syntactic concerns from validation and token emission.
 pub(crate) struct ReducerArgs {
     pub(crate) engine_ident: Ident,
@@ -86,5 +86,49 @@ impl Parse for ReducerArgs {
             persist_key,
             persist_min_interval_ms,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_required_and_optional_reducer_args() {
+        let args: ReducerArgs = syn::parse_str(
+            "engine = AppEngine, snapshot = AppSnapshot, initial = AppState { value: 0 }, reducer = AppReducer::new(), persist = \"app\", persist_min_interval_ms = 25",
+        )
+        .unwrap();
+
+        assert_eq!(args.engine_ident.to_string(), "AppEngine");
+        assert_eq!(args.snapshot_ident.to_string(), "AppSnapshot");
+        assert!(args.reducer_expr.is_some());
+        assert!(args.include_frb);
+        assert_eq!(args.persist_key.unwrap().value(), "app");
+        assert_eq!(args.persist_min_interval_ms, Some(25));
+    }
+
+    #[test]
+    fn parses_no_frb_flag() {
+        let args: ReducerArgs =
+            syn::parse_str("engine = E, snapshot = S, initial = Init::default(), no_frb").unwrap();
+        assert!(!args.include_frb);
+    }
+
+    #[test]
+    fn rejects_unknown_and_missing_args() {
+        let err = match syn::parse_str::<ReducerArgs>(
+            "engine = E, snapshot = S, initial = x, nope = 1",
+        ) {
+            Ok(_) => panic!("expected parse error"),
+            Err(err) => err.to_string(),
+        };
+        assert!(err.contains("unknown #[reducer] argument"));
+
+        let err = match syn::parse_str::<ReducerArgs>("snapshot = S, initial = x") {
+            Ok(_) => panic!("expected parse error"),
+            Err(err) => err.to_string(),
+        };
+        assert!(err.contains("missing `engine = <Name>`"));
     }
 }

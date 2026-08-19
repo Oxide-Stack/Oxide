@@ -7,7 +7,7 @@
 - Streaming revisioned snapshots (`StateSnapshot<T>`)
 - Optional persistence helpers (feature-gated)
 
-This crate is intentionally usage-agnostic. For end-to-end Rust ↔ Flutter wiring, see the repository [examples](../../examples) and the root [README](../../README.md).
+This crate stays usage-agnostic. For end-to-end Rust ↔ Flutter wiring, see the repository [examples](../../examples) and the root [README](../../README.md).
 
 ## Add It To Your Crate
 
@@ -15,13 +15,13 @@ In your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxide_core = "0.4.0"
+oxide_core = "0.5.0"
 ```
 
-When working inside this repository, use a combined version + path dependency (Cargo prefers `path` locally, while published crates resolve by `version`):
+When working inside this repository, use a combined version + path dependency. Cargo prefers `path` locally, while published crates resolve by `version`:
 
 ```toml
-oxide_core = { version = "0.4.0", path = "../rust/oxide_core" }
+oxide_core = { version = "0.5.0", path = "../rust/oxide_core" }
 ```
 
 ## Core Concepts
@@ -57,7 +57,7 @@ impl Reducer for CounterReducer {
   fn reduce(
     &mut self,
     state: &mut Self::State,
-    ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+    ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
   ) -> CoreResult<StateChange> {
     match ctx.input {
       CounterAction::Inc => state.value = state.value.saturating_add(1),
@@ -68,7 +68,7 @@ impl Reducer for CounterReducer {
   fn effect(
     &mut self,
     _state: &mut Self::State,
-    _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
+    _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
   ) -> CoreResult<StateChange> {
     Ok(StateChange::None)
   }
@@ -105,7 +105,7 @@ use oxide_core::ReducerEngine;
 #   fn reduce(
 #     &mut self,
 #     state: &mut Self::State,
-#     ctx: oxide_core::Context<'_, Self::Action, Self::State, ()>,
+#     ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
 #   ) -> CoreResult<StateChange> {
 #     match ctx.input {
 #       CounterAction::Inc => state.value = state.value.saturating_add(1),
@@ -116,7 +116,7 @@ use oxide_core::ReducerEngine;
 #   fn effect(
 #     &mut self,
 #     _state: &mut Self::State,
-#     _ctx: oxide_core::Context<'_, Self::SideEffect, Self::State, ()>,
+#     _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
 #   ) -> CoreResult<StateChange> {
 #     Ok(StateChange::None)
 #   }
@@ -191,9 +191,8 @@ If you are not using sliced updates, you can ignore `snapshot.slices` (it will r
 ## Feature Flags
 
 - `frb-spawn` (default): enables FRB’s `spawn` helper for cross-platform task spawning
-- `state-persistence`: enables bincode encode/decode helpers in `oxide_core::persistence`
-- `persistence-json`: adds JSON encode/decode helpers (requires `state-persistence`)
-- `full`: enables all persistence features
+- `state-persistence`: enables bincode persistence plus debug JSON copy support in `oxide_core::persistence`
+- `full`: enables all optional features
 - `internal-runtime` (default): enables a global Tokio runtime fallback on native targets
 
 ## Web / WASM Support

@@ -1,3 +1,6 @@
+## 0.5.0
+- No changes.
+
 ## 0.4.0
 - Expand navigation annotations and metadata to support macro-driven route generation and migration to the new navigation init pattern
 - Add support for `oxide_route`-style metadata consumed by the generator to produce typed route bindings and a unified `oxide.dart` entrypoint

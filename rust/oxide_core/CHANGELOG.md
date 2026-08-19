@@ -1,3 +1,8 @@
+## 0.5.0
+- Updated persistence to always use bincode, with optional validated debug JSON copies for readable snapshots.
+- Refactored reducer engine internals to `ReducerCtx`-based reducer signatures and clearer engine state naming.
+- Added test coverage for persistence debug JSON equivalence and related runtime behaviors.
+
 ## 0.4.0
 - Unified initialization: converge runtime init APIs to enable `OxideStack.init()` replacing the previous `RustLib.init()` + `initOxide()` pattern
 - Add typed FRB command stream plumbing used by navigation route payloads and expose initialization hooks for the navigation runtime

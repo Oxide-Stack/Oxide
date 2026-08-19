@@ -2,7 +2,7 @@ import 'model.dart';
 
 // flutter_bloc Cubit backend templates.
 //
-// Why: BLoC-style apps integrate naturally with a Cubit that owns the Oxide core
+// BLoC-style apps integrate naturally with a Cubit that owns the Oxide core
 // and emits a derived `OxideView` state for widgets.
 String buildBlocBackend(OxideCodegenConfig c, String coreInstantiation) {
   final snapshotsStream = (c.slices == null || c.slices!.isEmpty)

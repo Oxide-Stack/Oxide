@@ -2,20 +2,20 @@
 
 // Proc-macro entrypoint and stable macro surface.
 //
-// Why: keep macro names and signatures stable for downstream crates, while
+// keep macro names and signatures stable for downstream crates, while
 // allowing internal parsing/codegen modules to evolve safely.
 use proc_macro::TokenStream;
-use syn::Item;
-use syn::parse_macro_input;
 #[cfg(test)]
 use std::sync::{Mutex, OnceLock};
+use syn::Item;
+use syn::parse_macro_input;
 
 mod derive;
+#[cfg(feature = "isolated-channels")]
+mod isolated_channels;
 mod meta;
 mod reducer;
 mod routes;
-#[cfg(feature = "isolated-channels")]
-mod isolated_channels;
 #[cfg(test)]
 pub(crate) static TEST_ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
@@ -102,10 +102,10 @@ pub fn reducer(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// # Errors
 /// Emits a compile error if route files cannot be scanned or metadata cannot be emitted.
 pub fn routes(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let _ = parse_macro_input!(attr as syn::parse::Nothing);
+    let args = parse_macro_input!(attr as routes::RoutesArgs);
     let input = parse_macro_input!(item as Item);
     match input {
-        Item::Mod(item_mod) => match routes::expand_routes_module(item_mod) {
+        Item::Mod(item_mod) => match routes::expand_routes_module(args, item_mod) {
             Ok(ts) => ts.into(),
             Err(e) => e.to_compile_error().into(),
         },
@@ -144,10 +144,12 @@ pub fn oxide_event_channel(attr: TokenStream, item: TokenStream) -> TokenStream 
     let args = parse_macro_input!(attr as isolated_channels::OxideEventChannelArgs);
     let input = parse_macro_input!(item as Item);
     match input {
-        Item::Impl(item_impl) => match isolated_channels::expand_oxide_event_channel(args, item_impl) {
-            Ok(ts) => ts.into(),
-            Err(e) => e.to_compile_error().into(),
-        },
+        Item::Impl(item_impl) => {
+            match isolated_channels::expand_oxide_event_channel(args, item_impl) {
+                Ok(ts) => ts.into(),
+                Err(e) => e.to_compile_error().into(),
+            }
+        }
         other => syn::Error::new_spanned(
             other,
             "#[oxide_event_channel] can only be applied to an impl block",

@@ -26,4 +26,3 @@ pub fn to_snake_case(input: &str) -> String {
 
     out
 }
-

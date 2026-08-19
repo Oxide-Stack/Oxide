@@ -2,7 +2,7 @@ use crate::navigation::RouteReturn;
 
 /// A route return type that can provide a default value.
 ///
-/// How: a default is used when a route pop completes without a result or when the result cannot
+/// a default is used when a route pop completes without a result or when the result cannot
 /// be decoded.
 pub trait DefaultReturn: RouteReturn {
     /// Creates a default return value for this type.

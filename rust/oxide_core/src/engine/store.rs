@@ -1,13 +1,14 @@
 use tokio::sync::mpsc;
 
+use crate::ReducerCtx;
 use crate::engine::CoreResult;
 
 // Reducer and state-change contracts.
 //
-// Why: The engine needs a small, deterministic interface for applying updates
+// The engine needs a small, deterministic interface for applying updates
 // that remains easy to reason about from both Rust and generated FFI surfaces.
 //
-// How: `Reducer` keeps mutation synchronous (for serialized updates) while
+// `Reducer` keeps mutation synchronous (for serialized updates) while
 // allowing async work by pushing results back as side-effects.
 /// Initialization context passed to [`Reducer::init`].
 ///
@@ -93,7 +94,10 @@ where
     ///
     /// Implementations typically clone `ctx.sideeffect_tx` and move it into any
     /// background tasks the reducer spawns.
-    fn init(&mut self, ctx: InitContext<Self::SideEffect>) -> impl std::future::Future<Output = ()> + Send;
+    fn init(
+        &mut self,
+        ctx: InitContext<Self::SideEffect>,
+    ) -> impl std::future::Future<Output = ()> + Send;
 
     /// Applies an action to the provided `state`.
     ///
@@ -102,7 +106,7 @@ where
     fn reduce(
         &mut self,
         state: &mut Self::State,
-        ctx: crate::Context<'_, Self::Action, Self::State, StateSlice>,
+        ctx: ReducerCtx<'_, Self::Action, Self::State, StateSlice>,
     ) -> CoreResult<StateChange<StateSlice>>;
 
     /// Applies a previously-enqueued side-effect to the provided `state`.
@@ -113,7 +117,7 @@ where
     fn effect(
         &mut self,
         state: &mut Self::State,
-        ctx: crate::Context<'_, Self::SideEffect, Self::State, StateSlice>,
+        ctx: ReducerCtx<'_, Self::SideEffect, Self::State, StateSlice>,
     ) -> CoreResult<StateChange<StateSlice>>;
 
     /// Infers which slices changed between `before` and `after`.

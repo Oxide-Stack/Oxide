@@ -1,8 +1,8 @@
 # Navigation (Rust-driven)
 
-Oxide navigation is a feature-gated, Rust-driven routing layer that integrates with Flutter-native navigation backends (Navigator 1.0 and GoRouter).
+Oxide navigation is a feature-gated routing layer driven from Rust and wired into Flutter navigation backends (Navigator 1.0 and GoRouter).
 
-The goal is to let reducers/effects decide *where to go* while keeping all Flutter-specific navigation details in Dart.
+Reducers and effects decide where to go. Flutter keeps the navigation plumbing.
 
 ## Enable the Feature
 
@@ -21,7 +21,7 @@ navigation-binding = ["oxide_core/navigation-binding", "oxide_generator_rs/navig
 
 ### Dart
 
-Add `oxide_annotations`, `oxide_generator`, and `oxide_runtime` as you already do for store codegen. Navigation generation is auto-applied to dependents and produces `lib/oxide_generated/...`.
+Add `oxide_annotations`, `oxide_generator`, and `oxide_runtime` as you already do for store codegen. Navigation generation applies to dependents and produces `lib/oxide_generated/...`.
 
 ## Define Routes in Rust
 
@@ -30,24 +30,44 @@ Create a `routes/` module and apply `#[oxide_generator_rs::routes]` to the modul
 ```rust
 #[cfg(feature = "navigation-binding")]
 #[oxide_generator_rs::routes]
-pub mod routes {
-    include!("routes/mod.rs");
-}
+pub mod routes {}
 ```
+
+No `include!("routes/mod.rs")` is required; the macro discovers and loads `src/routes/mod.rs`.
 
 Each route is a Rust struct annotated with `#[oxide_generator_rs::oxide_route(...)]`:
 
 ```rust
-use serde::{Deserialize, Serialize};
-
 #[oxide_generator_rs::oxide_route()]
-#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SplashRoute {}
 ```
 
-The macro scans `src/routes/` and writes a JSON metadata file to `target/oxide_routes/`. The Dart generator consumes this file.
+`#[oxide_route]` automatically adds `Clone`, `Debug`, `serde::Serialize`, and `serde::Deserialize` derives.
 
-When `navigation-binding` is enabled, the macro generates FRB-ready navigation endpoints under `crate::routes::oxide_navigation` (for example: `init_navigation`, `oxide_nav_commands_stream`, `oxide_nav_emit_result`, `oxide_nav_set_current_route`). Applications should not hand-write these bindings; examples re-export them through `crate::api::oxide_navigation` for FRB discovery.
+The macro scans `src/routes/` and writes a JSON metadata file to `target/oxide_routes/`. The Dart generator reads that file.
+
+When `navigation-binding` is enabled, the macro generates FRB-ready navigation endpoints under `crate::routes::oxide_navigation` (for example: `init_navigation`, `oxide_nav_commands_stream`, `oxide_nav_emit_result`, `oxide_nav_set_current_route`, `oxide_nav_route_update`). Do not hand-write these bindings; the examples re-export them through `crate::api::oxide_navigation` for FRB discovery.
+
+Optional route hooks can be configured directly on `#[routes(...)]`:
+
+```rust
+#[oxide_generator_rs::routes(init = on_nav_init, on_route_change = on_route_changed)]
+pub mod routes {
+    fn on_nav_init(ctx: RouteInitContext) -> oxide_core::CoreResult<()> {
+        let _ = ctx;
+        Ok(())
+    }
+
+    fn on_route_changed(ctx: RouteUpdateContext) -> oxide_core::CoreResult<()> {
+        let _ = ctx;
+        Ok(())
+    }
+}
+```
+
+Hook signatures are validated by the macro with explicit diagnostics:
+- `init` must be a function in the same `routes` module with signature `fn(RouteInitContext) -> oxide_core::CoreResult<()>`.
+- `on_route_change` must be a function in the same `routes` module with signature `fn(RouteUpdateContext) -> oxide_core::CoreResult<()>`.
 
 ## Bind Routes to Widgets in Dart
 
@@ -77,7 +97,7 @@ import 'oxide.dart';
 
 Navigation runtime setup is generated.
 
-Use the generated navigator key with your navigation backend (Navigator 1.0 or GoRouter), and call `OxideStack.init()` from `main()`. When `startNavigation` is enabled (default), the runtime starts automatically.
+Use the generated navigator key with your navigation backend (Navigator 1.0 or GoRouter), and call `OxideStack.init()` from `main()`. If you use `runOxideApp(..., startNavigation: true)` or pass `startNavigation: true` to `OxideStack.init(...)`, the runtime starts automatically.
 
 ```dart
 import 'package:go_router/go_router.dart';

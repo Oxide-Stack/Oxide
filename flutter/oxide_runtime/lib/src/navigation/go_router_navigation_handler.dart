@@ -47,14 +47,15 @@ final class GoRouterNavigationHandler<RouteT extends Object, KindT extends Objec
   }
 
   @override
-  void reset(List<RouteT> routes) {
+  Future<void> reset(List<RouteT> routes) async {
     if (routes.isEmpty) return;
-    unawaited(() async {
-      _router.go(_locationOf(routes.first));
-      for (final r in routes.skip(1)) {
-        await _router.push<void>(_locationOf(r));
-      }
-    }());
+
+    // Perform sequential navigation so the route stack matches the provided list
+    // and callers can reliably await completion.
+    _router.go(_locationOf(routes.first));
+    for (final r in routes.skip(1)) {
+      await _router.push<void>(_locationOf(r));
+    }
   }
 
   @override

@@ -33,7 +33,7 @@ final class _TestHandler implements OxideNavigationHandler<String, String> {
   }
 
   @override
-  void reset(List<String> routes) {
+  Future<void> reset(List<String> routes) async {
     resets.add(List<String>.from(routes));
     current = routes.isEmpty ? null : routes.last;
   }
@@ -228,4 +228,111 @@ void main() {
     expect(identical(OxideStack.events, OxideStack.events), isTrue);
     expect(identical(OxideStack.callbacks, OxideStack.callbacks), isTrue);
   });
+
+  test('command and stream errors are emitted to callbacks', () async {
+    final commandController = StreamController<OxideNavigationCommand<String, String>>();
+    final handler = _FailingPushHandler();
+    final commandErrors = <Object>[];
+    final streamErrors = <Object>[];
+
+    final runtime = OxideNavigationRuntime<String, String>(
+      commands: commandController.stream,
+      handler: handler,
+      emitResult: (_, __) async {},
+      setCurrentRoute: (_) async {},
+      kindOf: (r) => r,
+      onCommandError: (error, _, __) => commandErrors.add(error),
+      onStreamError: (error, _) => streamErrors.add(error),
+    );
+
+    runtime.start();
+
+    commandController.add(OxideNavigationCommand.push(route: 'bad-route', ticket: null));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    commandController.addError(StateError('stream-failed'));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    expect(commandErrors, isNotEmpty);
+    expect(streamErrors, isNotEmpty);
+
+    await commandController.close();
+    await runtime.dispose();
+  });
+
+  test('state helpers and error objects expose expected values', () {
+    final state = OxideNavigationState<String, String>(
+      stack: const ['A', 'B'],
+      current: 'B',
+      kindOf: (route) => route.toLowerCase(),
+    );
+    expect(state.kindStack, ['a', 'b']);
+    expect(state.currentKind, 'b');
+
+    const cmd = OxideNavigationPush<String, String>(route: 'A', ticket: null);
+    final commandError = OxideNavigationCommandError<String, String>(
+      StateError('failed'),
+      StackTrace.empty,
+      cmd,
+    );
+    final streamError = OxideNavigationStreamError<String, String>(
+      StateError('stream-failed'),
+      StackTrace.empty,
+    );
+
+    expect(commandError.command, cmd);
+    expect(commandError.error, isA<StateError>());
+    expect(streamError.error, isA<StateError>());
+  });
+
+  test('route updates include operation metadata and first push marker', () async {
+    final controller = StreamController<OxideNavigationCommand<String, String>>();
+    final handler = _TestHandler();
+    final updates = <OxideRouteUpdate<String, String>>[];
+
+    final runtime = OxideNavigationRuntime<String, String>(
+      commands: controller.stream,
+      handler: handler,
+      emitResult: (_, __) async {},
+      setCurrentRoute: (_) async {},
+      kindOf: (r) => r,
+      emitRouteUpdate: (update) async => updates.add(update),
+    );
+
+    runtime.start();
+    controller.add(OxideNavigationCommand.push(route: 'A', ticket: null));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    controller.add(OxideNavigationCommand.pop(result: 7));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    handler.completePush('A', 7);
+
+    expect(updates.length, greaterThanOrEqualTo(2));
+    expect(updates.first.operation, OxideRouteOperation.push);
+    expect(updates.first.firstPush, isTrue);
+    expect(updates[1].operation, OxideRouteOperation.pop);
+    expect(updates[1].result, 7);
+
+    await controller.close();
+    await runtime.dispose();
+  });
+}
+
+final class _FailingPushHandler implements OxideNavigationHandler<String, String> {
+  @override
+  Future<Object?> push(String route, {String? ticket}) {
+    throw StateError('push-failed:$route');
+  }
+
+  @override
+  void pop([Object? result]) {}
+
+  @override
+  void popUntil(String kind) {}
+
+  @override
+  Future<void> reset(List<String> routes) async {}
+
+  @override
+  void setCurrentRoute(String route) {}
 }

@@ -3,7 +3,7 @@ import 'model.dart';
 
 // Riverpod Notifier backend templates.
 //
-// Why: Riverpod is a common app-layer integration; this template wires the core
+// Riverpod is a common app-layer integration; this template wires the core
 // store into a NotifierProvider while keeping the engine lifecycle consistent.
 String buildRiverpodBackend(OxideCodegenConfig c, String coreInstantiation) {
   final snapshotsStream = (c.slices == null || c.slices!.isEmpty)

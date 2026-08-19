@@ -1,5 +1,5 @@
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 use crate::navigation::Route;
 
@@ -18,4 +18,3 @@ pub trait OxideRoute: Route {
 
     fn into_payload(self) -> Self::Payload;
 }
-

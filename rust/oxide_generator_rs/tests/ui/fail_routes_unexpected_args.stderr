@@ -1,0 +1,5 @@
+error: unknown #[routes] argument; supported: init = hook_fn, on_route_change = hook_fn
+ --> tests/ui/fail_routes_unexpected_args.rs:3:10
+  |
+3 | #[routes(bogus = true)]
+  |          ^^^^^

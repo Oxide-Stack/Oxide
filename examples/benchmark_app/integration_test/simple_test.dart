@@ -5,13 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:benchmark_app/src/bench/bench_screen.dart';
 import 'package:benchmark_app/oxide.dart';
-import 'package:benchmark_app/src/oxide.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
     // navigation not needed for bench app smoke test
-    await OxideStack.init(startNavigation: false);
+    await OxideStack.init();
   });
 
   testWidgets('App boots and renders dashboard', (WidgetTester tester) async {
@@ -20,7 +19,9 @@ void main() {
         child: BenchCounterHooksOxideScope(
           child: BenchJsonHooksOxideScope(
             child: BenchSieveHooksOxideScope(
-              child: MaterialApp(home: BenchHomeScreen(route: const HomeRoute())),
+              child: MaterialApp(
+                home: BenchHomeScreen(route: const HomeRoute()),
+              ),
             ),
           ),
         ),

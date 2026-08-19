@@ -1,9 +1,9 @@
 /// A navigation command consumed by an [OxideNavigationHandler].
 ///
-/// Why: Oxide navigation is Rust-driven. Rust emits commands, and Dart executes them using
+/// Oxide navigation is Rust-driven. Rust emits commands, and Dart executes them using
 /// a Flutter-native handler (Navigator 1.0, GoRouter, or custom).
 ///
-/// How: Apps typically decode incoming commands from the Rust binding layer into this model.
+/// Apps typically decode incoming commands from the Rust binding layer into this model.
 sealed class OxideNavigationCommand<RouteT extends Object, KindT extends Object> {
   const OxideNavigationCommand();
 
@@ -21,6 +21,24 @@ sealed class OxideNavigationCommand<RouteT extends Object, KindT extends Object>
 
   /// Resets the stack to the given routes.
   const factory OxideNavigationCommand.reset({required List<RouteT> routes}) = OxideNavigationReset<RouteT, KindT>;
+}
+
+enum OxideRouteOperation { push, pop, popUntil, reset, sync }
+
+final class OxideRouteUpdate<RouteT extends Object, KindT extends Object> {
+  const OxideRouteUpdate({
+    required this.operation,
+    this.route,
+    this.result,
+    this.arguments,
+    this.firstPush = false,
+  });
+
+  final OxideRouteOperation operation;
+  final RouteT? route;
+  final Object? result;
+  final Object? arguments;
+  final bool firstPush;
 }
 
 /// Push command.

@@ -2,7 +2,7 @@
 
 `oxide_annotations` defines the `@OxideStore(...)` annotation consumed by `oxide_generator`.
 
-This package is intentionally minimal and usage-agnostic. For runnable usage, see the example apps in the repository (examples/*) and the root README.
+The package stays minimal and usage-agnostic. For runnable usage, see the example apps in the repository and the root README.
 
 ## What It Provides
 
@@ -12,7 +12,7 @@ This package is intentionally minimal and usage-agnostic. For runnable usage, se
 
 ## Usage
 
-In a Flutter app that also includes FRB-generated Dart bindings for your Rust engine:
+In a Flutter app that already includes FRB-generated Dart bindings for your Rust engine:
 
 ```dart
 import 'rust/api/bridge.dart' show ArcAppEngine, AppStateSnapshot;

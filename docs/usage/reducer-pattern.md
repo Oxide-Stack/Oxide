@@ -1,31 +1,57 @@
-# Reducer Pattern (Rust)
+# Reducer Pattern (Rust, Fool-Proof Setup)
 
-This page covers the Rust-side pieces you define for an Oxide store:
+This guide gives the exact Rust steps for a working Oxide reducer pipeline.
 
-- State (your data model)
-- Actions (events from UI / system)
-- Reducer (the pure-ish state transition function + side-effect entrypoint)
+## 1. Add Crate Dependencies
 
-## Add Rust Dependencies
-
-In your Rust crate (the one FRB will bind to), add dependencies:
+In your Rust crate (`Cargo.toml`):
 
 ```toml
 [dependencies]
-oxide_core = "0.3.0"
-oxide_generator_rs = "0.3.0"
+oxide_core = "0.4.0"
+oxide_generator_rs = "0.4.0"
 ```
 
-When working inside this repository, use combined version + path dependencies (Cargo prefers `path` locally, while published crates resolve by `version`):
+Inside this monorepo, prefer version + path together:
 
 ```toml
-oxide_core = { version = "0.3.0", path = "../rust/oxide_core" }
-oxide_generator_rs = { version = "0.3.0", path = "../rust/oxide_generator_rs" }
+oxide_core = { version = "0.4.0", path = "../rust/oxide_core" }
+oxide_generator_rs = { version = "0.4.0", path = "../rust/oxide_generator_rs" }
 ```
 
-## Define State, Actions, Reducer
+## 2. Define Your State
 
-This is the minimal pattern (modeled after `counter_app`).
+Annotate the state model with `#[state]`:
+
+```rust
+#[state]
+pub struct AppState {
+  pub counter: u64,
+}
+```
+
+## 3. Define UI/System Inputs as Actions
+
+Annotate your action enum with `#[actions]`:
+
+```rust
+#[actions]
+pub enum AppAction {
+  Increment,
+}
+```
+
+## 4. Define Side-Effects Channel Type
+
+Even if you do not emit effects yet, define the side-effect type:
+
+```rust
+pub enum AppSideEffect {}
+```
+
+## 5. Implement `Reducer` and Annotate with `#[reducer(...)]`
+
+This is the minimum complete pattern:
 
 ```rust
 use oxide_generator_rs::{actions, reducer, state};
@@ -60,9 +86,9 @@ impl oxide_core::Reducer for AppReducer {
   fn reduce(
     &mut self,
     state: &mut Self::State,
-    action: Self::Action,
+    ctx: oxide_core::ReducerCtx<'_, Self::Action, Self::State>,
   ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-    match action {
+    match ctx.input {
       AppAction::Increment => state.counter = state.counter.saturating_add(1),
     }
     Ok(oxide_core::StateChange::Full)
@@ -71,64 +97,48 @@ impl oxide_core::Reducer for AppReducer {
   fn effect(
     &mut self,
     _state: &mut Self::State,
-    _effect: Self::SideEffect,
+    _ctx: oxide_core::ReducerCtx<'_, Self::SideEffect, Self::State>,
   ) -> oxide_core::CoreResult<oxide_core::StateChange> {
     Ok(oxide_core::StateChange::None)
   }
 }
 ```
 
-## What The Macros Generate
+## 6. Understand What Is Generated
 
-At a high level, the macros generate:
+The macros generate (at minimum):
 
-- An engine type (held behind an `Arc` on the Dart side).
-- A snapshot type for `current()` and stream updates.
-- An FRB-friendly surface by default (can be disabled with `no_frb`).
+- Engine type (`engine = ...`).
+- Snapshot type (`snapshot = ...`).
+- FRB-friendly exports by default (`no_frb` disables this behavior).
 
-## Emitting Updates: `StateChange`
+For full macro/runtime pipeline details, see:
 
-Your reducer returns a `StateChange` that controls snapshot emissions:
+- [../../misc/rust-core-generator-workflow.md](../../misc/rust-core-generator-workflow.md)
 
-- `StateChange::None`: don’t commit and don’t emit a snapshot.
-- `StateChange::Full`: commit and emit a “full update”.
+## 7. Return the Correct `StateChange`
 
-If you enable sliced updates (next section), you’ll also use:
+`StateChange` controls commit + emission behavior:
 
-- `StateChange::Infer`: compare top-level fields and infer which slices changed.
-- `StateChange::Slices(&[...])`: explicitly declare which slices changed.
+- `StateChange::None`: no commit, no new snapshot.
+- `StateChange::Full`: commit and emit full update.
+- `StateChange::Infer`: infer changed slices (sliced mode).
+- `StateChange::Slices(&[...])`: explicitly mark changed slices.
 
-## Optional: Sliced Updates
+## 8. Optional: Enable Sliced Updates
 
-Sliced updates let Flutter subscribe to only the parts of state it cares about (based on top-level state fields).
+For targeted Flutter rebuilds:
 
-Rust side:
+1. Add `#[state(sliced = true)]`.
+2. Return `Infer` or `Slices(...)`.
+3. Configure matching slices in `@OxideStore`.
 
-```rust
-use oxide_generator_rs::{actions, reducer, state};
+Details: [sliced-updates.md](./sliced-updates.md)
 
-#[state(sliced = true)]
-pub struct AppState {
-  pub counter: u64,
-  pub username: String,
-}
+## 9. Done Criteria (Before Moving to Dart)
 
-// The macro generates an enum named `AppStateSlice` with variants derived from fields:
-// `Counter`, `Username`, ...
-```
+Before generating Dart adapters, verify:
 
-Reducer side:
-
-- Return `StateChange::Infer` to have Oxide infer which slices changed.
-- Return `StateChange::Slices(&[...])` when you already know which slices changed.
-- `StateChange::Full` always passes slice filters (acts like “full update”).
-
-Flutter side:
-
-```dart
-@OxideStore(
-  // ...
-  slices: [AppStateSlice.counter],
-)
-class AppOxide {}
-```
+1. Rust reducer compiles with your selected features.
+2. Reducer paths always return a valid `CoreResult<StateChange>`.
+3. Initial state and snapshot names in `#[reducer(...)]` are correct.

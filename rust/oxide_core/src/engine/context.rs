@@ -2,10 +2,10 @@ use crate::engine::StateSnapshot;
 
 /// Context object passed to reducers/effects.
 ///
-/// Why: reducers/effects frequently need access to the current route and a stable view of
+/// reducers/effects frequently need access to the current route and a stable view of
 /// state while processing an input (action or side-effect).
 ///
-/// How: the engine constructs this context for each invocation and passes it into reducer
+/// the engine constructs this context for each invocation and passes it into reducer
 /// calls as an immutable view of the invocation environment.
 pub struct Context<'a, Input, State, StateSlice = ()>
 where

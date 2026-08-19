@@ -6,10 +6,10 @@ import 'navigation_handler.dart';
 
 /// Default Navigator 1.0 based navigation handler.
 ///
-/// Why: most Flutter apps already depend on Navigator. This handler provides a minimal
+/// most Flutter apps already depend on Navigator. This handler provides a minimal
 /// implementation that works for apps that want an imperative route stack.
 ///
-/// How: the handler uses a [GlobalKey] to access the active [NavigatorState], and a route
+/// the handler uses a [GlobalKey] to access the active [NavigatorState], and a route
 /// builder map keyed by a generated route kind enum.
 final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Object>
     implements OxideNavigationHandler<RouteT, KindT> {
@@ -95,28 +95,26 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
   }
 
   @override
-  void reset(List<RouteT> routes) {
+  Future<void> reset(List<RouteT> routes) async {
     final navigator = navigatorKey.currentState;
     if (navigator != null) {
       if (routes.isEmpty) {
         navigator.popUntil((r) => r.isFirst);
         return;
       }
-      unawaited(_resetAsync(navigator, routes));
+      await _resetAsync(navigator, routes);
       return;
     }
-    unawaited(() async {
-      try {
-        final navigator = await _waitForNavigator();
-        if (routes.isEmpty) {
-          navigator.popUntil((r) => r.isFirst);
-          return;
-        }
-        await _resetAsync(navigator, routes);
-      } catch (error, stackTrace) {
-        Zone.current.handleUncaughtError(error, stackTrace);
+    try {
+      final navigator = await _waitForNavigator();
+      if (routes.isEmpty) {
+        navigator.popUntil((r) => r.isFirst);
+        return;
       }
-    }());
+      await _resetAsync(navigator, routes);
+    } catch (error, stackTrace) {
+      Zone.current.handleUncaughtError(error, stackTrace);
+    }
   }
 
   @override

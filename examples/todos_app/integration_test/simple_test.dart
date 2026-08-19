@@ -10,7 +10,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
     // don't start navigation; tests only drive CRUD flows
-    await OxideStack.init(startNavigation: false);
+    await OxideStack.init();
   });
 
   testWidgets('Todo CRUD updates Rust state', (WidgetTester tester) async {

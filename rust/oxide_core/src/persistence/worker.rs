@@ -8,10 +8,10 @@ use crate::CoreResult;
 
 // Debounced persistence worker.
 //
-// Why: dispatch can be frequent; writing every snapshot would be slow and
+// dispatch can be frequent; writing every snapshot would be slow and
 // unnecessary. A debounced worker keeps the latest state without disk churn.
 //
-// How: queue encoded payloads over an unbounded channel and write the most
+// queue encoded payloads over an unbounded channel and write the most
 // recent payload once per `min_interval`.
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 struct SendTimeoutFuture(gloo_timers::future::TimeoutFuture);
@@ -189,4 +189,121 @@ async fn worker_loop(
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 fn now_ms() -> u64 {
     js_sys::Date::now().max(0.0) as u64
+}
+
+#[cfg(all(test, not(all(target_arch = "wasm32", target_os = "unknown"))))]
+mod tests {
+    use super::*;
+
+    fn init_test_runtime() {
+        fn thread_pool() -> &'static flutter_rust_bridge::SimpleThreadPool {
+            static POOL: std::sync::OnceLock<flutter_rust_bridge::SimpleThreadPool> =
+                std::sync::OnceLock::new();
+            POOL.get_or_init(flutter_rust_bridge::SimpleThreadPool::default)
+        }
+        let _ = crate::runtime::init(thread_pool);
+    }
+
+    fn unique_temp_path(label: &str) -> PathBuf {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::env::temp_dir().join(format!("oxide_worker_{label}_{nanos}.bin"))
+    }
+
+    #[tokio::test]
+    async fn worker_timeout_flushes_pending_payload() {
+        init_test_runtime();
+
+        let path = unique_temp_path("timeout_flush");
+        let (tx, mut rx) = mpsc::unbounded_channel::<Vec<u8>>();
+
+        let path_for_task = path.clone();
+        let task = tokio::spawn(async move {
+            worker_loop(&path_for_task, Duration::from_millis(10), &mut rx).await;
+        });
+
+        tx.send(vec![1, 2, 3]).unwrap();
+        tokio::time::sleep(Duration::from_millis(30)).await;
+        drop(tx);
+
+        task.await.unwrap();
+        let bytes = std::fs::read(&path).unwrap();
+        assert_eq!(bytes, vec![1, 2, 3]);
+
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[tokio::test]
+    async fn worker_writes_latest_payload_on_close() {
+        init_test_runtime();
+
+        let path = unique_temp_path("latest_on_close");
+        let (tx, mut rx) = mpsc::unbounded_channel::<Vec<u8>>();
+
+        tx.send(vec![1]).unwrap();
+        tx.send(vec![9, 9, 9]).unwrap();
+        drop(tx);
+
+        worker_loop(&path, Duration::from_secs(10), &mut rx).await;
+
+        let bytes = std::fs::read(&path).unwrap();
+        assert_eq!(bytes, vec![9, 9, 9]);
+
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[tokio::test]
+    async fn worker_flushes_and_exits_when_channel_closes_after_recent_write() {
+        init_test_runtime();
+
+        let path = unique_temp_path("closed_after_recent_write");
+        let (tx, mut rx) = mpsc::unbounded_channel::<Vec<u8>>();
+
+        let path_for_task = path.clone();
+        let task = tokio::spawn(async move {
+            worker_loop(&path_for_task, Duration::from_millis(200), &mut rx).await;
+        });
+
+        tx.send(vec![1]).unwrap();
+
+        for _ in 0..30 {
+            if std::fs::metadata(&path).is_ok() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+
+        tx.send(vec![2]).unwrap();
+        drop(tx);
+
+        task.await.unwrap();
+        let bytes = std::fs::read(&path).unwrap();
+        assert_eq!(bytes, vec![2]);
+
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[tokio::test]
+    async fn file_persistence_worker_new_spawns_and_writes_payload() {
+        init_test_runtime();
+
+        let path = unique_temp_path("new_worker_write");
+        let worker = FilePersistenceWorker::new(path.clone(), Duration::from_millis(0)).unwrap();
+        worker.queue(vec![4, 5, 6]);
+        drop(worker);
+
+        for _ in 0..50 {
+            if let Ok(bytes) = std::fs::read(&path) {
+                if bytes == vec![4, 5, 6] {
+                    let _ = std::fs::remove_file(&path);
+                    return;
+                }
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+
+        panic!("worker did not persist queued payload in time");
+    }
 }

@@ -2,7 +2,7 @@ import 'model.dart';
 
 // InheritedWidget/ChangeNotifier backend templates.
 //
-// Why: this backend provides a dependency-free integration for Flutter apps
+// this backend provides a dependency-free integration for Flutter apps
 // that don't want an additional state management dependency.
 String buildInheritedBackend(OxideCodegenConfig c, String coreInstantiation) {
   final snapshotsStream = (c.slices == null || c.slices!.isEmpty)

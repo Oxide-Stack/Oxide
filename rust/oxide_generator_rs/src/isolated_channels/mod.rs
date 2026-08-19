@@ -4,13 +4,14 @@
 //! `OxideIsolatedChannels` specification.
 
 mod callback;
+mod common;
 mod event;
 mod naming;
 mod scan;
 mod validate;
 
-pub use callback::{expand_oxide_callback, OxideCallbackArgs};
-pub use event::{expand_oxide_event_channel, OxideEventChannelArgs};
+pub use callback::{OxideCallbackArgs, expand_oxide_callback};
+pub use event::{OxideEventChannelArgs, expand_oxide_event_channel};
 
 #[cfg(test)]
 mod tests;

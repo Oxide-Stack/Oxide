@@ -7,17 +7,17 @@ final class OxideStack {
     _initialized = true;
   }
 
-  static _OxideEvents get events => _oxideEvents;
-  static final _oxideEvents = _OxideEvents._();
+  static OxideEvents get events => _events;
+  static final _events = OxideEvents._();
 
-  static _OxideCallbacks get callbacks => _oxideCallbacks;
-  static final _oxideCallbacks = _OxideCallbacks._();
+  static OxideCallbacks get callbacks => _callbacks;
+  static final _callbacks = OxideCallbacks._();
 }
 
-class _OxideEvents {
-  const _OxideEvents._();
+final class OxideEvents {
+  const OxideEvents._();
 }
 
-class _OxideCallbacks {
-  const _OxideCallbacks._();
+final class OxideCallbacks {
+  const OxideCallbacks._();
 }

@@ -1,0 +1,5 @@
+error: #[routes] can only be applied to a module
+ --> tests/ui/fail_routes_wrong_target.rs:4:1
+  |
+4 | pub struct NotAModule;
+  | ^^^^^^^^^^^^^^^^^^^^^^

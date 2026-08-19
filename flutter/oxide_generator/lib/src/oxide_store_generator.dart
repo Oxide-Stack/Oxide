@@ -1,8 +1,4 @@
 // Analyzer-driven configuration extraction for Oxide store generation.
-//
-// Why: Dart analyzer types are powerful but hard to unit-test. This layer
-// translates analyzer metadata into a pure-data config consumed by the string
-// emitter.
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
@@ -11,37 +7,15 @@ import 'package:source_gen/source_gen.dart';
 
 import 'oxide_store_codegen.dart';
 
-/// Source_gen generator for `@OxideStore` annotations.
-///
-/// This generator emits glue code that instantiates `OxideStoreCore` and
-/// provides a backend-specific controller/actions API.
-///
-/// ## High-level flow
-///
-/// 1. Read annotation configuration (`state`, `actions`, binding function names, backend).
-/// 2. Inspect the `actions` type:
-///    - If it is an enum, generate one method per enum constant.
-///    - If it is a class, generate one method per public factory constructor.
-/// 3. Feed a normalized [OxideCodegenConfig] into the string-based generator in
-///    `oxide_store_codegen.dart` to produce the `part` output.
 final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
-  /// Generates code for a single annotated element.
-  ///
-  /// # Throws
-  /// Throws [InvalidGenerationSourceError] if the annotation is applied to an
-  /// unsupported element or its configuration is invalid.
   @override
-  String generateForAnnotatedElement(Element element, ConstantReader annotation, BuildStep buildStep) {
-    if (element is! ClassElement) {
-      throw InvalidGenerationSourceError('@OxideStore can only be used on classes.', element: element);
-    }
-
-    final nameOverride = annotation.peek('name')?.stringValue;
-    final className = element.name;
-    if (className == null || className.isEmpty) {
-      throw InvalidGenerationSourceError('@OxideStore can only be used on named classes.', element: element);
-    }
-    final prefix = (nameOverride == null || nameOverride.isEmpty) ? className : nameOverride;
+  String generateForAnnotatedElement(
+    Element element,
+    ConstantReader annotation,
+    BuildStep buildStep,
+  ) {
+    final target = _readTargetClass(element);
+    final prefix = _resolvePrefix(annotation, target);
 
     final stateType = _readType(annotation, 'state');
     final snapshotType = _readType(annotation, 'snapshot');
@@ -49,167 +23,14 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
     final engineType = _readType(annotation, 'engine');
 
     final keepAlive = annotation.peek('keepAlive')?.boolValue ?? false;
-    final bindings = annotation.peek('bindings')?.stringValue;
-
-    var createEngine = annotation.read('createEngine').stringValue;
-    var disposeEngine = annotation.read('disposeEngine').stringValue;
-    var dispatchFn = annotation.read('dispatch').stringValue;
-    var stateStreamFn = annotation.read('stateStream').stringValue;
-    var currentFn = annotation.read('current').stringValue;
-
-    if (bindings != null && bindings.isNotEmpty) {
-      if (createEngine == 'createEngine') createEngine = '$bindings.createEngine';
-      if (disposeEngine == 'disposeEngine') disposeEngine = '$bindings.disposeEngine';
-      if (dispatchFn == 'dispatch') dispatchFn = '$bindings.dispatch';
-      if (stateStreamFn == 'stateStream') stateStreamFn = '$bindings.stateStream';
-      if (currentFn == 'current') currentFn = '$bindings.current';
-    }
-    final initAppFn = annotation.peek('initApp')?.stringValue;
-    final backendIndex = annotation.peek('backend')?.objectValue.getField('index')?.toIntValue();
-    final backend = switch (backendIndex) {
-      0 => 'inherited',
-      1 => 'inheritedHooks',
-      2 => 'riverpod',
-      3 => 'bloc',
-      _ => 'inherited',
-    };
-    final encodeCurrentStateFn = annotation.peek('encodeCurrentState')?.stringValue;
-    final encodeStateFn = annotation.peek('encodeState')?.stringValue;
-    final decodeStateFn = annotation.peek('decodeState')?.stringValue;
-
-    String? sliceType;
-    List<String>? slices;
-    final slicesReader = annotation.peek('slices');
-    if (slicesReader != null && !slicesReader.isNull) {
-      final values = slicesReader.listValue;
-      if (values.isNotEmpty) {
-        slices = <String>[];
-        for (final obj in values) {
-          final objType = obj.type;
-          final objElement = objType?.element;
-          if (objType == null || objElement is! EnumElement) {
-            throw InvalidGenerationSourceError('@OxideStore.slices must contain enum values.', element: element);
-          }
-
-          final enumIndex = obj.getField('index')?.toIntValue();
-          if (enumIndex == null) {
-            throw InvalidGenerationSourceError('@OxideStore.slices must contain enum values.', element: element);
-          }
-
-          final constants = (() {
-            final dynamic dyn = objElement;
-            try {
-              final value = dyn.constants;
-              if (value is List) return value;
-            } catch (_) {}
-            return null;
-          })();
-
-          String? constantName;
-          if (constants != null) {
-            if (enumIndex >= 0 && enumIndex < constants.length) {
-              final dynamic dynConstant = constants[enumIndex];
-              final name = dynConstant.name;
-              if (name is String && name.isNotEmpty) constantName = name;
-            }
-          } else {
-            final fields = objElement.fields.where((f) => f.isEnumConstant).toList(growable: false);
-            if (enumIndex >= 0 && enumIndex < fields.length) constantName = fields[enumIndex].name;
-          }
-
-          if (constantName == null || constantName.isEmpty) {
-            throw InvalidGenerationSourceError('@OxideStore.slices contains an unknown enum value.', element: element);
-          }
-
-          final enumTypeName = _typeName(objType);
-          sliceType ??= enumTypeName;
-          if (sliceType != enumTypeName) {
-            throw InvalidGenerationSourceError('@OxideStore.slices must contain values from a single enum type.', element: element);
-          }
-          slices.add('$enumTypeName.$constantName');
-        }
-      }
-
-      final snapElement = snapshotType.element;
-      if (slices != null && slices.isNotEmpty) {
-        if (snapElement is! ClassElement) {
-          throw InvalidGenerationSourceError('@OxideStore.snapshot must be a class type when using slices.', element: element);
-        }
-        final hasSlicesGetter = snapElement.getGetter('slices') != null || snapElement.fields.any((f) => f.name == 'slices');
-        if (!hasSlicesGetter) {
-          throw InvalidGenerationSourceError(
-            '@OxideStore.slices requires snapshot to expose a `slices` field/getter generated from Rust sliced updates.',
-            element: element,
-          );
-        }
-      }
-    }
-
-    final actionsElement = actionsType.element;
-    final actionsIsEnum = actionsElement is EnumElement;
-    if (actionsElement is! ClassElement && actionsElement is! EnumElement) {
-      throw InvalidGenerationSourceError('@OxideStore.actions must be a class or enum type.', element: element);
-    }
+    final bindings = _readBindings(annotation);
+    final slices = _readSlices(annotation, snapshotType, target);
+    final actions = _readActions(actionsType, target);
 
     final stateTypeName = _typeName(stateType);
     final snapshotTypeName = _typeName(snapshotType);
     final actionsTypeName = _typeName(actionsType);
     final engineTypeName = _typeName(engineType);
-
-    final actionConstructors = <OxideActionConstructor>[];
-    if (actionsElement is ClassElement) {
-      // Union-class actions are represented as a Dart class with factory constructors.
-      // Each public factory becomes a method on the generated `...Actions` facade.
-      for (final ctor in actionsElement.constructors) {
-        if (!ctor.isFactory) continue;
-        if (ctor.isPrivate) continue;
-        final ctorName = ctor.name;
-        if (ctorName == null || ctorName.isEmpty) continue;
-
-        actionConstructors.add(
-          OxideActionConstructor(
-            name: ctorName,
-            positionalParams: ctor.formalParameters
-                .where((p) => p.isPositional && (p.name?.isNotEmpty ?? false))
-                .map((p) => OxideActionParam(name: p.name!, type: p.type.getDisplayString(withNullability: true), isRequiredNamed: false))
-                .toList(growable: false),
-            namedParams: ctor.formalParameters
-                .where((p) => p.isNamed && (p.name?.isNotEmpty ?? false))
-                .map((p) => OxideActionParam(name: p.name!, type: p.type.getDisplayString(withNullability: true), isRequiredNamed: p.isRequiredNamed))
-                .toList(growable: false),
-          ),
-        );
-      }
-    } else if (actionsElement is EnumElement) {
-      // Enum actions are represented as enum constants (no parameters).
-      //
-      // Newer analyzer versions provide `EnumElement.constants`, but we also
-      // support older versions by falling back to scanning fields.
-      final constants = (() {
-        final dynamic dyn = actionsElement;
-        try {
-          final value = dyn.constants;
-          if (value is List) return value;
-        } catch (_) {}
-        return null;
-      })();
-
-      if (constants != null) {
-        for (final constant in constants) {
-          final dynamic dynConstant = constant;
-          final name = dynConstant.name;
-          if (name is! String || name.isEmpty) continue;
-          actionConstructors.add(OxideActionConstructor(name: name, positionalParams: const [], namedParams: const []));
-        }
-      } else {
-        for (final field in actionsElement.fields) {
-          if (!field.isEnumConstant) continue;
-          final fieldName = field.name;
-          if (fieldName == null || fieldName.isEmpty) continue;
-          actionConstructors.add(OxideActionConstructor(name: fieldName, positionalParams: const [], namedParams: const []));
-        }
-      }
-    }
 
     return generateOxideStoreSource(
       OxideCodegenConfig(
@@ -217,33 +38,316 @@ final class OxideStoreGenerator extends GeneratorForAnnotation<OxideStore> {
         stateType: stateTypeName,
         snapshotType: snapshotTypeName,
         actionsType: actionsTypeName,
-        actionsIsEnum: actionsIsEnum,
+        actionsIsEnum: actions.isEnum,
         engineType: engineTypeName,
-        sliceType: sliceType,
-        slices: slices,
-        backend: backend,
+        sliceType: slices.type,
+        slices: slices.values,
+        backend: _readBackend(annotation),
         keepAlive: keepAlive,
-        createEngine: createEngine,
-        disposeEngine: disposeEngine,
-        dispatch: dispatchFn,
-        stateStream: stateStreamFn,
-        current: currentFn,
-        initApp: initAppFn,
-        encodeCurrentState: encodeCurrentStateFn,
-        encodeState: encodeStateFn,
-        decodeState: decodeStateFn,
-        actionConstructors: actionConstructors,
+        createEngine: bindings.createEngine,
+        disposeEngine: bindings.disposeEngine,
+        dispatch: bindings.dispatch,
+        stateStream: bindings.stateStream,
+        current: bindings.current,
+        initApp: annotation.peek('initApp')?.stringValue,
+        encodeCurrentState: annotation.peek('encodeCurrentState')?.stringValue,
+        encodeState: annotation.peek('encodeState')?.stringValue,
+        decodeState: annotation.peek('decodeState')?.stringValue,
+        actionConstructors: actions.constructors,
       ),
     );
   }
 }
 
-/// Reads a type-valued field from an annotation.
 DartType _readType(ConstantReader annotation, String field) {
   return annotation.read(field).typeValue;
 }
 
-/// Returns a display name for a type without nullability markers.
+ClassElement _readTargetClass(Element element) {
+  if (element is! ClassElement) {
+    throw InvalidGenerationSourceError(
+      '@OxideStore can only be used on classes.',
+      element: element,
+    );
+  }
+
+  final name = element.name;
+  if (name == null || name.isEmpty) {
+    throw InvalidGenerationSourceError(
+      '@OxideStore can only be used on named classes.',
+      element: element,
+    );
+  }
+
+  return element;
+}
+
+String _resolvePrefix(ConstantReader annotation, ClassElement element) {
+  final override = annotation.peek('name')?.stringValue;
+  if (override != null && override.isNotEmpty) {
+    return override;
+  }
+  return element.name!;
+}
+
+_Bindings _readBindings(ConstantReader annotation) {
+  final scope = annotation.peek('bindings')?.stringValue;
+  return _Bindings(
+    createEngine: _resolveBinding(
+      annotation.read('createEngine').stringValue,
+      scope,
+    ),
+    disposeEngine: _resolveBinding(
+      annotation.read('disposeEngine').stringValue,
+      scope,
+    ),
+    dispatch: _resolveBinding(annotation.read('dispatch').stringValue, scope),
+    stateStream: _resolveBinding(
+      annotation.read('stateStream').stringValue,
+      scope,
+    ),
+    current: _resolveBinding(annotation.read('current').stringValue, scope),
+  );
+}
+
+String _resolveBinding(String value, String? scope) {
+  if (scope == null || scope.isEmpty) {
+    return value;
+  }
+
+  return switch (value) {
+    'createEngine' => '$scope.createEngine',
+    'disposeEngine' => '$scope.disposeEngine',
+    'dispatch' => '$scope.dispatch',
+    'stateStream' => '$scope.stateStream',
+    'current' => '$scope.current',
+    _ => value,
+  };
+}
+
+String _readBackend(ConstantReader annotation) {
+  final index = annotation
+      .peek('backend')
+      ?.objectValue
+      .getField('index')
+      ?.toIntValue();
+  return switch (index) {
+    1 => 'inheritedHooks',
+    2 => 'riverpod',
+    3 => 'bloc',
+    _ => 'inherited',
+  };
+}
+
+_SliceConfig _readSlices(
+  ConstantReader annotation,
+  DartType snapshotType,
+  Element element,
+) {
+  final slicesReader = annotation.peek('slices');
+  if (slicesReader == null || slicesReader.isNull) {
+    return const _SliceConfig.empty();
+  }
+
+  final values = slicesReader.listValue;
+  if (values.isEmpty) {
+    return const _SliceConfig.empty();
+  }
+
+  String? sliceType;
+  final slices = <String>[];
+  final enumConstantsByType = <EnumElement, List<String>>{};
+  for (final value in values) {
+    final enumType = value.type;
+    final enumElement = enumType?.element;
+    if (enumType == null || enumElement is! EnumElement) {
+      throw InvalidGenerationSourceError(
+        '@OxideStore.slices must contain enum values.',
+        element: element,
+      );
+    }
+
+    final enumIndex = value.getField('index')?.toIntValue();
+    if (enumIndex == null) {
+      throw InvalidGenerationSourceError(
+        '@OxideStore.slices must contain enum values.',
+        element: element,
+      );
+    }
+
+    final constantNames = enumConstantsByType.putIfAbsent(
+      enumElement,
+      () => _enumConstantNames(enumElement),
+    );
+    if (enumIndex < 0 || enumIndex >= constantNames.length) {
+      throw InvalidGenerationSourceError(
+        '@OxideStore.slices contains an unknown enum value.',
+        element: element,
+      );
+    }
+
+    final enumTypeName = _typeName(enumType);
+    sliceType ??= enumTypeName;
+    if (sliceType != enumTypeName) {
+      throw InvalidGenerationSourceError(
+        '@OxideStore.slices must contain values from a single enum type.',
+        element: element,
+      );
+    }
+
+    slices.add('$enumTypeName.${constantNames[enumIndex]}');
+  }
+
+  final snapshotElement = snapshotType.element;
+  if (snapshotElement is! ClassElement) {
+    throw InvalidGenerationSourceError(
+      '@OxideStore.snapshot must be a class type when using slices.',
+      element: element,
+    );
+  }
+
+  final hasSlicesMember =
+      snapshotElement.getGetter('slices') != null ||
+      snapshotElement.fields.any((field) => field.name == 'slices');
+  if (!hasSlicesMember) {
+    throw InvalidGenerationSourceError(
+      '@OxideStore.slices requires snapshot to expose a `slices` field or getter.',
+      element: element,
+    );
+  }
+
+  return _SliceConfig(type: sliceType, values: slices);
+}
+
+_ActionsConfig _readActions(DartType actionsType, Element element) {
+  final actionsElement = actionsType.element;
+  if (actionsElement is EnumElement) {
+    return _ActionsConfig(
+      isEnum: true,
+      constructors: _enumConstantNames(actionsElement)
+          .map(
+            (name) => OxideActionConstructor(
+              name: name,
+              positionalParams: const [],
+              namedParams: const [],
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  if (actionsElement is! ClassElement) {
+    throw InvalidGenerationSourceError(
+      '@OxideStore.actions must be a class or enum type.',
+      element: element,
+    );
+  }
+
+  return _ActionsConfig(
+    isEnum: false,
+    constructors: actionsElement.constructors
+        .where((ctor) => ctor.isFactory && !ctor.isPrivate)
+        .map(_toActionConstructor)
+        .where((ctor) => ctor.name.isNotEmpty)
+        .toList(growable: false),
+  );
+}
+
+OxideActionConstructor _toActionConstructor(ConstructorElement ctor) {
+  return OxideActionConstructor(
+    name: ctor.name ?? '',
+    positionalParams: ctor.formalParameters
+        .where(
+          (param) => param.isPositional && (param.name?.isNotEmpty ?? false),
+        )
+        .map(_toPositionalParam)
+        .toList(growable: false),
+    namedParams: ctor.formalParameters
+        .where((param) => param.isNamed && (param.name?.isNotEmpty ?? false))
+        .map(_toNamedParam)
+        .toList(growable: false),
+  );
+}
+
+OxideActionParam _toPositionalParam(FormalParameterElement param) {
+  return OxideActionParam(
+    name: param.name!,
+    type: param.type.getDisplayString(withNullability: true),
+    isRequiredNamed: false,
+  );
+}
+
+OxideActionParam _toNamedParam(FormalParameterElement param) {
+  return OxideActionParam(
+    name: param.name!,
+    type: param.type.getDisplayString(withNullability: true),
+    isRequiredNamed: param.isRequiredNamed,
+  );
+}
+
+List<String> _enumConstantNames(EnumElement element) {
+  final constants = _readEnumConstants(element);
+  if (constants != null) {
+    return constants
+        .map((constant) {
+          final dynamic dynamicConstant = constant;
+          final name = dynamicConstant.name;
+          return name is String ? name : null;
+        })
+        .whereType<String>()
+        .where((name) => name.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  return element.fields
+      .where((field) => field.isEnumConstant)
+      .map((field) => field.name)
+      .whereType<String>()
+      .toList(growable: false);
+}
+
+List<dynamic>? _readEnumConstants(EnumElement element) {
+  final dynamic dynamicElement = element;
+  try {
+    final constants = dynamicElement.constants;
+    return constants is List ? constants : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 String _typeName(DartType type) {
   return type.getDisplayString(withNullability: false);
+}
+
+final class _Bindings {
+  const _Bindings({
+    required this.createEngine,
+    required this.disposeEngine,
+    required this.dispatch,
+    required this.stateStream,
+    required this.current,
+  });
+
+  final String createEngine;
+  final String disposeEngine;
+  final String dispatch;
+  final String stateStream;
+  final String current;
+}
+
+final class _SliceConfig {
+  const _SliceConfig({required this.type, required this.values});
+
+  const _SliceConfig.empty() : type = null, values = null;
+
+  final String? type;
+  final List<String>? values;
+}
+
+final class _ActionsConfig {
+  const _ActionsConfig({required this.isEnum, required this.constructors});
+
+  final bool isEnum;
+  final List<OxideActionConstructor> constructors;
 }

@@ -5,6 +5,8 @@
 
 // Maintenance: keep these helpers generic and dependency-light so they can be
 // safely used by multiple binding strategies without pulling in app concepts.
+#[cfg(feature = "frb-spawn")]
+pub mod logger;
 mod stream;
 
 pub use stream::watch_receiver_to_stream;

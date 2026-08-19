@@ -1,6 +1,6 @@
 #![cfg(feature = "state-persistence")]
 
-use oxide_core::persistence::PersistenceConfig;
+use oxide_core::persistence::{decode, set_debug_json_enabled, PersistenceConfig};
 use oxide_core::{CoreResult, InitContext, OxideError, Reducer, ReducerEngine, StateChange};
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -61,6 +61,7 @@ async fn persistence_restores_state_across_engines() {
     let _ = oxide_core::runtime::init(thread_pool);
     #[cfg(feature = "navigation-binding")]
     let _ = oxide_core::init_navigation();
+    set_debug_json_enabled(false);
 
     let key = "oxide_core.test.persistence_engine_restore.v1".to_string();
     let path = oxide_core::persistence::default_persistence_path(&key);
@@ -84,10 +85,14 @@ async fn persistence_restores_state_across_engines() {
     let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(2);
     loop {
         if tokio::time::Instant::now() >= deadline {
-            break;
+            panic!("persistence file never restored the committed state");
         }
-        if std::fs::metadata(&path).map(|m| m.len() > 0).unwrap_or(false) {
-            break;
+        if let Ok(bytes) = std::fs::read(&path) {
+            if let Ok(restored) = decode::<State>(&bytes) {
+                if restored.counter == 1 {
+                    break;
+                }
+            }
         }
         tokio::time::sleep(std::time::Duration::from_millis(10)).await;
     }

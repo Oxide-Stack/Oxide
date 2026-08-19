@@ -29,8 +29,8 @@ impl oxide_core::Reducer for MyReducer {
         state: &mut Self::State,
         ctx: oxide_core::Context<'_, Self::Action, Self::State, MyStateSlice>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        // Why: Many users prefer importing enum variants for brevity.
-        // How: The macro should still detect `Infer` usage even when `StateChange`
+        // Many users prefer importing enum variants for brevity.
+        // The macro should still detect `Infer` usage even when `StateChange`
         // isn't spelled out at the callsite.
         use oxide_core::StateChange::*;
         match ctx.input {

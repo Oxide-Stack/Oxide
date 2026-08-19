@@ -1,7 +1,8 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
-use syn::{ImplItem, ItemEnum, ItemImpl, Type};
+use syn::{ItemEnum, ItemImpl, Type};
 
+use super::common::{find_assoc_type, impl_self_ident};
 use super::naming::to_snake_case;
 use super::scan::find_enum_in_crate_src;
 use super::validate::{type_to_simple_ident, validate_enum_payload};
@@ -17,7 +18,8 @@ impl syn::parse::Parse for OxideCallbackArgs {
             return Ok(Self { no_frb: false });
         }
 
-        let args = syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated(input)?;
+        let args =
+            syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated(input)?;
         let mut no_frb = false;
         for meta in args {
             match meta {
@@ -37,7 +39,10 @@ impl syn::parse::Parse for OxideCallbackArgs {
 }
 
 /// Expands `#[oxide_callback]` for `OxideCallbacking`.
-pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> syn::Result<TokenStream2> {
+pub fn expand_oxide_callback(
+    args: OxideCallbackArgs,
+    item_impl: ItemImpl,
+) -> syn::Result<TokenStream2> {
     let Some((_, trait_path, _)) = &item_impl.trait_ else {
         return Err(syn::Error::new_spanned(
             &item_impl,
@@ -81,10 +86,17 @@ pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> sy
     let service_snake = to_snake_case(&self_ident.to_string());
     let runtime_mod_ident = format_ident!("__oxide_isolated_callback_{service_snake}");
     let envelope_ident = format_ident!("__OxideCallbackRequest_{service_snake}");
+    let channel_error_alias_ident = format_ident!("OxideChannelError{}", self_ident);
     let stream_fn_ident = format_ident!("oxide_{service_snake}_requests_stream");
     let respond_fn_ident = format_ident!("oxide_{service_snake}_respond");
 
-    let methods = generate_callback_methods(&self_ident, &request_ty, &request_enum, &response_ty, &response_enum)?;
+    let methods = generate_callback_methods(
+        &self_ident,
+        &request_ty,
+        &request_enum,
+        &response_ty,
+        &response_enum,
+    )?;
 
     let frb_mod = if args.no_frb {
         quote! {}
@@ -92,6 +104,23 @@ pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> sy
         quote! {
             pub mod frb {
                 use super::*;
+
+                /// Compile-time guardrail for stale FRB bindings.
+                ///
+                /// If this fails with trait-bound errors around `IntoIntoDart` or
+                /// `StreamSink<...>::add`, regenerate FRB bindings from your Flutter app root:
+                ///
+                /// `flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml`
+                #[inline(always)]
+                fn __oxide_callback_require_fresh_frb_bindings(
+                    sink: &crate::frb_generated::StreamSink<#envelope_ident>,
+                    envelope: #envelope_ident,
+                )
+                where
+                    #envelope_ident: flutter_rust_bridge::IntoIntoDart<#envelope_ident>,
+                {
+                    let _ = sink.add(envelope);
+                }
 
                 #[flutter_rust_bridge::frb]
                 pub async fn #stream_fn_ident(
@@ -101,7 +130,8 @@ pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> sy
                         let Some((id, request)) = super::runtime().recv_request().await else {
                             break;
                         };
-                        let _ = sink.add(#envelope_ident { id, request });
+                        let envelope = #envelope_ident { id, request };
+                        __oxide_callback_require_fresh_frb_bindings(&sink, envelope);
                     }
                 }
 
@@ -118,6 +148,8 @@ pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> sy
 
     Ok(quote! {
         #item_impl
+
+        pub type #channel_error_alias_ident = oxide_core::OxideChannelError;
 
         #methods
 
@@ -144,7 +176,10 @@ pub fn expand_oxide_callback(args: OxideCallbackArgs, item_impl: ItemImpl) -> sy
     })
 }
 
-fn validate_request_response_parity(request_enum: &ItemEnum, response_enum: &ItemEnum) -> syn::Result<()> {
+fn validate_request_response_parity(
+    request_enum: &ItemEnum,
+    response_enum: &ItemEnum,
+) -> syn::Result<()> {
     for req_variant in &request_enum.variants {
         let name = &req_variant.ident;
         let has_match = response_enum.variants.iter().any(|v| v.ident == *name);
@@ -201,7 +236,10 @@ fn generate_callback_methods(
     })
 }
 
-fn response_match_arm(response_ty: &Type, variant: &syn::Variant) -> syn::Result<(Type, TokenStream2)> {
+fn response_match_arm(
+    response_ty: &Type,
+    variant: &syn::Variant,
+) -> syn::Result<(Type, TokenStream2)> {
     let variant_ident = &variant.ident;
     match &variant.fields {
         syn::Fields::Unit => Ok((
@@ -238,7 +276,10 @@ fn response_match_arm(response_ty: &Type, variant: &syn::Variant) -> syn::Result
     }
 }
 
-fn variant_ctor(enum_ty: &Type, variant: &syn::Variant) -> syn::Result<(TokenStream2, TokenStream2)> {
+fn variant_ctor(
+    enum_ty: &Type,
+    variant: &syn::Variant,
+) -> syn::Result<(TokenStream2, TokenStream2)> {
     let variant_ident = &variant.ident;
     match &variant.fields {
         syn::Fields::Unit => Ok((quote! {}, quote! { #enum_ty::#variant_ident })),
@@ -271,27 +312,4 @@ fn variant_ctor(enum_ty: &Type, variant: &syn::Variant) -> syn::Result<(TokenStr
             ))
         }
     }
-}
-
-fn find_assoc_type(item_impl: &ItemImpl, assoc: &str) -> syn::Result<Type> {
-    for item in &item_impl.items {
-        let ImplItem::Type(ty_item) = item else { continue };
-        if ty_item.ident == assoc {
-            return Ok(ty_item.ty.clone());
-        }
-    }
-    Err(syn::Error::new_spanned(
-        item_impl,
-        format!("missing associated type `{assoc}`"),
-    ))
-}
-
-fn impl_self_ident(ty: &Type) -> syn::Result<syn::Ident> {
-    let Type::Path(type_path) = ty else {
-        return Err(syn::Error::new_spanned(ty, "expected a concrete self type"));
-    };
-    let Some(seg) = type_path.path.segments.last() else {
-        return Err(syn::Error::new_spanned(ty, "expected a concrete self type"));
-    };
-    Ok(seg.ident.clone())
 }

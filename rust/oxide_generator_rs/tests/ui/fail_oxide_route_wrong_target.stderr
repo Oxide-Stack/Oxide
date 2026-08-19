@@ -1,0 +1,7 @@
+error: #[oxide_route] can only be applied to a struct
+ --> tests/ui/fail_oxide_route_wrong_target.rs:4:1
+  |
+4 | / pub enum NotAStruct {
+5 | |     V,
+6 | | }
+  | |_^

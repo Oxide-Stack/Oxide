@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Runs the local FRB/oxide drift gate before every push.
+# Bypass deliberately with: git push --no-verify
+
+HOOKS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+bash "$HOOKS_DIR/../tools/scripts/qa/gate-frb.sh"

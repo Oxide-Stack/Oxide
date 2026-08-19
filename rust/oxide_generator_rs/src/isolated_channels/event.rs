@@ -1,7 +1,8 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{ToTokens, format_ident, quote};
-use syn::{ImplItem, ItemEnum, ItemImpl, LitBool, Type};
+use syn::{ItemEnum, ItemImpl, LitBool, Type};
 
+use super::common::{find_assoc_type, impl_self_ident};
 use super::naming::to_snake_case;
 use super::scan::find_enum_in_crate_src;
 use super::validate::{type_to_simple_ident, validate_enum_payload};
@@ -15,13 +16,17 @@ pub struct OxideEventChannelArgs {
 impl syn::parse::Parse for OxideEventChannelArgs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         if input.is_empty() {
-            return Ok(Self { orphaned: false, no_frb: false });
+            return Ok(Self {
+                orphaned: false,
+                no_frb: false,
+            });
         }
 
         let mut orphaned = false;
         let mut no_frb = false;
 
-        let args = syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated(input)?;
+        let args =
+            syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated(input)?;
         for meta in args {
             match meta {
                 syn::Meta::Path(path) if path.is_ident("no_frb") => {
@@ -35,7 +40,8 @@ impl syn::parse::Parse for OxideEventChannelArgs {
                             "expected `orphaned = true` or `orphaned = false`",
                         ));
                     };
-                    let LitBool { value, .. } = syn::parse2::<LitBool>(expr_lit.lit.to_token_stream())?;
+                    let LitBool { value, .. } =
+                        syn::parse2::<LitBool>(expr_lit.lit.to_token_stream())?;
                     orphaned = value;
                 }
                 other => {
@@ -74,7 +80,10 @@ pub fn expand_oxide_event_channel(
     }
 }
 
-fn expand_event_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> syn::Result<TokenStream2> {
+fn expand_event_channel(
+    args: OxideEventChannelArgs,
+    item_impl: ItemImpl,
+) -> syn::Result<TokenStream2> {
     let self_ident = impl_self_ident(&item_impl.self_ty)?;
     let events_ty = find_assoc_type(&item_impl, "Events")?;
     let events_ident = type_to_simple_ident(&events_ty)?;
@@ -87,7 +96,10 @@ fn expand_event_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> syn
     };
     validate_enum_payload(&events_enum)?;
 
-    let runtime_mod_ident = format_ident!("__oxide_isolated_events_{}", to_snake_case(&self_ident.to_string()));
+    let runtime_mod_ident = format_ident!(
+        "__oxide_isolated_events_{}",
+        to_snake_case(&self_ident.to_string())
+    );
     let send_helpers =
         generate_event_send_helpers(&self_ident, &events_ty, &events_enum, &runtime_mod_ident)?;
     let stream_fn_ident = if args.orphaned {
@@ -114,12 +126,30 @@ fn expand_event_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> syn
                     loop {
                         match rx.recv().await {
                             Ok(event) => {
-                                let _ = sink.add(event);
+                                __oxide_require_fresh_event_stream_bindings(&sink, event);
                             }
                             Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
                             Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Closed) => break,
                         }
                     }
+                }
+
+                /// Compile-time guardrail for stale FRB bindings on isolated event streams.
+                ///
+                /// If this fails with trait-bound errors around `IntoIntoDart` or
+                /// `StreamSink<#events_ty>::add`, regenerate FRB bindings from your
+                /// Flutter app root:
+                ///
+                /// `flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml`
+                #[inline(always)]
+                fn __oxide_require_fresh_event_stream_bindings(
+                    sink: &crate::frb_generated::StreamSink<#events_ty>,
+                    event: #events_ty,
+                )
+                where
+                    #events_ty: flutter_rust_bridge::IntoIntoDart<#events_ty>,
+                {
+                    let _ = sink.add(event);
                 }
             }
         }
@@ -149,7 +179,10 @@ fn expand_event_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> syn
     Ok(expanded)
 }
 
-fn expand_duplex_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> syn::Result<TokenStream2> {
+fn expand_duplex_channel(
+    args: OxideEventChannelArgs,
+    item_impl: ItemImpl,
+) -> syn::Result<TokenStream2> {
     let self_ident = impl_self_ident(&item_impl.self_ty)?;
     let outgoing_ty = find_assoc_type(&item_impl, "Outgoing")?;
     let incoming_ty = find_assoc_type(&item_impl, "Incoming")?;
@@ -173,7 +206,11 @@ fn expand_duplex_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> sy
     };
     validate_enum_payload(&incoming_enum)?;
 
-    let runtime_mod_ident = format_ident!("__oxide_isolated_duplex_{}", to_snake_case(&self_ident.to_string()));
+    let runtime_mod_ident = format_ident!(
+        "__oxide_isolated_duplex_{}",
+        to_snake_case(&self_ident.to_string())
+    );
+    let channel_error_alias_ident = format_ident!("OxideChannelError{}", self_ident);
     let send_helpers = generate_duplex_outgoing_helpers(
         &self_ident,
         &outgoing_ty,
@@ -191,10 +228,8 @@ fn expand_duplex_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> sy
         format_ident!("oxide_outgoing_stream")
     };
 
-    let incoming_fn_ident = format_ident!(
-        "oxide_{}_incoming",
-        to_snake_case(&self_ident.to_string())
-    );
+    let incoming_fn_ident =
+        format_ident!("oxide_{}_incoming", to_snake_case(&self_ident.to_string()));
 
     let frb_mod = if args.no_frb {
         quote! {}
@@ -211,12 +246,30 @@ fn expand_duplex_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> sy
                     loop {
                         match rx.recv().await {
                             Ok(event) => {
-                                let _ = sink.add(event);
+                                __oxide_require_fresh_duplex_outgoing_bindings(&sink, event);
                             }
                             Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
                             Err(::oxide_core::tokio::sync::broadcast::error::RecvError::Closed) => break,
                         }
                     }
+                }
+
+                /// Compile-time guardrail for stale FRB bindings on duplex outgoing streams.
+                ///
+                /// If this fails with trait-bound errors around `IntoIntoDart` or
+                /// `StreamSink<#outgoing_ty>::add`, regenerate FRB bindings from your
+                /// Flutter app root:
+                ///
+                /// `flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml`
+                #[inline(always)]
+                fn __oxide_require_fresh_duplex_outgoing_bindings(
+                    sink: &crate::frb_generated::StreamSink<#outgoing_ty>,
+                    event: #outgoing_ty,
+                )
+                where
+                    #outgoing_ty: flutter_rust_bridge::IntoIntoDart<#outgoing_ty>,
+                {
+                    let _ = sink.add(event);
                 }
 
                 #[flutter_rust_bridge::frb]
@@ -231,6 +284,8 @@ fn expand_duplex_channel(args: OxideEventChannelArgs, item_impl: ItemImpl) -> sy
 
     let expanded = quote! {
         #item_impl
+
+        pub type #channel_error_alias_ident = oxide_core::OxideChannelError;
 
         #send_helpers
 
@@ -314,7 +369,10 @@ fn generate_duplex_outgoing_helpers(
     })
 }
 
-fn variant_ctor(enum_ty: &Type, variant: &syn::Variant) -> syn::Result<(TokenStream2, TokenStream2)> {
+fn variant_ctor(
+    enum_ty: &Type,
+    variant: &syn::Variant,
+) -> syn::Result<(TokenStream2, TokenStream2)> {
     let variant_ident = &variant.ident;
     match &variant.fields {
         syn::Fields::Unit => Ok((quote! {}, quote! { #enum_ty::#variant_ident })),
@@ -347,27 +405,4 @@ fn variant_ctor(enum_ty: &Type, variant: &syn::Variant) -> syn::Result<(TokenStr
             ))
         }
     }
-}
-
-fn find_assoc_type(item_impl: &ItemImpl, assoc: &str) -> syn::Result<Type> {
-    for item in &item_impl.items {
-        let ImplItem::Type(ty_item) = item else { continue };
-        if ty_item.ident == assoc {
-            return Ok(ty_item.ty.clone());
-        }
-    }
-    Err(syn::Error::new_spanned(
-        item_impl,
-        format!("missing associated type `{assoc}`"),
-    ))
-}
-
-fn impl_self_ident(ty: &Type) -> syn::Result<syn::Ident> {
-    let Type::Path(type_path) = ty else {
-        return Err(syn::Error::new_spanned(ty, "expected a concrete self type"));
-    };
-    let Some(seg) = type_path.path.segments.last() else {
-        return Err(syn::Error::new_spanned(ty, "expected a concrete self type"));
-    };
-    Ok(seg.ident.clone())
 }

@@ -1,3 +1,38 @@
+## 0.5.0
+- Runtime and persistence:
+  - Updated persistence to always use bincode with optional validated debug JSON copies.
+  - Added Dart-to-Rust debug JSON persistence toggle wiring through `OxideStack.init` and debug logging flags.
+  - Added structured runtime logging for initialization, dispatch, and error paths.
+  - Refactored reducer engine internals with `ReducerCtx` signatures and clearer engine state naming.
+  - Refactored initialization and navigation startup handling; relaxed init validation to reduce false positives.
+- Tooling and code generation:
+  - Updated navigation codegen to use web-safe FRB imports for isolated channels.
+  - Mapped route update payload generation through `routes.dart` bindings.
+  - Added FRB guard helpers for isolated channels.
+  - Added optional `#[routes(...)]` hooks with signature validation for init/route-change callbacks.
+  - Added implicit routes module discovery, FRB metadata checks, and auto-derived standard traits for `#[oxide_route]` types.
+  - Fixed version sync to preserve original line endings.
+- Tests and QA:
+  - Added persistence test validating debug JSON decodes to the same state as bincode snapshots.
+  - Added coverage for isolated channels, reducer arguments, persistence worker, and navigation runtime behavior.
+  - Added modular QA pipeline spanning Rust crates, Flutter packages, and example suites.
+- CI:
+  - Added Test Suite workflow for full QA on pull requests across Linux and Windows.
+  - Updated Basic CI to run minimal QA on pushes/dispatch and ignore tag builds.
+  - Updated release workflow with tag/version alignment checks, multi-platform QA, and publish gates.
+  - Updated workflow triggers: Basic CI skips `main` pushes, Test Suite runs on PRs, releases run on tag pushes.
+- Examples:
+  - Added `showcase_app` Flutter + Rust example and bumped its versions to `0.4.0`.
+  - Added an isolated channels demo with related routes.
+  - Updated example bridges to expose `setPersistenceDebugJsonEnabled`.
+- Docs and maintenance:
+  - Updated persistence docs for bincode-only storage with debug JSON copy behavior.
+  - Added web notes for isolated channels docs, including FRB web binding guidance.
+  - Added sliced updates docs for state slice snapshots and widget rebuild filtering.
+  - Updated README/usage example lists to include `showcase_app`.
+  - Added a root GitHub Actions overview and a root repo architecture guide.
+  - Refactored documentation and code comments for clarity and consistency.
+
 ## 0.4.0
 - Add navigation and isolated channels support across Rust and Flutter packages; unify initialization with `OxideStack.init()`
 - Introduce the `oxide_route` macro and generator improvements to produce a unified `oxide.dart` entry point and typed route command streams
