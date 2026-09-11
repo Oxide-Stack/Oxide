@@ -22,13 +22,17 @@ class ${c.prefix}Cubit extends Cubit<OxideView<${c.stateType}, ${c.prefix}Action
           isLoading: true,
           error: null,
         )) {
+    // Rebind to the real dispatch handler (instance method cannot be referenced
+    // from an initializer list, so binding happens here in the body).
     actions._bind(_dispatch);
     _subscription = $snapshotsStream.listen((_) => _emit());
+    _failureSubscription = _core.failures.listen((_) => _emit());
     unawaited(_initialize());
   }
 
   final ${c.prefix}Actions actions;
   StreamSubscription<${c.snapshotType}>? _subscription;
+  StreamSubscription<OxideStoreFailure>? _failureSubscription;
 
 $coreInstantiation
 
@@ -36,8 +40,6 @@ $coreInstantiation
 
   Future<void> _initialize() async {
     await _core.initialize();
-    // emission will come through subscription; explicit emit removed to
-    // avoid duplicate events after initialization.
   }
 
   void _emit() {
@@ -51,13 +53,12 @@ $coreInstantiation
 
   Future<void> _dispatch(${c.actionsType} action) async {
     await _core.dispatchAction(action);
-    // subscription listener will call _emit when snapshot changes; no manual
-    // emit here.
   }
 
   @override
   Future<void> close() async {
     await _subscription?.cancel();
+    await _failureSubscription?.cancel();
     await _core.dispose();
     return super.close();
   }

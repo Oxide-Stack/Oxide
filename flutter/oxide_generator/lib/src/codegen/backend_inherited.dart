@@ -18,11 +18,13 @@ class ${c.prefix}Controller extends ChangeNotifier {
     actions = ${c.prefix}Actions._(_dispatch);
     actions._bind(_dispatch);
     _subscription = $snapshotsStream.listen((_) => _notify());
+    _failureSubscription = _core.failures.listen((_) => _notify());
     unawaited(_initialize());
   }
 
   late final ${c.prefix}Actions actions;
   StreamSubscription<${c.snapshotType}>? _subscription;
+  StreamSubscription<OxideStoreFailure>? _failureSubscription;
 
 $coreInstantiation
 
@@ -44,6 +46,7 @@ $coreInstantiation
   void dispose() {
     _isDisposed = true;
     _subscription?.cancel();
+    _failureSubscription?.cancel();
     unawaited(_core.dispose());
     super.dispose();
   }

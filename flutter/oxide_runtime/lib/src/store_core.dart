@@ -32,6 +32,8 @@ final class OxideStoreCore<S, A, E, Snap> {
   Snap? _snapshot;
   final StreamController<Snap> _snapshotsController =
       StreamController<Snap>.broadcast();
+  final StreamController<OxideStoreFailure> _failuresController =
+      StreamController<OxideStoreFailure>.broadcast();
 
   // instrumentation counters (debug only)
   int _engineCreationCount = 0;
@@ -46,6 +48,7 @@ final class OxideStoreCore<S, A, E, Snap> {
   StackTrace? _errorStackTrace;
 
   int? _lastDeliveredRevision;
+  int? _highestRevision;
 
   bool get isLoading => _isLoading;
   Object? get error => _error;
@@ -61,6 +64,12 @@ final class OxideStoreCore<S, A, E, Snap> {
   }
 
   Stream<Snap> get snapshots => _snapshotsController.stream;
+
+  /// Broadcast stream of errors recorded during engine lifecycle phases.
+  ///
+  /// Emits whenever an error is recorded during initialization, action
+  /// dispatch, or snapshot streaming; no emissions occur after dispose.
+  Stream<OxideStoreFailure> get failures => _failuresController.stream;
 
   Future<void> initialize({S? initialState}) async {
     if (_isDisposed) return;
@@ -97,9 +106,13 @@ final class OxideStoreCore<S, A, E, Snap> {
 
       _subscription = stateStream(
         engine,
-      ).listen(_handleStreamSnapshot, onError: _recordError);
+      ).listen(
+        _handleStreamSnapshot,
+        onError: (Object err, StackTrace st) =>
+            _recordError(err, st, OxideFailurePhase.stream),
+      );
     } catch (err, st) {
-      _recordError(err, st);
+      _recordError(err, st, OxideFailurePhase.init);
     } finally {
       _isLoading = false;
     }
@@ -111,6 +124,7 @@ final class OxideStoreCore<S, A, E, Snap> {
     await _subscription?.cancel();
     if (_inFlight == 0) await _disposeEngine();
     await _snapshotsController.close();
+    await _failuresController.close();
   }
 
   Future<void> dispatchAction(A action) async {
@@ -151,7 +165,7 @@ final class OxideStoreCore<S, A, E, Snap> {
         'OxideStore',
         'Dispatch failure: before=${_snapshotSummary(previousSnapshot)} action=$action error=$err',
       );
-      _recordError(err, st);
+      _recordError(err, st, OxideFailurePhase.dispatch);
     }
   }
 
@@ -178,6 +192,7 @@ final class OxideStoreCore<S, A, E, Snap> {
     _errorStackTrace = null;
     _snapshot = null;
     _lastDeliveredRevision = null;
+    _highestRevision = null;
   }
 
   Future<E> _createTrackedEngine(S? initialState) async {
@@ -194,16 +209,33 @@ final class OxideStoreCore<S, A, E, Snap> {
 
   void _recordSnapshot(Snap snap) {
     if (_isDisposed) return;
+    if (_isStaleRevision(snap)) return;
     _snapshot = snap;
     if (_shouldEmit(snap)) {
       _emitSnapshot(snap);
     }
   }
 
-  void _recordError(Object err, StackTrace st) {
+  // Returns true when [snap] carries a revision older than the highest one
+  // already recorded, which prevents out-of-order snapshots (e.g. from
+  // overlapping dispatches) from reverting state.
+  bool _isStaleRevision(Snap snap) {
+    final revisionOf = this.revisionOf;
+    if (revisionOf == null) return false;
+    final rev = revisionOf(snap);
+    final highest = _highestRevision;
+    if (highest != null && rev < highest) return true;
+    _highestRevision = rev;
+    return false;
+  }
+
+  void _recordError(Object err, StackTrace st, OxideFailurePhase phase) {
     if (_isDisposed) return;
     _error = err;
     _errorStackTrace = st;
+    _failuresController.add(
+      OxideStoreFailure(error: err, stackTrace: st, phase: phase),
+    );
   }
 
   Future<void> _disposeEngine() async {

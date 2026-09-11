@@ -50,11 +50,26 @@ final class GoRouterNavigationHandler<RouteT extends Object, KindT extends Objec
   Future<void> reset(List<RouteT> routes) async {
     if (routes.isEmpty) return;
 
-    // Perform sequential navigation so the route stack matches the provided list
-    // and callers can reliably await completion.
+    // Issue all pushes up front so the route stack matches the provided list
+    // immediately; push futures resolve on pop, so only the final one can be
+    // awaited for completion. Failures on intermediate pushes are reported to
+    // the enclosing zone.
     _router.go(_locationOf(routes.first));
-    for (final r in routes.skip(1)) {
-      await _router.push<void>(_locationOf(r));
+    final pushes = <Future<void>>[
+      for (final r in routes.skip(1)) _router.push<void>(_locationOf(r)),
+    ];
+    for (var i = 0; i < pushes.length - 1; i++) {
+      unawaited(
+        pushes[i].then(
+          (_) {},
+          onError: (Object error, StackTrace stackTrace) {
+            Zone.current.handleUncaughtError(error, stackTrace);
+          },
+        ),
+      );
+    }
+    if (pushes.isNotEmpty) {
+      await pushes.last;
     }
   }
 

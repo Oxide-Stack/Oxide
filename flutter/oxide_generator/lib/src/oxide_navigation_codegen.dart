@@ -441,8 +441,7 @@ String generateRouteModelsSource(RustRouteMetadata metadata) {
       buf.writeln('    return $className(');
       for (final f in r.fields) {
         final name = _lowerCamel(f.name);
-        final dartType = _dartTypeFromRust(f.type);
-        buf.writeln("      $name: json['$name'] as $dartType,");
+        buf.writeln("      $name: ${_fromJsonExpr(f.type, name)},");
       }
       buf.writeln('    );');
     }
@@ -956,6 +955,66 @@ String _dartTypeFromRust(String rustType) {
       return 'BigInt';
     default:
       return base;
+  }
+}
+
+/// Emits the expression that decodes a single route-model field from JSON.
+///
+/// `jsonDecode` never yields `BigInt` or arbitrary model instances, so plain
+/// `json['x'] as $dartType` would throw for 64-bit integers and nested models.
+/// Scalars use a direct cast; `BigInt` types parse their string form; nested
+/// model types use their own `fromJson`. Option/Vec/Map wrappers are handled
+/// recursively with the appropriate null/element handling.
+String _fromJsonExpr(String rustType, String jsonKey) {
+  final normalized = rustType.replaceAll(' ', '');
+  final optionMatch = RegExp(r'^Option<(.+)>$').firstMatch(normalized);
+  if (optionMatch != null) {
+    final inner = optionMatch.group(1)!;
+    return 'json[\'$jsonKey\'] == null ? null : ${_fromJsonExpr(inner, jsonKey)}';
+  }
+  final vecMatch = RegExp(r'^Vec<(.+)>$').firstMatch(normalized);
+  if (vecMatch != null) {
+    final inner = vecMatch.group(1)!;
+    return '(json[\'$jsonKey\'] as List<dynamic>?)'
+        '?.map((e) => ${_fromJsonExpr(inner, 'e')}).toList()';
+  }
+  final mapMatch = RegExp(r'^(HashMap|BTreeMap)<(.+)>$').firstMatch(normalized);
+  if (mapMatch != null) {
+    final args = _splitRustGenericArgs(mapMatch.group(2)!);
+    if (args.length == 2) {
+      final mapType = _dartTypeFromRust(mapMatch.group(2)!);
+      return '(json[\'$jsonKey\'] as Map<dynamic, dynamic>?)'
+          '?.map((k, v) => MapEntry(${_fromJsonExpr(args[0], 'k')}, '
+          '${_fromJsonExpr(args[1], 'v')})).cast<$mapType>()';
+    }
+  }
+  final base = _stripRustPath(normalized);
+  switch (base) {
+    case 'String':
+    case 'str':
+      return "json['$jsonKey'] as String";
+    case 'bool':
+      return "json['$jsonKey'] as bool";
+    case 'f32':
+    case 'f64':
+      return "json['$jsonKey'] as double";
+    case 'i8':
+    case 'i16':
+    case 'i32':
+    case 'isize':
+    case 'u8':
+    case 'u16':
+    case 'u32':
+    case 'usize':
+      return "json['$jsonKey'] as int";
+    case 'i64':
+    case 'u64':
+    case 'i128':
+    case 'u128':
+      return "BigInt.parse(json['$jsonKey'].toString())";
+    default:
+      // Nested model type with a generated fromJson constructor.
+      return '$base.fromJson(json[\'$jsonKey\'] as Map<String, dynamic>)';
   }
 }
 

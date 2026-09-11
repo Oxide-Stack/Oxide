@@ -128,7 +128,10 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
       throw StateError('Missing route builder for kind $firstKind');
     }
 
-    await navigator.pushAndRemoveUntil<Object?>(
+    // Replace the entire stack with the first route. Do NOT await the returned
+    // future: it completes only when this first route is later popped, which
+    // would otherwise block the subsequent pushes below from ever being issued.
+    navigator.pushAndRemoveUntil<Object?>(
       PageRouteBuilder<Object?>(
         settings: RouteSettings(name: firstKind.toString()),
         pageBuilder: (context, animation, secondaryAnimation) => firstBuilder(context, first),
@@ -136,8 +139,31 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
       (route) => false,
     );
 
+    // Push futures resolve on pop, so issue every remaining push up front. The
+    // stack reflects the full requested list immediately; intermediate-push
+    // failures are reported to the enclosing zone rather than swallowed.
     for (final r in routes.skip(1)) {
-      await push(r);
+      final kind = kindOf(r);
+      final builder = routeBuilders[kind];
+      if (builder == null) continue;
+      final future = navigator.push<Object?>(
+        PageRouteBuilder<Object?>(
+          settings: RouteSettings(name: kind.toString()),
+          pageBuilder: (context, animation, secondaryAnimation) => builder(context, r),
+        ),
+      );
+      unawaited(
+        future.then(
+          (_) {},
+          onError: (Object error, StackTrace stackTrace) {
+            Zone.current.handleUncaughtError(error, stackTrace);
+          },
+        ),
+      );
     }
+
+    // Let the navigator schedule the route builds so callers awaiting `reset`
+    // observe an initiated (not necessarily settled) navigation.
+    await WidgetsBinding.instance.endOfFrame;
   }
 }

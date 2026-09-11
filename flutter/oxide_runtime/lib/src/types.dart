@@ -37,3 +37,19 @@ typedef OxideStateFromSnapshot<S, Snap> = S Function(Snap snapshot);
 
 /// Encodes the current engine state to bytes suitable for persistence.
 typedef OxideEncodeCurrentState<E> = Future<List<int>> Function(E engine);
+
+/// The engine lifecycle phase in which a failure was recorded.
+enum OxideFailurePhase { init, dispatch, stream }
+
+/// Describes an error observed by the store core during a lifecycle phase.
+class OxideStoreFailure {
+  final Object error;
+  final StackTrace? stackTrace;
+  final OxideFailurePhase phase;
+
+  const OxideStoreFailure({
+    required this.error,
+    this.stackTrace,
+    required this.phase,
+  });
+}

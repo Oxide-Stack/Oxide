@@ -102,14 +102,32 @@ void main() {
         _RouteModel(_RouteKind.details, 'B'),
       ]));
       await tester.pumpAndSettle();
-      expect(find.text('home:A'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is Text && widget.data == 'home:A',
+          skipOffstage: false,
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('details:B'), findsOneWidget);
 
       handler.pop('first');
       await tester.pumpAndSettle();
-      expect(find.text('details:B'), findsOneWidget);
+      expect(find.text('home:A'), findsOneWidget);
+      expect(find.text('details:B'), findsNothing);
 
       handler.pop('second');
       await tester.pumpAndSettle();
+      // reset() replaced the root with the requested stack, so after popping
+      // both custom routes the navigator is empty.
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is Text && widget.data == 'home:A',
+          skipOffstage: false,
+        ),
+        findsNothing,
+      );
+      expect(find.text('details:B'), findsNothing);
 
       final missingNavigator = NavigatorNavigationHandler<_RouteModel, _RouteKind>(
         navigatorKey: GlobalKey<NavigatorState>(),

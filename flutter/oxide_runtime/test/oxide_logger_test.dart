@@ -110,6 +110,7 @@ void main() {
       debugPrint = (message, {wrapWidth}) => logOutput.add(message!);
 
       OxideLogger.attachRustStream(controller.stream);
+      addTearDown(OxideLogger.detachRustStream);
       controller.add(('warn', 'rust::engine', 'warn message'));
       controller.add(('error', 'rust::engine', 'error message'));
       await Future<void>.delayed(Duration.zero);
@@ -122,6 +123,62 @@ void main() {
       expect(logOutput[1], contains('error message'));
       expect(logOutput[0], contains('Rust:rust::engine'));
       expect(logOutput[1], contains('Rust:rust::engine'));
+    });
+
+    test('double attachRustStream keeps a single forwarding path', () async {
+      final logOutput = <String>[];
+      final originalDebugPrint = debugPrint;
+      addTearDown(() => debugPrint = originalDebugPrint);
+      debugPrint = (message, {wrapWidth}) => logOutput.add(message!);
+
+      final first = StreamController<(String, String, String)>();
+      final second = StreamController<(String, String, String)>();
+      addTearDown(first.close);
+      addTearDown(second.close);
+
+      OxideLogger.attachRustStream(first.stream);
+      OxideLogger.attachRustStream(second.stream);
+      addTearDown(OxideLogger.detachRustStream);
+
+      // the first subscription was cancelled on re-attach.
+      first.add(('info', 'rust::engine', 'stale message'));
+      second.add(('info', 'rust::engine', 'fresh message'));
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(logOutput.length, 1);
+      expect(logOutput.single, contains('fresh message'));
+
+      OxideLogger.detachRustStream();
+      second.add(('info', 'rust::engine', 'after detach'));
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(logOutput.length, 1);
+    });
+
+    test('rust stream errors do not escape as unhandled', () async {
+      final logOutput = <String>[];
+      final originalDebugPrint = debugPrint;
+      addTearDown(() => debugPrint = originalDebugPrint);
+      debugPrint = (message, {wrapWidth}) => logOutput.add(message!);
+
+      final uncaught = <Object>[];
+      final controller = StreamController<(String, String, String)>();
+      addTearDown(controller.close);
+
+      await runZonedGuarded(() async {
+        OxideLogger.attachRustStream(controller.stream);
+        addTearDown(OxideLogger.detachRustStream);
+        controller.addError(StateError('stream boom'), StackTrace.current);
+        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
+      }, (error, _) {
+        uncaught.add(error);
+      });
+
+      expect(uncaught, isEmpty);
+      expect(logOutput, isEmpty);
     });
   });
 }
