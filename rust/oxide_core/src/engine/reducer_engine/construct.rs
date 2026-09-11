@@ -4,12 +4,13 @@ use std::sync::Mutex as StdMutex;
 
 use tokio::sync::{mpsc, watch};
 
-use crate::engine::{CoreResult, InitContext, Reducer, StateSnapshot};
+use crate::engine::{CoreResult, InitContext, OxideError, Reducer, StateSnapshot};
 
 #[cfg(feature = "state-persistence")]
 use crate::persistence::{
-    FilePersistenceWorker, PersistenceConfig, decode, default_persistence_debug_json_path,
-    default_persistence_path, encode, encode_debug_json_and_validate, try_read_bytes,
+    DecodedSnapshot, FilePersistenceWorker, PersistenceConfig, decode_tracked,
+    default_persistence_debug_json_path, default_persistence_path, encode,
+    encode_debug_json_and_validate, try_read_bytes,
 };
 
 #[cfg(feature = "state-persistence")]
@@ -25,7 +26,7 @@ where
 {
     /// Creates a new engine with the given reducer and initial state.
     pub async fn new(reducer: R, initial_state: R::State) -> CoreResult<Self> {
-        Self::new_inner(reducer, initial_state, None).await
+        Self::new_inner(reducer, initial_state, None, None).await
     }
 
     #[cfg(feature = "state-persistence")]
@@ -33,6 +34,10 @@ where
     ///
     /// When persistence is enabled, every emitted snapshot is encoded and queued for writing
     /// by a background persistence worker (using `config.min_interval` for write throttling).
+    ///
+    /// Restores are best-effort: if persisted bytes exist but cannot be decoded (corrupt or
+    /// incompatible snapshot), the engine starts from `initial_state` and surfaces a
+    /// [`OxideError::Persistence`] on [`subscribe_errors`](Self::subscribe_errors).
     pub async fn new_persistent(
         reducer: R,
         initial_state: R::State,
@@ -41,6 +46,8 @@ where
     where
         R::State: crate::serde::Serialize + crate::serde::de::DeserializeOwned,
     {
+        crate::runtime::ensure_initialized()?;
+
         let path = default_persistence_path(&config.key);
         let restored_bytes = {
             #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
@@ -57,8 +64,20 @@ where
                 try_read_bytes(&path)
             }
         };
-        let restored = restored_bytes.and_then(|bytes| decode(&bytes).ok());
-        let state = restored.unwrap_or(initial_state);
+        let decoded = restored_bytes.map(|bytes| decode_tracked::<R::State>(&bytes));
+        let (state, initial_error) = match decoded {
+            Some(Ok(DecodedSnapshot::Current(state))) => (state, None),
+            Some(Ok(DecodedSnapshot::Legacy(state))) => (state, None),
+            Some(Err(err)) => (
+                initial_state,
+                Some(OxideError::Persistence {
+                    message: format!(
+                        "persisted state could not be restored (corrupt or incompatible snapshot): {err}"
+                    ),
+                }),
+            ),
+            None => (initial_state, None),
+        };
         let worker = FilePersistenceWorker::new(path, config.min_interval)?;
         let debug_path = default_persistence_debug_json_path(&config.key);
         let debug = Some(DebugPersistenceHooks {
@@ -70,7 +89,7 @@ where
             encode: Box::new(|state| encode(state)),
             debug: StdMutex::new(debug),
         };
-        Self::new_inner(reducer, state, Some(persistence)).await
+        Self::new_inner(reducer, state, Some(persistence), initial_error).await
     }
 
     async fn new_inner(
@@ -78,6 +97,7 @@ where
         initial_state: R::State,
         #[cfg(feature = "state-persistence")] persistence: Option<PersistenceHooks<R::State>>,
         #[cfg(not(feature = "state-persistence"))] _persistence: Option<()>,
+        initial_error: Option<OxideError>,
     ) -> CoreResult<Self> {
         crate::runtime::ensure_initialized()?;
 
@@ -88,6 +108,9 @@ where
         };
         let (tx, _rx) = watch::channel(initial_snapshot);
         let (error_tx, _error_rx) = watch::channel::<Option<crate::engine::OxideError>>(None);
+        if let Some(err) = initial_error {
+            let _ = error_tx.send(Some(err));
+        }
 
         let (sideeffect_tx, sideeffect_rx) = mpsc::unbounded_channel::<R::SideEffect>();
         let init_ctx = InitContext {
@@ -105,9 +128,8 @@ where
             }),
             tx,
             error_tx,
-            sideeffect_tx: sideeffect_tx.clone(),
             #[cfg(feature = "frb-spawn")]
-            _sideeffect_task: std::sync::Mutex::new(None),
+            sideeffect_task: std::sync::Mutex::new(None),
             #[cfg(feature = "state-persistence")]
             persistence,
         });
@@ -116,17 +138,47 @@ where
         {
             let handle = crate::runtime::spawn(sideeffect_loop(Arc::clone(&shared), sideeffect_rx));
             let mut slot = shared
-                ._sideeffect_task
+                .sideeffect_task
                 .lock()
                 .unwrap_or_else(|e| e.into_inner());
             *slot = Some(handle);
         }
 
-        Ok(Self { shared })
+        Ok(Self {
+            shared,
+            sideeffect_tx,
+        })
     }
 
     /// Returns a sender that can be used to enqueue side-effects for background processing.
+    ///
+    /// The engine's background loop stays alive while any sender clone exists.
     pub fn sideeffect_sender(&self) -> mpsc::UnboundedSender<R::SideEffect> {
-        self.shared.sideeffect_tx.clone()
+        self.sideeffect_tx.clone()
+    }
+
+    /// Aborts the background side-effect loop idempotently.
+    ///
+    /// Pending/queued side-effects are dropped and later sends via
+    /// [`sideeffect_sender`](Self::sideeffect_sender) fail harmlessly. Dispatching actions and
+    /// subscribing to snapshots/errors keeps working. Dropping every engine handle also stops
+    /// the loop naturally once all sender clones are gone.
+    pub fn shutdown(&self) {
+        #[cfg(all(feature = "frb-spawn", not(target_arch = "wasm32")))]
+        {
+            let slot = self
+                .shared
+                .sideeffect_task
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            if let Some(handle) = slot.as_ref() {
+                handle.abort();
+            }
+        }
+        #[cfg(any(not(feature = "frb-spawn"), target_arch = "wasm32"))]
+        {
+            // No abortable task handle on this target; the loop exits once every
+            // engine handle and sender clone is dropped.
+        }
     }
 }

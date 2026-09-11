@@ -11,7 +11,11 @@
 //!   from [`default_persistence_path`], storing the payload as base64.
 //!
 //! ## Serialization format
-//! - Persisted snapshots always use bincode.
+//! - Persisted snapshots use a versioned frame (`OXSNAP` magic + little-endian
+//!   u32 version + bincode payload) so format changes are detectable.
+//! - Legacy payloads written before versioning (raw bincode, no frame) remain
+//!   readable: decoding falls back to raw-bincode parsing and reports the
+//!   legacy format via [`DecodedSnapshot::Legacy`].
 //! - Optional debug JSON copies can be generated when enabled.
 
 mod backend;
@@ -22,7 +26,7 @@ mod worker;
 
 pub(crate) use backend::{try_read_bytes, try_write_bytes_atomic};
 pub(crate) use codec::encode_debug_json_and_validate;
-pub use codec::{decode, encode};
+pub use codec::{DecodedSnapshot, decode, decode_tracked, encode};
 pub use config::PersistenceConfig;
 pub use path::{default_persistence_debug_json_path, default_persistence_path};
 pub use worker::FilePersistenceWorker;

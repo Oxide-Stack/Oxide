@@ -25,6 +25,6 @@ pub use crate::navigation::runtime::NavigationRuntime;
 pub use crate::navigation::runtime::{init_navigation, navigation_runtime};
 pub use context::Context;
 pub use error::{CoreResult, OxideError};
-pub use reducer_engine::ReducerEngine;
+pub use reducer_engine::{ReducerEngine, debug_active_sideeffect_loops};
 pub use snapshot::StateSnapshot;
 pub use store::{InitContext, Reducer, SlicedState, StateChange};

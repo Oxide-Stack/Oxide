@@ -1,6 +1,6 @@
 use std::sync::Mutex as StdMutex;
 
-use tokio::sync::{Mutex, mpsc, watch};
+use tokio::sync::{Mutex, watch};
 
 #[cfg(feature = "state-persistence")]
 use crate::engine::CoreResult;
@@ -47,9 +47,8 @@ where
     pub(super) engine_state: Mutex<EngineState<R, StateSlice>>,
     pub(super) tx: watch::Sender<StateSnapshot<R::State, StateSlice>>,
     pub(super) error_tx: watch::Sender<Option<OxideError>>,
-    pub(super) sideeffect_tx: mpsc::UnboundedSender<R::SideEffect>,
     #[cfg(feature = "frb-spawn")]
-    pub(super) _sideeffect_task: StdMutex<Option<flutter_rust_bridge::JoinHandle<()>>>,
+    pub(super) sideeffect_task: StdMutex<Option<flutter_rust_bridge::JoinHandle<()>>>,
     #[cfg(feature = "state-persistence")]
     pub(super) persistence: Option<PersistenceHooks<R::State>>,
 }

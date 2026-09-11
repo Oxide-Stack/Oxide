@@ -5,8 +5,11 @@ mod types;
 
 use std::sync::Arc;
 
+use tokio::sync::mpsc;
+
 use crate::engine::Reducer;
 
+pub use sideeffects::debug_active_sideeffect_loops;
 use sideeffects::sideeffect_loop;
 use types::{EngineState, Shared};
 #[cfg(feature = "state-persistence")]
@@ -44,6 +47,7 @@ where
     StateSlice: Copy + PartialEq + Eq + Send + Sync + 'static,
 {
     shared: Arc<Shared<R, StateSlice>>,
+    sideeffect_tx: mpsc::UnboundedSender<R::SideEffect>,
 }
 
 impl<R, StateSlice> Clone for ReducerEngine<R, StateSlice>
@@ -54,6 +58,7 @@ where
     fn clone(&self) -> Self {
         Self {
             shared: Arc::clone(&self.shared),
+            sideeffect_tx: self.sideeffect_tx.clone(),
         }
     }
 }

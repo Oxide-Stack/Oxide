@@ -26,6 +26,8 @@ pub use engine::InitContext;
 pub use engine::{
     CoreResult, OxideError, Reducer, ReducerEngine, SlicedState, StateChange, StateSnapshot,
 };
+#[doc(hidden)]
+pub use engine::debug_active_sideeffect_loops;
 pub type ReducerCtx<'a, Input, State, StateSlice = ()> =
     engine::Context<'a, Input, State, StateSlice>;
 
