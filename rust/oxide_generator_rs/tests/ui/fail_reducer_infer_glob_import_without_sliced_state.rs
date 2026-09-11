@@ -37,14 +37,13 @@ impl oxide_core::Reducer for MyReducer {
             MyStateSlice,
         >,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        // This mirrors real usage where people import variants.
-        // Even with `Ok(Infer)`, the macro should enforce that the state
-        // opted into slicing (via `#[state(sliced = true)]`).
-        use oxide_core::StateChange::*;
+        // This mirrors real usage where `StateChange::Infer` is spelled out.
+        // The macro should enforce that the state opted into slicing
+        // (via `#[state(sliced = true)]`).
         match ctx.input {
             MyAction::IncA => {
                 state.a = state.a.saturating_add(1);
-                Ok(Infer)
+                Ok(oxide_core::StateChange::Infer)
             }
         }
     }

@@ -147,7 +147,9 @@ pub(super) fn generate_navigation_bridge_module(args: &RoutesArgs) -> syn::Resul
 
                 while let Some(cmd) = rx.recv().await {
                     let out = map_nav_command(cmd)?;
-                    __oxide_nav_require_fresh_frb_bindings(&sink, out);
+                    if __oxide_nav_require_fresh_frb_bindings(&sink, out).is_err() {
+                        break;
+                    }
                 }
 
                 Ok(())
@@ -255,6 +257,9 @@ pub(super) fn generate_navigation_bridge_module(args: &RoutesArgs) -> syn::Resul
 
             /// Compile-time guardrail for stale FRB bindings.
             ///
+            /// Forwards one command to the sink and returns the send result so
+            /// callers can stop when the sink is detached/closed.
+            ///
             /// If this fails with trait-bound errors around `IntoIntoDart` or
             /// `StreamSink<OxideNavCommand>::add`, regenerate FRB bindings from your
             /// Flutter app root:
@@ -264,11 +269,11 @@ pub(super) fn generate_navigation_bridge_module(args: &RoutesArgs) -> syn::Resul
             fn __oxide_nav_require_fresh_frb_bindings(
                 sink: &crate::frb_generated::StreamSink<OxideNavCommand>,
                 command: OxideNavCommand,
-            )
+            ) -> Result<(), flutter_rust_bridge::Rust2DartSendError>
             where
                 OxideNavCommand: flutter_rust_bridge::IntoIntoDart<OxideNavCommand>,
             {
-                let _ = sink.add(command);
+                sink.add(command)
             }
 
             fn map_nav_command(cmd: oxide_core::navigation::NavCommand) -> oxide_core::CoreResult<OxideNavCommand> {

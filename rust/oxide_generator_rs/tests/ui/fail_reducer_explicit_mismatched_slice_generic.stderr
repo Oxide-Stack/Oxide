@@ -1,0 +1,5 @@
+error: reducer declares an explicit `Reducer<OtherStateSlice>` but sliced updates imply `Reducer<MyStateSlice>`; elide the trait generic or write `Reducer<MyStateSlice>` so they agree
+  --> tests/ui/fail_reducer_explicit_mismatched_slice_generic.rs:26:26
+   |
+26 | impl oxide_core::Reducer<OtherStateSlice> for MyReducer {
+   |                          ^^^^^^^^^^^^^^^

@@ -59,8 +59,9 @@ pub(super) fn analyze_reducer_impl(item_impl: &mut ItemImpl) -> syn::Result<Redu
     })?;
     validate_reduce_like_sig(effect_fn, "effect")?;
 
-    let uses_sliced_updates =
-        fn_uses_sliced_state_change(reduce_fn) || fn_uses_sliced_state_change(effect_fn);
+    let reduce_uses_sliced = fn_uses_sliced_state_change(reduce_fn)?;
+    let effect_uses_sliced = fn_uses_sliced_state_change(effect_fn)?;
+    let uses_sliced_updates = reduce_uses_sliced || effect_uses_sliced;
 
     let sliced_state_assert = if uses_sliced_updates {
         quote! {
@@ -81,10 +82,7 @@ pub(super) fn analyze_reducer_impl(item_impl: &mut ItemImpl) -> syn::Result<Redu
                 "#[reducer(...)] must be applied to an `impl oxide_core::Reducer for <Type>` block",
             ));
         };
-        if let Some(last) = trait_path.segments.last_mut() {
-            let args: syn::AngleBracketedGenericArguments = syn::parse_quote!(<#state_slice_ty>);
-            last.arguments = syn::PathArguments::AngleBracketed(args);
-        }
+        specialize_reducer_trait_generic(trait_path, state_slice_ty)?;
     }
 
     let has_infer_slices = item_impl.items.iter().any(|item| match item {
@@ -159,4 +157,75 @@ fn infer_state_slice_type(
         last.arguments = syn::PathArguments::None;
     }
     Ok(Some(syn::Type::Path(slice_path)))
+}
+
+/// Specializes the impl's `Reducer<...>` generic to the detected slice type.
+///
+/// Only elided (`Reducer`) or wildcard (`Reducer<_>`) generics are rewritten. An
+/// explicit generic is kept as-is when it already matches the slice type and
+/// otherwise produces a compile_error naming both types instead of being
+/// silently overwritten.
+fn specialize_reducer_trait_generic(
+    trait_path: &mut syn::Path,
+    state_slice_ty: &syn::Type,
+) -> syn::Result<()> {
+    enum Plan {
+        Rewrite,
+        AlreadyCorrect,
+    }
+
+    let Some(last) = trait_path.segments.last_mut() else {
+        return Ok(());
+    };
+
+    let plan = match &last.arguments {
+        // Elided: `impl Reducer for MyReducer`.
+        syn::PathArguments::None => Plan::Rewrite,
+        syn::PathArguments::AngleBracketed(args) => match explicit_single_type_arg(args) {
+            // Wildcard: `impl Reducer<_> for MyReducer`.
+            Some(syn::Type::Infer(_)) => Plan::Rewrite,
+            // Already exactly what we would have written.
+            Some(ty) if quote!(#ty).to_string() == quote!(#state_slice_ty).to_string() => {
+                Plan::AlreadyCorrect
+            }
+            Some(ty) => {
+                return Err(syn::Error::new_spanned(
+                    ty,
+                    format!(
+                        "reducer declares an explicit `Reducer<{explicit}>` but sliced updates imply `Reducer<{slice}>`; elide the trait generic or write `Reducer<{slice}>` so they agree",
+                        explicit = quote!(#ty),
+                        slice = quote!(#state_slice_ty),
+                    ),
+                ));
+            }
+            None => {
+                return Err(syn::Error::new_spanned(
+                    args,
+                    "#[reducer] could not interpret the `Reducer<...>` trait generic for sliced updates; elide it, use `Reducer<_>`, or pass the slice type directly",
+                ));
+            }
+        },
+        syn::PathArguments::Parenthesized(args) => {
+            return Err(syn::Error::new_spanned(
+                args,
+                "`Reducer<...>` must not use parenthesized (Fn-style) generics",
+            ));
+        }
+    };
+
+    if let Plan::Rewrite = plan {
+        let args: syn::AngleBracketedGenericArguments = syn::parse_quote!(<#state_slice_ty>);
+        last.arguments = syn::PathArguments::AngleBracketed(args);
+    }
+    Ok(())
+}
+
+fn explicit_single_type_arg(args: &syn::AngleBracketedGenericArguments) -> Option<&syn::Type> {
+    if args.args.len() != 1 {
+        return None;
+    }
+    match args.args.first() {
+        Some(syn::GenericArgument::Type(ty)) => Some(ty),
+        _ => None,
+    }
 }

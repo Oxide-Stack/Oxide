@@ -7,58 +7,136 @@ use syn::visit::Visit;
 // - Specialize the reducer impl to `Reducer<<State as SlicedState>::StateSlice>`
 // - Generate snapshot wrappers that expose `slices` metadata
 //
-// Walk the function AST and look for references to `Infer`/`Slices` either
-// as `StateChange::Infer` / `StateChange::Slices` or via glob imports like
-// `use StateChange::*; Ok(Infer)`.
+// Only clearly-qualified paths count as evidence (e.g. `StateChange::Infer`,
+// `crate::...::StateChange::Slices`). A bare glob-imported `Infer`/`Slices`
+// identifier is ambiguous (any enum could export such a variant), so it
+// produces a compile_error! diagnostic instead of being silently interpreted.
 
-pub(crate) fn fn_uses_sliced_state_change(item_fn: &syn::ImplItemFn) -> bool {
-    let mut detector = SlicedUsageDetector { found: false };
+pub(crate) fn fn_uses_sliced_state_change(item_fn: &syn::ImplItemFn) -> syn::Result<bool> {
+    let mut detector = SlicedUsageDetector {
+        found: false,
+        ambiguous: None,
+    };
     detector.visit_impl_item_fn(item_fn);
-    detector.found
+    match detector.ambiguous {
+        Some(err) => Err(err),
+        None => Ok(detector.found),
+    }
 }
 
 struct SlicedUsageDetector {
     found: bool,
+    ambiguous: Option<syn::Error>,
 }
 
-impl<'ast> Visit<'ast> for SlicedUsageDetector {
-    fn visit_expr_path(&mut self, node: &'ast syn::ExprPath) {
-        if path_looks_like_sliced_state_change(&node.path) {
-            self.found = true;
-            return;
-        }
-        syn::visit::visit_expr_path(self, node);
-    }
-
-    fn visit_pat(&mut self, node: &'ast syn::Pat) {
-        if let syn::Pat::Path(path) = node {
-            if path_looks_like_sliced_state_change(&path.path) {
-                self.found = true;
-                return;
-            }
-        }
-        syn::visit::visit_pat(self, node);
-    }
+enum SlicedPathKind {
+    /// Multi-segment path ending in `StateChange::Infer` / `StateChange::Slices`.
+    Qualified,
+    /// Single-segment bare `Infer` / `Slices` identifier.
+    Bare,
+    Unrelated,
 }
 
-fn path_looks_like_sliced_state_change(path: &syn::Path) -> bool {
+fn classify_sliced_path(path: &syn::Path) -> SlicedPathKind {
     let Some(last) = path.segments.last() else {
-        return false;
+        return SlicedPathKind::Unrelated;
     };
 
     let last_ident = last.ident.to_string();
     if last_ident != "Infer" && last_ident != "Slices" {
-        return false;
+        return SlicedPathKind::Unrelated;
     }
 
-    // Accept both `StateChange::Infer` (or `oxide_core::StateChange::Infer`) and
-    // glob-import usage like `Infer`.
     if path.segments.len() == 1 {
-        return true;
+        return SlicedPathKind::Bare;
     }
 
-    let Some(prev) = path.segments.iter().rev().nth(1) else {
-        return false;
-    };
-    prev.ident == "StateChange"
+    match path.segments.iter().rev().nth(1) {
+        Some(prev) if prev.ident == "StateChange" => SlicedPathKind::Qualified,
+        _ => SlicedPathKind::Unrelated,
+    }
+}
+
+impl SlicedUsageDetector {
+    fn record_path(&mut self, path: &syn::Path) {
+        match classify_sliced_path(path) {
+            SlicedPathKind::Qualified => self.found = true,
+            SlicedPathKind::Bare => {
+                if self.ambiguous.is_none() {
+                    self.ambiguous = Some(syn::Error::new_spanned(
+                        path,
+                        "ambiguous bare `Infer`/`Slices`; qualify the path (e.g. `StateChange::Infer`) so sliced-update detection is explicit",
+                    ));
+                }
+            }
+            SlicedPathKind::Unrelated => {}
+        }
+    }
+}
+
+impl<'ast> Visit<'ast> for SlicedUsageDetector {
+    fn visit_expr_path(&mut self, node: &'ast syn::ExprPath) {
+        self.record_path(&node.path);
+        if self.ambiguous.is_none() {
+            syn::visit::visit_expr_path(self, node);
+        }
+    }
+
+    fn visit_pat(&mut self, node: &'ast syn::Pat) {
+        if let syn::Pat::Path(path) = node {
+            self.record_path(&path.path);
+        }
+        if self.ambiguous.is_none() {
+            syn::visit::visit_pat(self, node);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn detect(body: &str) -> syn::Result<bool> {
+        let src = format!(
+            "fn reduce(&mut self, _state: &mut S, _ctx: C) -> oxide_core::CoreResult<oxide_core::StateChange> {{ {body} }}"
+        );
+        let item_fn: syn::ImplItemFn = syn::parse_str(&src).unwrap();
+        fn_uses_sliced_state_change(&item_fn)
+    }
+
+    #[test]
+    fn qualified_state_change_paths_are_detected() {
+        assert!(detect("let _ = StateChange::Infer;").unwrap());
+        assert!(
+            detect("let _ = oxide_core::StateChange::Infer;")
+                .unwrap()
+        );
+        assert!(
+            detect(
+                "let _ = crate::deep::inner::StateChange::Slices(&[]);"
+            )
+            .unwrap()
+        );
+        // Pattern position (`match` arms) is detected too.
+        assert!(
+            detect("match r { StateChange::Infer => {} StateChange::None => {} }").unwrap()
+        );
+    }
+
+    #[test]
+    fn bare_infer_or_slices_idents_produce_diagnostic() {
+        let err = detect("let _ = Infer;").unwrap_err();
+        assert!(err.to_string().contains("ambiguous bare `Infer`/`Slices`"));
+        assert!(err.to_string().contains("qualify the path"));
+
+        let err = detect("let _ = Slices(&[]);").unwrap_err();
+        assert!(err.to_string().contains("ambiguous bare `Infer`/`Slices`"));
+    }
+
+    #[test]
+    fn unrelated_identifiers_are_ignored() {
+        assert!(!detect("let infer = 1; let _ = OtherEnum::Infer;").unwrap());
+        assert!(!detect("let slices = vec![1]; let _ = config.slices;").unwrap());
+        assert!(!detect("Ok(StateChange::None)").unwrap());
+    }
 }

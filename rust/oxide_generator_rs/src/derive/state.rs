@@ -26,6 +26,21 @@ fn slice_variant_ident(field: &Ident) -> Ident {
     quote::format_ident!("{out}")
 }
 
+fn find_duplicate_slice_variants(
+    field_variants: &[(&Ident, Ident)],
+) -> Option<(String, Vec<String>)> {
+    let mut groups: Vec<(String, Vec<String>)> = Vec::new();
+    for (field, variant) in field_variants {
+        let variant = variant.to_string();
+        let field = field.to_string();
+        match groups.iter_mut().find(|(v, _)| *v == variant) {
+            Some((_, fields)) => fields.push(field),
+            None => groups.push((variant, vec![field])),
+        }
+    }
+    groups.into_iter().find(|(_, fields)| fields.len() > 1)
+}
+
 pub(crate) fn expand_state_struct(
     args: StateArgs,
     mut item: ItemStruct,
@@ -39,17 +54,34 @@ pub(crate) fn expand_state_struct(
             .to_compile_error();
         };
 
-        // The previously-generated enum name was always `StateSlice`, which
-        // collides when multiple sliced state structs exist in the same module.
-        //
-        // Make the generated enum name state-specific, e.g. `MyStateSlice`.
+
         let slice_enum_ident = quote::format_ident!("{}Slice", item.ident);
 
-        let slice_variants: Vec<Ident> = named
+        let field_variants: Vec<(&Ident, Ident)> = named
             .named
             .iter()
             .filter_map(|f| f.ident.as_ref())
-            .map(slice_variant_ident)
+            .map(|field| (field, slice_variant_ident(field)))
+            .collect();
+
+        if let Some((variant, colliding_fields)) = find_duplicate_slice_variants(&field_variants) {
+            let field_list = colliding_fields
+                .iter()
+                .map(|f| format!("`{f}`"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            return syn::Error::new_spanned(
+                &item,
+                format!(
+                    "fields {field_list} all map to the duplicate slice variant `{variant}`; rename these fields so each generates a unique variant"
+                ),
+            )
+            .to_compile_error();
+        }
+
+        let slice_variants: Vec<Ident> = field_variants
+            .into_iter()
+            .map(|(_, variant)| variant)
             .collect();
 
         let slice_checks: Vec<proc_macro2::TokenStream> = named
@@ -252,4 +284,59 @@ pub(crate) fn expand_state_enum(args: StateArgs, mut item: ItemEnum) -> proc_mac
             let _ = _oxide_require_state_traits::<#ident>;
         };
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse_field(name: &str) -> Ident {
+        syn::parse_str::<Ident>(name).unwrap()
+    }
+
+    #[test]
+    fn colliding_snake_and_camel_fields_are_detected() {
+        let f1 = parse_field("a_b");
+        let f2 = parse_field("aB");
+        let field_variants = vec![
+            (&f1, slice_variant_ident(&f1)),
+            (&f2, slice_variant_ident(&f2)),
+        ];
+
+        let (variant, fields) = find_duplicate_slice_variants(&field_variants).unwrap();
+        assert_eq!(variant, "AB");
+        assert_eq!(fields, vec!["a_b".to_string(), "aB".to_string()]);
+    }
+
+    #[test]
+    fn underscore_prefix_collision_is_detected() {
+        let f1 = parse_field("value");
+        let f2 = parse_field("_value");
+        let f3 = parse_field("unrelated");
+        let field_variants = vec![
+            (&f1, slice_variant_ident(&f1)),
+            (&f2, slice_variant_ident(&f2)),
+            (&f3, slice_variant_ident(&f3)),
+        ];
+
+        let (variant, fields) = find_duplicate_slice_variants(&field_variants).unwrap();
+        assert_eq!(variant, "Value");
+        assert_eq!(fields, vec!["value".to_string(), "_value".to_string()]);
+    }
+
+    #[test]
+    fn distinct_fields_have_no_collisions() {
+        let f1 = parse_field("a");
+        let f2 = parse_field("b_c");
+        let f3 = parse_field("dB");
+        let f4 = parse_field("_leading");
+        let field_variants = vec![
+            (&f1, slice_variant_ident(&f1)),
+            (&f2, slice_variant_ident(&f2)),
+            (&f3, slice_variant_ident(&f3)),
+            (&f4, slice_variant_ident(&f4)),
+        ];
+
+        assert!(find_duplicate_slice_variants(&field_variants).is_none());
+    }
 }

@@ -106,7 +106,9 @@ pub(super) fn emit_reducer_tokens(
             }
 
             #[flutter_rust_bridge::frb]
-            pub fn dispose_engine(_engine: &std::sync::Arc<#engine_ident>) {}
+            pub fn dispose_engine(_engine: &std::sync::Arc<#engine_ident>) {
+                _engine.inner.shutdown();
+            }
 
             #[flutter_rust_bridge::frb]
             pub async fn setup_rust_logs(sink: crate::frb_generated::StreamSink<(String, String, String)>) {

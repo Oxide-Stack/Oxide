@@ -171,6 +171,35 @@ fn navigation_bridge_module_contains_bindings() {
 }
 
 #[test]
+fn nav_commands_stream_stops_forwarding_when_sink_detaches() {
+    let tokens = generate_navigation_bridge_module(&RoutesArgs::default())
+        .unwrap()
+        .to_string();
+
+    // The stream loop must propagate `StreamSink::add` results and break on a
+    // terminal send error so the command-guard drops and clears the active slot.
+    assert!(tokens.contains("Rust2DartSendError"));
+
+    let compact: String = tokens.chars().filter(|c| !c.is_whitespace()).collect();
+    let stream_fn = compact
+        .find("asyncfnoxide_nav_commands_stream(")
+        .expect("commands stream function");
+    let loop_body = &compact[stream_fn..];
+    let loop_start = loop_body
+        .find("whileletSome(cmd)=rx.recv().await{")
+        .expect("commands receive loop");
+    let forward = &loop_body[loop_start..];
+    let send_pos = forward
+        .find("__oxide_nav_require_fresh_frb_bindings(&sink,out)")
+        .expect("forwarded sink add");
+    let result_check = &forward[send_pos..];
+    assert!(
+        result_check.contains(".is_err(){break;}"),
+        "send errors must break the forwarding loop, got: {result_check}"
+    );
+}
+
+#[test]
 fn route_context_types_include_operation_and_update_payload() {
     let tokens = generate_route_context_types().unwrap().to_string();
     assert!(tokens.contains("pub enum RouteOperation"));

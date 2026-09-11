@@ -3,7 +3,6 @@ use oxide_generator_rs::{actions, reducer, state};
 #[state(sliced = true)]
 pub struct MyState {
     pub a: u64,
-    pub b: u64,
 }
 
 #[actions]
@@ -16,8 +15,10 @@ pub enum MySideEffect {}
 #[derive(Default)]
 pub struct MyReducer;
 
-#[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0, b: 0 }, no_frb)]
-impl oxide_core::Reducer for MyReducer {
+// An explicit trait generic that already matches the inferred slice type must
+// be accepted as-is (not rewritten, not an error).
+#[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0 }, no_frb)]
+impl oxide_core::Reducer<MyStateSlice> for MyReducer {
     type State = MyState;
     type Action = MyAction;
     type SideEffect = MySideEffect;
@@ -29,14 +30,10 @@ impl oxide_core::Reducer for MyReducer {
         state: &mut Self::State,
         ctx: oxide_core::Context<'_, Self::Action, Self::State, MyStateSlice>,
     ) -> oxide_core::CoreResult<oxide_core::StateChange> {
-        // Many users prefer importing enum variants for brevity.
-        // The macro should still detect `Infer` usage even when `StateChange`
-        // isn't spelled out at the callsite.
-        use oxide_core::StateChange::*;
         match ctx.input {
             MyAction::IncA => {
                 state.a = state.a.saturating_add(1);
-                Ok(Infer)
+                Ok(oxide_core::StateChange::Infer)
             }
         }
     }

@@ -7,7 +7,8 @@ fn ui() {
     t.pass("tests/ui/pass_state_sliced_struct.rs");
     t.pass("tests/ui/pass_actions_enum.rs");
     t.pass("tests/ui/pass_reducer_fn.rs");
-    t.pass("tests/ui/pass_reducer_infer_glob_import.rs");
+    t.pass("tests/ui/pass_reducer_infer_qualified_path.rs");
+    t.pass("tests/ui/pass_reducer_explicit_matching_slice_generic.rs");
     if cfg!(feature = "state-persistence") {
         t.pass("tests/ui/pass_reducer_persistence.rs");
         t.pass("tests/ui/pass_reducer_persistence_nested_type.rs");
@@ -29,6 +30,8 @@ fn ui() {
     t.compile_fail("tests/ui/fail_reducer_async_reduce.rs");
     t.compile_fail("tests/ui/fail_reducer_infer_without_sliced_state.rs");
     t.compile_fail("tests/ui/fail_reducer_infer_glob_import_without_sliced_state.rs");
+    t.compile_fail("tests/ui/fail_reducer_bare_infer_ident.rs");
+    t.compile_fail("tests/ui/fail_reducer_explicit_mismatched_slice_generic.rs");
     if cfg!(feature = "isolated-channels") {
         t.compile_fail("tests/ui/fail_oxide_event_channel_wrong_target.rs");
         t.compile_fail("tests/ui/fail_oxide_callback_wrong_target.rs");
