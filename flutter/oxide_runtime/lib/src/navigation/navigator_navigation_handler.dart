@@ -145,7 +145,9 @@ final class NavigatorNavigationHandler<RouteT extends Object, KindT extends Obje
     for (final r in routes.skip(1)) {
       final kind = kindOf(r);
       final builder = routeBuilders[kind];
-      if (builder == null) continue;
+      if (builder == null) {
+        throw StateError('Missing route builder for kind $kind');
+      }
       final future = navigator.push<Object?>(
         PageRouteBuilder<Object?>(
           settings: RouteSettings(name: kind.toString()),

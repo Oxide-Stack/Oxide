@@ -5,8 +5,6 @@
 //! `ReducerEngine` handle was dropped. These tests observe loop lifetime via
 //! `debug_active_sideeffect_loops`.
 
-use std::sync::{Mutex, MutexGuard};
-
 use oxide_core::{
     CoreResult, InitContext, Reducer, ReducerEngine, StateChange, debug_active_sideeffect_loops,
 };
@@ -59,10 +57,11 @@ fn init_test_runtime() {
 }
 
 // The instrumentation is process-global; serialize the lifecycle tests so they
-// do not observe each other's engines.
-fn test_lock() -> MutexGuard<'static, ()> {
-    static LOCK: Mutex<()> = Mutex::new(());
-    LOCK.lock().unwrap_or_else(|e| e.into_inner())
+// do not observe each other's engines. Uses an async mutex so the guard may
+// be held across `.await` without risking thread-pool starvation.
+async fn test_lock() -> tokio::sync::MutexGuard<'static, ()> {
+    static LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+    LOCK.lock().await
 }
 
 async fn wait_for_active_loops(target: usize) {
@@ -82,7 +81,7 @@ async fn wait_for_active_loops(target: usize) {
 
 #[tokio::test]
 async fn dropping_last_engine_handle_terminates_sideeffect_loop() {
-    let _guard = test_lock();
+    let _guard = test_lock().await;
     init_test_runtime();
 
     assert_eq!(debug_active_sideeffect_loops(), 0);
@@ -105,7 +104,7 @@ async fn dropping_last_engine_handle_terminates_sideeffect_loop() {
 
 #[tokio::test]
 async fn shutdown_aborts_loop_and_subsequent_effect_sends_are_noops() {
-    let _guard = test_lock();
+    let _guard = test_lock().await;
     init_test_runtime();
 
     let engine = ReducerEngine::<TestReducer>::new(TestReducer, TestState)
@@ -124,7 +123,7 @@ async fn shutdown_aborts_loop_and_subsequent_effect_sends_are_noops() {
 
 #[tokio::test]
 async fn sequential_engines_never_exceed_one_concurrent_loop() {
-    let _guard = test_lock();
+    let _guard = test_lock().await;
     init_test_runtime();
 
     let mut peak = 0;

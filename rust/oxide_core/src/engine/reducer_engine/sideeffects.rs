@@ -17,23 +17,26 @@ static ACTIVE_SIDEEFFECT_LOOPS: AtomicUsize = AtomicUsize::new(0);
 /// Test/diagnostic-only instrumentation: the count is incremented when a
 /// `sideeffect_loop` task starts and decremented when it exits (including when
 /// aborted via [`ReducerEngine::shutdown`](super::ReducerEngine::shutdown)).
+/// Uses relaxed ordering; exact cross-thread synchronization is unnecessary
+/// for a diagnostic counter. Shipped unconditionally so integration tests in
+/// other crates can observe teardown without feature gates.
 #[doc(hidden)]
 pub fn debug_active_sideeffect_loops() -> usize {
-    ACTIVE_SIDEEFFECT_LOOPS.load(Ordering::SeqCst)
+    ACTIVE_SIDEEFFECT_LOOPS.load(Ordering::Relaxed)
 }
 
 struct SideeffectLoopGuard;
 
 impl SideeffectLoopGuard {
     fn new() -> Self {
-        ACTIVE_SIDEEFFECT_LOOPS.fetch_add(1, Ordering::SeqCst);
+        ACTIVE_SIDEEFFECT_LOOPS.fetch_add(1, Ordering::Relaxed);
         Self
     }
 }
 
 impl Drop for SideeffectLoopGuard {
     fn drop(&mut self) {
-        ACTIVE_SIDEEFFECT_LOOPS.fetch_sub(1, Ordering::SeqCst);
+        ACTIVE_SIDEEFFECT_LOOPS.fetch_sub(1, Ordering::Relaxed);
     }
 }
 

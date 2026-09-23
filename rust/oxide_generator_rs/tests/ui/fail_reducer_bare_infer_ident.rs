@@ -17,6 +17,8 @@ pub struct MyReducer;
 
 // A glob import can pull in an unrelated `Infer`/`Slices` identifier, so a bare
 // single-segment path must not be silently interpreted as sliced-update usage.
+// Migration: qualify as `StateChange::Infer`.
+#[allow(unused_imports)]
 use oxide_core::StateChange::*;
 
 #[reducer(engine = MyEngine, snapshot = MySnapshot, initial = MyState { a: 0 }, no_frb)]

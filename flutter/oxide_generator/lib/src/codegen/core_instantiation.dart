@@ -14,7 +14,7 @@ String buildCoreInstantiation(OxideCodegenConfig c) {
       : '    encodeCurrentState: (engine) async => await ${c.encodeCurrentState}(engine: engine),\n';
 
   return '''
-  late final OxideStoreCore<${c.stateType}, ${c.actionsType}, ${c.engineType}, ${c.snapshotType}> _core =
+  OxideStoreCore<${c.stateType}, ${c.actionsType}, ${c.engineType}, ${c.snapshotType}> _createCore() =>
       OxideStoreCore<${c.stateType}, ${c.actionsType}, ${c.engineType}, ${c.snapshotType}>(
     createEngine: (_) => ${c.createEngine}(),
     disposeEngine: (engine) => ${c.disposeEngine}(engine: engine),
@@ -25,5 +25,8 @@ String buildCoreInstantiation(OxideCodegenConfig c) {
     // ensure revision is an `int` for the core; incoming type may be BigInt
     revisionOf: (snap) => snap.revision.toInt(),
 $initAppArg$encodeCurrentStateArg  );
+
+  late OxideStoreCore<${c.stateType}, ${c.actionsType}, ${c.engineType}, ${c.snapshotType}> _core =
+      _createCore();
 ''';
 }

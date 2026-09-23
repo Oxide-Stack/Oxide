@@ -36,6 +36,18 @@ $coreInstantiation
   @override
   OxideView<${c.stateType}, ${c.prefix}Actions> build() {
     actions._bind(_dispatch);
+    // `ref.invalidate` on a keepAlive provider re-runs build() on the same
+    // Notifier instance after onDispose disposed the old core. Recreate the
+    // core so the new lifecycle owns a fresh engine instead of serving dead
+    // state. autoDispose providers get a fresh instance and never hit this.
+    if (_disposeHandled) {
+      _disposeHandled = false;
+      _initialized = false;
+      _initializing = null;
+      _subscription = null;
+      _failureSubscription = null;
+      _core = _createCore();
+    }
     if (!_disposeHandled) {
       ref.onDispose(() {
         _disposeHandled = true;
@@ -45,9 +57,9 @@ $coreInstantiation
       });
     }
 
-    // Riverpod re-runs build() on invalidation while keeping this Notifier
-    // instance. Re-initializing would leak a second native engine, so only
-    // the first (or in-flight) initialization owns the engine and subscriptions.
+    // Normal rebuilds reuse the in-flight/finished initialization to avoid
+    // leaking a second native engine; only a post-dispose rebuild (above)
+    // starts over with a fresh core.
     if (_initialized || _initializing != null) {
       return OxideView(
         state: _core.state,

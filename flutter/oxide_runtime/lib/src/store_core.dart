@@ -222,7 +222,15 @@ final class OxideStoreCore<S, A, E, Snap> {
   bool _isStaleRevision(Snap snap) {
     final revisionOf = this.revisionOf;
     if (revisionOf == null) return false;
-    final rev = revisionOf(snap);
+    final int rev;
+    try {
+      rev = revisionOf(snap);
+    } catch (err, st) {
+      // A throwing revision extractor must not escape as an unhandled async
+      // error from stream listeners; route it to failures instead.
+      _recordError(err, st, OxideFailurePhase.stream);
+      return false;
+    }
     final highest = _highestRevision;
     if (highest != null && rev < highest) return true;
     _highestRevision = rev;
@@ -247,7 +255,13 @@ final class OxideStoreCore<S, A, E, Snap> {
 
   bool _shouldEmit(Snap snap) {
     if (revisionOf != null) {
-      final rev = revisionOf!(snap);
+      final int rev;
+      try {
+        rev = revisionOf!(snap);
+      } catch (err, st) {
+        _recordError(err, st, OxideFailurePhase.stream);
+        return true;
+      }
       if (_lastDeliveredRevision != null && _lastDeliveredRevision == rev) {
         return false;
       }

@@ -441,7 +441,7 @@ String generateRouteModelsSource(RustRouteMetadata metadata) {
       buf.writeln('    return $className(');
       for (final f in r.fields) {
         final name = _lowerCamel(f.name);
-        buf.writeln("      $name: ${_fromJsonExpr(f.type, name)},");
+        buf.writeln("      $name: ${_fromJsonFieldExpr(f.type, name)},");
       }
       buf.writeln('    );');
     }
@@ -965,39 +965,59 @@ String _dartTypeFromRust(String rustType) {
 /// Scalars use a direct cast; `BigInt` types parse their string form; nested
 /// model types use their own `fromJson`. Option/Vec/Map wrappers are handled
 /// recursively with the appropriate null/element handling.
-String _fromJsonExpr(String rustType, String jsonKey) {
+///
+/// When [asVariable] is true, [ref] names an in-scope Dart variable (e.g. the
+/// `e`/`k`/`v` element of a collection literal) instead of a map key, so leaf
+/// branches emit `e as String` rather than `json['e']`.
+String _fromJsonExpr(String rustType, String ref, {bool asVariable = false}) {
   final normalized = rustType.replaceAll(' ', '');
+  // Unwrap Box/Arc/Rc the same way [_dartTypeFromRust] does; there is no
+  // `Box.fromJson` in Dart, the inner value decodes directly.
+  final boxMatch = RegExp(r'^(Box|Arc|Rc)<(.+)>$').firstMatch(normalized);
+  if (boxMatch != null) {
+    return _fromJsonExpr(boxMatch.group(2)!, ref, asVariable: asVariable);
+  }
   final optionMatch = RegExp(r'^Option<(.+)>$').firstMatch(normalized);
   if (optionMatch != null) {
     final inner = optionMatch.group(1)!;
-    return 'json[\'$jsonKey\'] == null ? null : ${_fromJsonExpr(inner, jsonKey)}';
+    if (asVariable) {
+      return '$ref == null ? null : ${_fromJsonExpr(inner, ref, asVariable: true)}';
+    }
+    return 'json[\'$ref\'] == null ? null : ${_fromJsonExpr(inner, ref)}';
   }
   final vecMatch = RegExp(r'^Vec<(.+)>$').firstMatch(normalized);
   if (vecMatch != null) {
     final inner = vecMatch.group(1)!;
-    return '(json[\'$jsonKey\'] as List<dynamic>?)'
-        '?.map((e) => ${_fromJsonExpr(inner, 'e')}).toList()';
+    final source = asVariable ? '($ref as List<dynamic>?)' : '(json[\'$ref\'] as List<dynamic>?)';
+    return '$source'
+        '?.map((e) => ${_fromJsonExpr(inner, 'e', asVariable: true)}).toList()';
   }
   final mapMatch = RegExp(r'^(HashMap|BTreeMap)<(.+)>$').firstMatch(normalized);
   if (mapMatch != null) {
     final args = _splitRustGenericArgs(mapMatch.group(2)!);
     if (args.length == 2) {
       final mapType = _dartTypeFromRust(mapMatch.group(2)!);
-      return '(json[\'$jsonKey\'] as Map<dynamic, dynamic>?)'
-          '?.map((k, v) => MapEntry(${_fromJsonExpr(args[0], 'k')}, '
-          '${_fromJsonExpr(args[1], 'v')})).cast<$mapType>()';
+      final source = asVariable
+          ? '($ref as Map<dynamic, dynamic>?)'
+          : '(json[\'$ref\'] as Map<dynamic, dynamic>?)';
+      return '$source'
+          '?.map((k, v) => MapEntry(${_fromJsonExpr(args[0], 'k', asVariable: true)}, '
+          '${_fromJsonExpr(args[1], 'v', asVariable: true)})).cast<$mapType>()';
     }
   }
   final base = _stripRustPath(normalized);
+  // Leaf: map-key access vs already-bound variable.
+  String read(String asMapAccess, String asVar) => asVariable ? asVar : asMapAccess;
   switch (base) {
     case 'String':
     case 'str':
-      return "json['$jsonKey'] as String";
+      return read("json['$ref'] as String", "$ref as String");
     case 'bool':
-      return "json['$jsonKey'] as bool";
+      return read("json['$ref'] as bool", "$ref as bool");
     case 'f32':
     case 'f64':
-      return "json['$jsonKey'] as double";
+      // JSON whole numbers decode as int; `as double` would throw.
+      return read("(json['$ref'] as num).toDouble()", "($ref as num).toDouble()");
     case 'i8':
     case 'i16':
     case 'i32':
@@ -1006,16 +1026,37 @@ String _fromJsonExpr(String rustType, String jsonKey) {
     case 'u16':
     case 'u32':
     case 'usize':
-      return "json['$jsonKey'] as int";
+      return read("json['$ref'] as int", "$ref as int");
     case 'i64':
     case 'u64':
     case 'i128':
     case 'u128':
-      return "BigInt.parse(json['$jsonKey'].toString())";
+      return read(
+        "BigInt.parse(json['$ref'].toString())",
+        "BigInt.parse($ref.toString())",
+      );
     default:
       // Nested model type with a generated fromJson constructor.
-      return '$base.fromJson(json[\'$jsonKey\'] as Map<String, dynamic>)';
+      return read(
+        '$base.fromJson(json[\'$ref\'] as Map<String, dynamic>)',
+        '$base.fromJson(($ref) as Map<String, dynamic>)',
+      );
   }
+}
+
+/// Field-level wrapper that keeps required collections non-nullable.
+///
+/// [_fromJsonExpr] returns a nullable `?.map(...).toList()` for `Vec`/maps,
+/// which is correct for `Option<Vec<T>>` but does not satisfy a required
+/// `List<T>` / `Map<K,V>` parameter. Required collections fall back to
+/// `[]` / `{}` instead.
+String _fromJsonFieldExpr(String rustType, String fieldName) {
+  final normalized = rustType.replaceAll(' ', '');
+  final expr = _fromJsonExpr(rustType, fieldName);
+  if (RegExp(r'^Option<').hasMatch(normalized)) return expr;
+  if (RegExp(r'^Vec<').hasMatch(normalized)) return '($expr ?? [])';
+  if (RegExp(r'^(HashMap|BTreeMap)<').hasMatch(normalized)) return '($expr ?? {})';
+  return expr;
 }
 
 String _stripRustPath(String s) {

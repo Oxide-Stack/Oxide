@@ -82,11 +82,11 @@ where
         let debug_path = default_persistence_debug_json_path(&config.key);
         let debug = Some(DebugPersistenceHooks {
             worker: FilePersistenceWorker::new(debug_path, config.min_interval)?,
-            encode: Box::new(|state, bytes| encode_debug_json_and_validate(state, bytes)),
+            encode: Box::new(encode_debug_json_and_validate),
         });
         let persistence = PersistenceHooks {
             worker,
-            encode: Box::new(|state| encode(state)),
+            encode: Box::new(encode),
             debug: StdMutex::new(debug),
         };
         Self::new_inner(reducer, state, Some(persistence), initial_error).await
@@ -153,16 +153,23 @@ where
     /// Returns a sender that can be used to enqueue side-effects for background processing.
     ///
     /// The engine's background loop stays alive while any sender clone exists.
+    /// Do not store clones inside the reducer; retained clones keep the channel
+    /// open forever and leak the loop plus `Shared`. Clone only for dispatching,
+    /// then drop. Call [`shutdown`](Self::shutdown) or drop all clones to stop.
     pub fn sideeffect_sender(&self) -> mpsc::UnboundedSender<R::SideEffect> {
         self.sideeffect_tx.clone()
     }
 
     /// Aborts the background side-effect loop idempotently.
     ///
-    /// Pending/queued side-effects are dropped and later sends via
-    /// [`sideeffect_sender`](Self::sideeffect_sender) fail harmlessly. Dispatching actions and
-    /// subscribing to snapshots/errors keeps working. Dropping every engine handle also stops
-    /// the loop naturally once all sender clones are gone.
+    /// On native targets with `frb-spawn` enabled, pending/queued side-effects
+    /// are dropped and later sends via
+    /// [`sideeffect_sender`](Self::sideeffect_sender) fail harmlessly.
+    /// On `wasm32` or without `frb-spawn` there is no abortable task handle;
+    /// the loop exits once every engine handle and sender clone is dropped.
+    /// Dispatching actions and subscribing to snapshots/errors keeps working.
+    /// Dropping every engine handle also stops the loop naturally once all
+    /// sender clones are gone.
     pub fn shutdown(&self) {
         #[cfg(all(feature = "frb-spawn", not(target_arch = "wasm32")))]
         {

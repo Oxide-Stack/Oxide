@@ -184,8 +184,10 @@ fn specialize_reducer_trait_generic(
         syn::PathArguments::AngleBracketed(args) => match explicit_single_type_arg(args) {
             // Wildcard: `impl Reducer<_> for MyReducer`.
             Some(syn::Type::Infer(_)) => Plan::Rewrite,
-            // Already exactly what we would have written.
-            Some(ty) if quote!(#ty).to_string() == quote!(#state_slice_ty).to_string() => {
+            // Already exactly what we would have written. Compare by final
+            // segment ident so qualified spellings (`crate::MyStateSlice`) and
+            // equivalent paths match instead of false-positiving on text.
+            Some(ty) if types_match_by_final_segment(ty, state_slice_ty) => {
                 Plan::AlreadyCorrect
             }
             Some(ty) => {
@@ -227,5 +229,22 @@ fn explicit_single_type_arg(args: &syn::AngleBracketedGenericArguments) -> Optio
     match args.args.first() {
         Some(syn::GenericArgument::Type(ty)) => Some(ty),
         _ => None,
+    }
+}
+
+/// Compares two types by their final path segment ident, so
+/// `MyStateSlice`, `crate::MyStateSlice`, and `super::MyStateSlice` agree.
+/// Falls back to token-string equality for non-path types.
+fn types_match_by_final_segment(a: &syn::Type, b: &syn::Type) -> bool {
+    match (a, b) {
+        (syn::Type::Path(a_path), syn::Type::Path(b_path)) => {
+            let a_last = a_path.path.segments.last().map(|s| s.ident.to_string());
+            let b_last = b_path.path.segments.last().map(|s| s.ident.to_string());
+            match (a_last, b_last) {
+                (Some(a_ident), Some(b_ident)) => a_ident == b_ident,
+                _ => quote!(#a).to_string() == quote!(#b).to_string(),
+            }
+        }
+        _ => quote!(#a).to_string() == quote!(#b).to_string(),
     }
 }

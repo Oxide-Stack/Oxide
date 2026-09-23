@@ -9,6 +9,7 @@ fn ui() {
     t.pass("tests/ui/pass_reducer_fn.rs");
     t.pass("tests/ui/pass_reducer_infer_qualified_path.rs");
     t.pass("tests/ui/pass_reducer_explicit_matching_slice_generic.rs");
+    t.pass("tests/ui/pass_reducer_wildcard_slice_generic.rs");
     if cfg!(feature = "state-persistence") {
         t.pass("tests/ui/pass_reducer_persistence.rs");
         t.pass("tests/ui/pass_reducer_persistence_nested_type.rs");

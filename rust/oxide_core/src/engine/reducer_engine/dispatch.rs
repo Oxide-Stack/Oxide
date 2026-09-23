@@ -127,7 +127,12 @@ where
     /// This includes:
     /// - background side-effect failures (`Reducer::effect`)
     /// - persistence encoding failures (when `state-persistence` is enabled)
+    /// - restore failures seeded at `new_persistent` time (corrupt/incompatible
+    ///   snapshot; engine starts from `initial_state` instead)
     /// - missing runtime dependencies (e.g., navigation runtime not initialized)
+    ///
+    /// Last-write-wins: a later error overwrites an earlier one (e.g. an
+    /// effect failure replaces a seeded restore error).
     pub fn subscribe_errors(&self) -> watch::Receiver<Option<OxideError>> {
         self.shared.error_tx.subscribe()
     }

@@ -71,11 +71,15 @@ where
     let header_len = SNAPSHOT_MAGIC.len() + std::mem::size_of::<u32>();
     if bytes.len() >= header_len && &bytes[..SNAPSHOT_MAGIC.len()] == SNAPSHOT_MAGIC {
         let version_bytes = &bytes[SNAPSHOT_MAGIC.len()..header_len];
-        let version = u32::from_le_bytes(
-            version_bytes
-                .try_into()
-                .expect("version slice has u32 length"),
-        );
+        // Guarded by `len >= header_len`, so this is exactly 4 bytes.
+        let version = u32::from_le_bytes(match version_bytes.try_into() {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(OxideError::Persistence {
+                    message: "snapshot header is truncated".to_string(),
+                });
+            }
+        });
         if version == SNAPSHOT_FORMAT_VERSION {
             return bincode::deserialize(&bytes[header_len..])
                 .map(DecodedSnapshot::Current)
@@ -86,6 +90,9 @@ where
         // A known magic with an unsupported version is a future-versioned
         // frame, not legacy raw bincode. Reject it rather than mis-reading the
         // header bytes as payload data.
+        // Note: a legacy payload that coincidentally starts with `OXSNAP`
+        // is treated as versioned and rejected; the tradeoff favors never
+        // mis-decoding future frames as legacy data.
         return Err(OxideError::Persistence {
             message: format!("unsupported snapshot format version {version}"),
         });

@@ -11,6 +11,15 @@ use syn::visit::Visit;
 // `crate::...::StateChange::Slices`). A bare glob-imported `Infer`/`Slices`
 // identifier is ambiguous (any enum could export such a variant), so it
 // produces a compile_error! diagnostic instead of being silently interpreted.
+// Migration: qualify as `StateChange::Infer` / `StateChange::Slices`.
+//
+// Limitations (syntactic detection only):
+// - The `StateChange` segment must be spelled literally; `use ...::StateChange
+//   as SC; SC::Infer` is treated as unrelated and sliced mode stays off.
+// - Detection runs on every `reduce`/`effect`, including non-sliced reducers.
+//   An unrelated `OtherEnum::Infer` is ignored, but a bare `Infer` from any
+//   import errors even if you never intended sliced updates; qualify or rename
+//   the unrelated import in that case.
 
 pub(crate) fn fn_uses_sliced_state_change(item_fn: &syn::ImplItemFn) -> syn::Result<bool> {
     let mut detector = SlicedUsageDetector {
@@ -65,7 +74,7 @@ impl SlicedUsageDetector {
                 if self.ambiguous.is_none() {
                     self.ambiguous = Some(syn::Error::new_spanned(
                         path,
-                        "ambiguous bare `Infer`/`Slices`; qualify the path (e.g. `StateChange::Infer`) so sliced-update detection is explicit",
+                        "ambiguous bare `Infer`/`Slices`; qualify the path (e.g. `StateChange::Infer`) so sliced-update detection is explicit. If you did not intend sliced updates, qualify or rename the unrelated import instead. Note: `StateChange` must be spelled literally (`SC::Infer` via an alias is not detected)",
                     ));
                 }
             }
@@ -75,19 +84,10 @@ impl SlicedUsageDetector {
 }
 
 impl<'ast> Visit<'ast> for SlicedUsageDetector {
-    fn visit_expr_path(&mut self, node: &'ast syn::ExprPath) {
-        self.record_path(&node.path);
+    fn visit_path(&mut self, node: &'ast syn::Path) {
+        self.record_path(node);
         if self.ambiguous.is_none() {
-            syn::visit::visit_expr_path(self, node);
-        }
-    }
-
-    fn visit_pat(&mut self, node: &'ast syn::Pat) {
-        if let syn::Pat::Path(path) = node {
-            self.record_path(&path.path);
-        }
-        if self.ambiguous.is_none() {
-            syn::visit::visit_pat(self, node);
+            syn::visit::visit_path(self, node);
         }
     }
 }
@@ -117,9 +117,16 @@ mod tests {
             )
             .unwrap()
         );
-        // Pattern position (`match` arms) is detected too.
+        // Pattern position (`match` arms) is detected too, including tuple-struct
+        // patterns like `StateChange::Slices(s)` which parse as Pat::TupleStruct.
         assert!(
             detect("match r { StateChange::Infer => {} StateChange::None => {} }").unwrap()
+        );
+        assert!(
+            detect("match r { StateChange::Slices(s) => { let _ = s; } _ => {} }").unwrap()
+        );
+        assert!(
+            detect("let StateChange::Slices(s) = r;").unwrap()
         );
     }
 

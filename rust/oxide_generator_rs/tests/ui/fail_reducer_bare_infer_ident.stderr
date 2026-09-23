@@ -1,13 +1,5 @@
-error: ambiguous bare `Infer`/`Slices`; qualify the path (e.g. `StateChange::Infer`) so sliced-update detection is explicit
-  --> tests/ui/fail_reducer_bare_infer_ident.rs:38:20
+error: ambiguous bare `Infer`/`Slices`; qualify the path (e.g. `StateChange::Infer`) so sliced-update detection is explicit. If you did not intend sliced updates, qualify or rename the unrelated import instead. Note: `StateChange` must be spelled literally (`SC::Infer` via an alias is not detected)
+  --> tests/ui/fail_reducer_bare_infer_ident.rs:40:20
    |
-38 |                 Ok(Infer)
+40 |                 Ok(Infer)
    |                    ^^^^^
-
-warning: unused import: `oxide_core::StateChange::*`
-  --> tests/ui/fail_reducer_bare_infer_ident.rs:20:5
-   |
-20 | use oxide_core::StateChange::*;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
-   |
-   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
