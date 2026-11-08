@@ -73,6 +73,45 @@ jobs:
       - name: Run Rust QA
         run: bash ./tools/scripts/qa/20-rust.sh 0 --crate ${{ matrix.crate }}
 
+  # The CLI is a separate Cargo workspace (own Cargo.lock) and is not a member
+  # of rust/Cargo.toml, so it needs its own job. Without this it is never
+  # compiled, linted, formatted or tested anywhere in CI.
+  cli-tests:
+    name: CLI QA
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            cli/target
+          key: ${{ runner.os }}-cargo-cli-${{ hashFiles('cli/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-cli-
+
+      - name: Check formatting
+        run: cargo fmt --check
+        working-directory: cli
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: cli
+
+      - name: Test
+        run: cargo test
+        working-directory: cli
+
   flutter-package-tests:
     name: Flutter package QA (${{ matrix.package }})
     runs-on: ubuntu-latest

@@ -1,0 +1,5 @@
+# Generated Dart files (Oxide additions; merged line-wise, existing lines kept).
+*.g.dart
+*.freezed.dart
+*.oxide.dart
+**/lib/oxide_generated/
